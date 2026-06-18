@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function ProductsPage() {
-  const { products, categories, deleteProduct, deleteCategory, addCategory } = useInventoryStore(); // Assuming deleteCategory isn't there, we'll mock it or add it later. Wait, we'll just mock here for UI.
+  const { products, categories, rawMaterials, deleteProduct, deleteCategory, addCategory, addProduct, updateProduct } = useInventoryStore();
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
   const [search, setSearch] = useState('');
 
@@ -20,9 +20,59 @@ export default function ProductsPage() {
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#00E5FF');
   const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
+  const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<string | null>(null);
+
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [productForm, setProductForm] = useState<Partial<Product>>({
+    name: '',
+    categoryId: '',
+    basePrice: 0,
+    type: 'SINGLE',
+    recipe: ''
+  });
+  const [moneyText, setMoneyText] = useState('');
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
   const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+
+  const handleOpenAddProduct = () => {
+    setEditingProductId(null);
+    setProductForm({ name: '', categoryId: categories[0]?.id || '', basePrice: 0, type: 'SINGLE', recipe: ''});
+    setMoneyText('');
+    setIsProductModalOpen(true);
+  };
+
+  const handleOpenEditProduct = (p: Product) => {
+    setEditingProductId(p.id);
+    setProductForm({ name: p.name, categoryId: p.categoryId, basePrice: p.basePrice, type: p.type, recipe: p.recipe || ''});
+    setMoneyText(p.basePrice?.toString() || '0');
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProduct = () => {
+    if (!productForm.name || !productForm.categoryId || !moneyText) {
+      return toast.error('Harap lengkapi data wajib (Nama, Kategori, Harga)!');
+    }
+    
+    const finalPrice = parseInt(moneyText) || 0;
+    
+    if (editingProductId) {
+       updateProduct(editingProductId, { ...productForm, basePrice: finalPrice });
+       toast.success('Menu diubah!');
+    } else {
+       addProduct({
+          id: 'p' + Math.random().toString(36).substring(2,6),
+          name: productForm.name,
+          categoryId: productForm.categoryId,
+          basePrice: finalPrice,
+          type: productForm.type as 'SINGLE' | 'COMBO',
+          recipe: productForm.recipe
+       });
+       toast.success('Menu ditambahkan!');
+    }
+    setIsProductModalOpen(false);
+  };
 
   const handleAddCategory = () => {
     if (!newCatName) return;
@@ -78,8 +128,7 @@ export default function ProductsPage() {
             </div>
             {activeTab === 'PRODUCTS' ? (
                <div className="flex gap-2">
-                 {/* This would route to new product form later */}
-                 <Button onClick={() => toast.info('Akan membuka form produk')} className="gap-2">
+                 <Button onClick={handleOpenAddProduct} className="gap-2">
                    <Plus className="w-5 h-5"/> TAMBAH MENU
                  </Button>
                </div>
@@ -137,7 +186,7 @@ export default function ProductsPage() {
                         <TableCell className="text-right border-r-2 border-gray-200 text-[#FF6321]">{formatRupiah(p.basePrice)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <button className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
+                            <button onClick={() => handleOpenEditProduct(p)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                               <Edit2 className="w-4 h-4"/>
                             </button>
                             <button onClick={() => setDeleteProductConfirm(p.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
@@ -159,7 +208,7 @@ export default function ProductsPage() {
                           <button className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                             <Edit2 className="w-4 h-4"/>
                           </button>
-                          <button onClick={() => toast.info('Fitur hapus kategori')} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
+                          <button onClick={() => setDeleteCategoryConfirm(c.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                             <Trash2 className="w-4 h-4"/>
                           </button>
                         </div>
@@ -179,6 +228,146 @@ export default function ProductsPage() {
          </div>
       </div>
 
+      <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
+        <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-xl max-h-[90vh] overflow-y-auto">
+           <DialogHeader>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">
+               {editingProductId ? 'Edit Menu' : 'Tambah Menu Baru'}
+             </DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                 <Label>Nama Menu *</Label>
+                 <Input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Contoh: Kopi Susu Aren" />
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                 <div className="flex flex-col gap-2 flex-1">
+                    <Label>Kategori *</Label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                      value={productForm.categoryId}
+                      onChange={e => setProductForm({...productForm, categoryId: e.target.value})}
+                    >
+                      <option value="" disabled>Pilih Kategori</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                 </div>
+                 <div className="flex flex-col gap-2 flex-1">
+                    <Label>Tipe / Jenis</Label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                      value={productForm.type}
+                      onChange={e => setProductForm({...productForm, type: e.target.value as 'SINGLE' | 'COMBO'})}
+                    >
+                      <option value="SINGLE">Single (Menu Satuan)</option>
+                      <option value="COMBO">Combo (Paket)</option>
+                    </select>
+                 </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                 <Label>Harga Dasar (Rp) *</Label>
+                 <Input 
+                   type="text"
+                   value={moneyText ? new Intl.NumberFormat('id-ID').format(parseInt(moneyText)) : ''}
+                   onChange={e => setMoneyText(e.target.value.replace(/\D/g, ''))}
+                   placeholder="Contoh: 15.000" 
+                 />
+              </div>
+
+              {productForm.type === 'SINGLE' && (
+                <div className="flex flex-col gap-2 border-4 border-black p-4 rounded-xl mt-2 bg-gray-50">
+                  <Label className="text-lg font-space-grotesk font-black uppercase">Resep Bahan Baku (BOM)</Label>
+                  <p className="text-xs font-inter font-bold text-gray-500 mb-2">Bahan baku yang akan dipotong otomatis saat menu dipesan.</p>
+                  
+                  {productForm.ingredients && productForm.ingredients.length > 0 ? (
+                    <div className="flex flex-col gap-2 mb-4">
+                      {productForm.ingredients.map((ing, idx) => {
+                        const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
+                        return (
+                          <div key={idx} className="flex justify-between items-center bg-white border-2 border-black p-2 rounded-lg">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm">{rm?.name || 'Unknown'}</span>
+                              <span className="text-xs text-gray-500">Satuan: {rm?.unit}</span>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <Input 
+                                type="number" 
+                                value={ing.amount}
+                                onChange={(e) => {
+                                  const newIngs = [...(productForm.ingredients || [])];
+                                  newIngs[idx].amount = parseFloat(e.target.value) || 0;
+                                  setProductForm({...productForm, ingredients: newIngs});
+                                }}
+                                className="w-20 text-right h-8"
+                              />
+                              <button 
+                                onClick={() => {
+                                  const newIngs = [...(productForm.ingredients || [])];
+                                  newIngs.splice(idx, 1);
+                                  setProductForm({...productForm, ingredients: newIngs});
+                                }}
+                                className="text-red-500 hover:text-red-700 p-1"
+                              >
+                                <Trash2 className="w-4 h-4"/>
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-sm font-bold text-gray-400 italic mb-4">Pilih bahan baku di bawah untuk menambahkan.</div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <select 
+                      className="flex-grow h-10 rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                      onChange={(e) => {
+                         const val = e.target.value;
+                         if (!val) return;
+                         // Add with default amount 1
+                         const exists = productForm.ingredients?.find(i => i.rawMaterialId === val);
+                         if (!exists) {
+                            setProductForm({
+                              ...productForm, 
+                              ingredients: [...(productForm.ingredients || []), { rawMaterialId: val, amount: 1 }]
+                            });
+                         }
+                         e.target.value = "";
+                      }}
+                       defaultValue=""
+                    >
+                       <option value="" disabled>+ Tambah Bahan Baru</option>
+                       {rawMaterials.map(rm => (
+                         <option key={rm.id} value={rm.id}>{rm.name} ({rm.unit})</option>
+                       ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2">
+                 <Label>Instruksi Penyajian (Opsional)</Label>
+                 <textarea 
+                   value={productForm.recipe}
+                   onChange={e => setProductForm({...productForm, recipe: e.target.value})}
+                   rows={5}
+                   className="flex w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                   placeholder="Tuliskan resep, instruksi, takaran gramasi untuk barista / dapur disini..."
+                 />
+                 <small className="font-inter font-bold text-gray-500">Akan dicetak di struk dapur jika diperlukan.</small>
+              </div>
+
+           </div>
+           <DialogFooter>
+             <Button variant="outline" onClick={() => setIsProductModalOpen(false)}>BATAL</Button>
+             <Button onClick={handleSaveProduct}>SIMPAN MENU</Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
         <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm">
            <DialogHeader>
@@ -203,6 +392,19 @@ export default function ProductsPage() {
            </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog 
+        open={!!deleteCategoryConfirm}
+        onOpenChange={(open) => !open && setDeleteCategoryConfirm(null)}
+        title="Hapus Kategori?"
+        description="Semua menu di kategori ini dapat kehilangan referensi kategori."
+        onConfirm={() => {
+          if (deleteCategoryConfirm) {
+            deleteCategory(deleteCategoryConfirm);
+            toast.success("Kategori berhasil dihapus");
+          }
+        }}
+      />
       
       <ConfirmDialog 
         open={!!deleteProductConfirm}

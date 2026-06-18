@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useInventoryStore, Category, Product } from '@/store/useInventoryStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useShiftStore } from '@/store/useShiftStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -27,6 +29,9 @@ export default function POSPage() {
   const router = useRouter();
   const { categories, products } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
+  const { user } = useAuthStore();
+  const { addTransaction } = useTransactionStore();
+  const { processCheckoutInventory } = useInventoryStore();
   const { items, addItem, removeItem, updateQty, clearCart, getTotal } = useCartStore();
   
   // Protect POS access
@@ -85,11 +90,30 @@ export default function POSPage() {
       return;
     }
 
+    // Process Inventory
+    const invRes = processCheckoutInventory(items.map(i => ({ productId: i.product.id, qty: i.qty })));
+    if (!invRes.success) {
+      toast.error(invRes.reason || 'Gagal potong stok');
+      return;
+    }
+
+    // Add transaction to history
+    addTransaction({
+      id: 'TXN' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      shiftId: currentShift?.id || 'unknown',
+      cashierId: user?.id || 'unknown',
+      items: [...items],
+      total,
+      paymentMethod,
+      cashGiven: paymentMethod === 'TUNAI' ? parseInt(cashGiven.replace(/\D/g, '')) : undefined,
+      timestamp: new Date(),
+      status: 'COMPLETED'
+    });
+
     // Success
     addSalesToShift(total);
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
-    // Note: Inventory decrement and Shift ledger update is mocked/omitted until Phase 6
   };
 
   const finishTransaction = () => {
@@ -348,7 +372,7 @@ export default function POSPage() {
 
        {/* ================= RECEIPT MODAL ================= */}
        <Dialog open={isReceiptOpen} onOpenChange={() => {}}>
-         <DialogContent className="border-8 border-black rounded-[2rem] max-w-md bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] [&>button]:hidden">
+         <DialogContent className="border-8 border-black rounded-[2rem] max-w-md bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] print-area">
             <div className="p-8 pb-4 flex flex-col items-center border-b-8 border-black bg-white">
                <div className="w-16 h-16 bg-[#00A19D] border-4 border-black rounded-full flex items-center justify-center mb-4 shadow-[4px_4px_0_0_#000]">
                  <CheckSquare className="w-8 h-8 text-black" strokeWidth={3} />
@@ -375,6 +399,28 @@ export default function POSPage() {
                       </div>
                   </div>
                )}
+
+               <div className="hidden print:block mb-4 border-t-2 border-black border-dashed pt-4 w-full">
+                 <h3 className="font-space-grotesk font-black uppercase text-center text-lg mb-2">NYAMAN COFFEE</h3>
+                 <div className="flex flex-col gap-1 w-full text-xs font-mono">
+                    {items.map(i => (
+                       <div key={i.id} className="flex justify-between w-full">
+                         <span>{i.qty}x {i.product.name}</span>
+                         <span>{formatRupiah(i.qty * i.product.basePrice)}</span>
+                       </div>
+                    ))}
+                    <div className="border-t-2 border-black border-dashed mt-2 pt-2 flex justify-between">
+                       <span>TOTAL</span>
+                       <span>{formatRupiah(total)}</span>
+                    </div>
+                    {paymentMethod === 'TUNAI' && (
+                      <div className="flex justify-between mt-1">
+                         <span>TUNAI</span>
+                         <span>{formatRupiah(parseInt(cashGiven))}</span>
+                      </div>
+                    )}
+                 </div>
+               </div>
 
                <Button className="w-full text-lg bg-[#FFD100] text-black hover:bg-yellow-400" variant="secondary" onClick={() => {toast.success('Mencetak struk order untuk dapur...'); setTimeout(()=> {window.print()}, 300);}}>CETAK STRUK DAPUR</Button>
                <Button className="w-full text-lg bg-[#00E5FF] text-black hover:bg-cyan-400" variant="secondary" onClick={() => {toast.success('Mencetak nota...'); setTimeout(()=> {window.print()}, 300);}}>CETAK NOTA</Button>

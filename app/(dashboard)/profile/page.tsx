@@ -9,12 +9,8 @@ import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuthStore();
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(user?.fullName || '');
   const [newPin, setNewPin] = useState('');
-  
-  useEffect(() => {
-    if (user) setFullName(user.fullName);
-  }, [user]);
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();

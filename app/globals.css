@@ -127,3 +127,32 @@
     @apply font-sans;
     }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  /* Hide shadows, rounded corners, colors to save ink and look like authentic receipt */
+  .print-area {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+  .print-area button {
+    display: none !important;
+  }
+}

@@ -68,16 +68,14 @@ export function PinLoginTemplate() {
     }
   };
 
-  React.useEffect(() => {
-    if (pin.length === 4 && !cooldownTime) {
-      handleLogin(pin);
-    }
-  }, [pin]);
-
   const handleKeyPress = (key: string) => {
     if (cooldownTime) return;
     if (pin.length < 4) {
-      setPin(prev => prev + key);
+      const newPin = pin + key;
+      setPin(newPin);
+      if (newPin.length === 4) {
+        handleLogin(newPin);
+      }
     }
   };
 

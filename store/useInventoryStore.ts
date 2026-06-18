@@ -46,10 +46,11 @@ interface InventoryState {
   addRawMaterial: (material: RawMaterial) => void;
   updateRawMaterial: (id: string, material: Partial<RawMaterial>) => void;
   deleteRawMaterial: (id: string) => void;
-  processCheckoutInventory: (items: { product: Product, qty: number }[]) => boolean;
-  revertCheckoutInventory: (items: { product: Product, qty: number }[]) => void;
   
   setInventoryMode: (mode: 'LOOSE' | 'STRICT' | 'OFF') => void;
+  
+  processCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => { success: boolean; reason?: string };
+  revertCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => void;
 }
 
 const mockCategories: Category[] = [
@@ -109,93 +110,85 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   })),
   deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
   
-  processCheckoutInventory: (items) => {
-    let success = true;
-    set(state => {
-      if (state.inventoryMode === 'OFF') return state;
-
-      const newRawMaterials = [...state.rawMaterials];
-      const inventoryDiffs: Record<string, number> = {};
-
-      // Calculate diffs
-      items.forEach(({ product, qty }) => {
-        if (product.type === 'SINGLE' && product.ingredients) {
-          product.ingredients.forEach(ing => {
-             inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
-          });
-        }
-        if (product.type === 'COMBO' && product.comboItems) {
-          product.comboItems.forEach(itemId => {
-             const subProduct = state.products.find(p => p.id === itemId);
-             if (subProduct?.ingredients) {
-                subProduct.ingredients.forEach(ing => {
-                   inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
-                });
-             }
-          });
-        }
-      });
-
-      // Verification for STRICT mode
-      if (state.inventoryMode === 'STRICT') {
-        const strictFailed = Object.entries(inventoryDiffs).some(([rmId, deductAmount]) => {
-           const rm = newRawMaterials.find(m => m.id === rmId);
-           return !rm || rm.currentStock < deductAmount;
-        });
-        if (strictFailed) {
-           success = false;
-           return state; // Do not apply changes
-        }
-      }
-
-      // Apply deductions
-      Object.entries(inventoryDiffs).forEach(([rmId, deductAmount]) => {
-         const index = newRawMaterials.findIndex(m => m.id === rmId);
-         if (index !== -1) {
-            newRawMaterials[index] = { ...newRawMaterials[index], currentStock: newRawMaterials[index].currentStock - deductAmount };
-         }
-      });
-
-      return { rawMaterials: newRawMaterials };
-    });
-    return success;
-  },
-
-  revertCheckoutInventory: (items) => {
-    set(state => {
-      if (state.inventoryMode === 'OFF') return state;
-
-      const newRawMaterials = [...state.rawMaterials];
-      const inventoryDiffs: Record<string, number> = {};
-
-      items.forEach(({ product, qty }) => {
-        if (product.type === 'SINGLE' && product.ingredients) {
-          product.ingredients.forEach(ing => {
-             inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
-          });
-        }
-        if (product.type === 'COMBO' && product.comboItems) {
-          product.comboItems.forEach(itemId => {
-             const subProduct = state.products.find(p => p.id === itemId);
-             if (subProduct?.ingredients) {
-                subProduct.ingredients.forEach(ing => {
-                   inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
-                });
-             }
-          });
-        }
-      });
-
-      Object.entries(inventoryDiffs).forEach(([rmId, refundAmount]) => {
-         const index = newRawMaterials.findIndex(m => m.id === rmId);
-         if (index !== -1) {
-            newRawMaterials[index] = { ...newRawMaterials[index], currentStock: newRawMaterials[index].currentStock + refundAmount };
-         }
-      });
-
-      return { rawMaterials: newRawMaterials };
-    });
-  },
-
   setInventoryMode: (mode) => set({ inventoryMode: mode }),
+  
+  processCheckoutInventory: (cartItems) => {
+    let success = true;
+    let reason = '';
+    
+    set(state => {
+      if (state.inventoryMode === 'OFF') return state;
+      
+      const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+      
+      for (const item of cartItems) {
+        const product = state.products.find(p => p.id === item.productId);
+        if (!product) continue;
+        
+        const processProduct = (prod: Product, multiplier: number) => {
+          if (prod.type === 'COMBO' && prod.comboItems) {
+            for (const subId of prod.comboItems) {
+              const subP = state.products.find(p => p.id === subId);
+              if (subP) processProduct(subP, multiplier);
+            }
+          } else if (prod.ingredients) {
+            for (const ing of prod.ingredients) {
+              const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
+              if (rmIdx >= 0) {
+                if (state.inventoryMode === 'STRICT' && nextMaterials[rmIdx].currentStock < ing.amount * multiplier) {
+                  success = false;
+                  reason = `Stok bahan baku ${nextMaterials[rmIdx].name} tidak mencukupi untuk menu ${prod.name}`;
+                }
+                nextMaterials[rmIdx].currentStock -= ing.amount * multiplier;
+              }
+            }
+          }
+        };
+        
+        processProduct(product, item.qty);
+        if (!success) break;
+      }
+      
+      if (!success && state.inventoryMode === 'STRICT') {
+        return state; // Revert state (do not apply changes)
+      }
+      
+      return { rawMaterials: nextMaterials };
+    });
+    
+    return { success, reason };
+  },
+  
+  revertCheckoutInventory: (cartItems) => {
+    set(state => {
+      if (state.inventoryMode === 'OFF') return state;
+      
+      const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+      
+      for (const item of cartItems) {
+        const product = state.products.find(p => p.id === item.productId);
+        if (!product) continue;
+        
+        const revertProduct = (prod: Product, multiplier: number) => {
+          if (prod.type === 'COMBO' && prod.comboItems) {
+            for (const subId of prod.comboItems) {
+              const subP = state.products.find(p => p.id === subId);
+              if (subP) revertProduct(subP, multiplier);
+            }
+          } else if (prod.ingredients) {
+            for (const ing of prod.ingredients) {
+              const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
+              if (rmIdx >= 0) {
+                nextMaterials[rmIdx].currentStock += ing.amount * multiplier;
+              }
+            }
+          }
+        };
+        
+        revertProduct(product, item.qty);
+      }
+      
+      return { rawMaterials: nextMaterials };
+    });
+  }
 }));
