@@ -76,20 +76,48 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 
 ---
 
-## FASE 7: Firebase Backend Migration
-*Fokus: Transisi dari Mock State ke Real Cloud Database Firestore & Firebase Auth.*
+## FASE 7: Industrial Grade - User & Data Master
+*Fokus: Karyawan, Database Pelanggan, dan Akses Kontrol.*
 
-- [ ] **Task 7.1:** Config & Init Firebase SDK (`firebase-applet-config.json`).
-- [ ] **Task 7.2:** Migrasi `useAuthStore` ke Firebase Auth (Email/Phone) & custom user claims untuk Role.
-- [ ] **Task 7.3:** Generate & Deploy Firestore Security Rules.
-- [ ] **Task 7.4:** Konversi `useShiftStore` CRUD ke Firestore Query Layer.
-- [ ] **Task 7.5:** Konversi `useInventoryStore` & `useProductStore` CRUD ke Firestore.
-- [ ] **Task 7.6:** Konversi `useCartStore` checkout ke Firestore Batch Writes/Transactions (Atomicity).
+- [x] **Task 7.1:** Pembuatan halaman Master Karyawan (Manajemen User, PIN, Nama, dan Role/Hak Akses Granular).
+- [x] **Task 7.2:** Pembuatan modul Database Pelanggan & Loyalty Points.
+- [x] **Task 7.3:** Implementasi Audit Trails UI (Log aktivitas kritikal).
 
 ---
 
-## FASE 8: Polish & Deploy
-- [ ] **Task 8.1:** Final E2E Audit.
-- [ ] **Task 8.2:** Testing responsivitas Tablet/Smartphone.
-- [ ] **Task 8.3:** Build Check (`npm run build`).
-- [ ] **Task 8.4:** Siap export/deploy ke Vercel.
+## FASE 8: Industrial Grade - Transaksi Lanjutan & Hardware
+*Fokus: Dinamika checkout dan konektivitas perangkat.*
+
+- [ ] **Task 8.1:** Modifikasi sistem Cart untuk mendukung Split Bill (Pisah Nota).
+- [ ] **Task 8.2:** Fitur Simpan Pesanan (Open Tab / Save Bill).
+- [ ] **Task 8.3:** Modul Diskon & Promo (Persentase vs Nominal) serta Pajak / Service Charge.
+- [ ] **Task 8.4:** Dukungan Custom Item & Shortcut Input Manual.
+
+---
+
+## FASE 9: Industrial Grade - Manajemen Inventori Lanjutan & Laci Kas
+*Fokus: Keakuratan stok dan pergerakan uang tunai.*
+
+- [ ] **Task 9.1:** Modul Stock Opname (Penyesuaian stok dengan pencatatan selisih dan alasan).
+- [ ] **Task 9.2:** Modul Purchase Order (PO) & Manajemen Supplier.
+- [ ] **Task 9.3:** Modul Peringatan Stok Menipis (Low Stock Warning).
+- [ ] **Task 9.4:** Modul Petty Cash In/Out (Kas Laci darurat).
+
+---
+
+## FASE 10: Backend Database Migration & Offline-First
+*Fokus: Transisi dari Mock State ke Real Cloud Database & Sistem asinkron.*
+
+- [ ] **Task 10.1:** Setup IndexedDB untuk antrean Offline-First & Sinkronisasi Background.
+- [ ] **Task 10.2:** Config & Init Firebase SDK (`firebase-applet-config.json`).
+- [ ] **Task 10.3:** Migrasi `useAuthStore` ke Firebase Auth dengan claims Role. & Deploy Firestore Security Rules.
+- [ ] **Task 10.4:** Konversi semua data lokal untuk tersinkronisasi dengan Firestore.
+- [ ] **Task 10.5:** Modul Export Lanjutan (Export to CSV/Excel dari Cloud Data untuk Accounting).
+
+---
+
+## FASE 11: Polish & Deploy
+- [ ] **Task 11.1:** Final E2E Audit.
+- [ ] **Task 11.2:** Testing responsivitas Tablet/Smartphone.
+- [ ] **Task 11.3:** Build Check (`npm run build`).
+- [ ] **Task 11.4:** Siap export/deploy ke Vercel.

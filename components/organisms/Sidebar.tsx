@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Coffee, LayoutGrid, PackageOpen, PieChart, CheckSquare, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { Coffee, LayoutGrid, PackageOpen, PieChart, CheckSquare, Settings, LogOut, ChevronRight, Users, Search } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -74,6 +74,29 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                 <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/inventory') ? "text-white" : "text-black")}>Bahan Baku</span>
               </div>
             </Link>
+
+            <Link href="/backoffice/users" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2", isActive('/backoffice/users') ? "bg-black text-white" : "bg-white text-black")}>
+              <div className="flex items-center gap-3">
+                <Users className={cn("w-5 h-5", isActive('/backoffice/users') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/users') ? "text-white" : "text-black")}>Karyawan</span>
+              </div>
+            </Link>
+
+            <Link href="/backoffice/customers" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2", isActive('/backoffice/customers') ? "bg-black text-white" : "bg-white text-black")}>
+              <div className="flex items-center gap-3">
+                <Users className={cn("w-5 h-5", isActive('/backoffice/customers') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/customers') ? "text-white" : "text-black")}>Pelanggan</span>
+              </div>
+            </Link>
+
+            {user?.role === 'SUPER_ADMIN' && (
+              <Link href="/backoffice/audit" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2", isActive('/backoffice/audit') ? "bg-black text-white" : "bg-white text-black")}>
+                <div className="flex items-center gap-3">
+                  <Search className={cn("w-5 h-5", isActive('/backoffice/audit') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                  <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/audit') ? "text-white" : "text-black")}>Audit Trails</span>
+                </div>
+              </Link>
+            )}
           </>
         )}
 
