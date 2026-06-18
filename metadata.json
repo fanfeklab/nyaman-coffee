@@ -1,0 +1,8 @@
+{
+  "name": "NYAMAN COFFEE SHOP - POS SYSTEM",
+  "description": "Coming soon page for NYAMAN COFFEE SHOP POS and management system",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
