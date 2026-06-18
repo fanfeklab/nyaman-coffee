@@ -10,9 +10,10 @@ import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare, Save, FolderOpen, Tag, Edit, Percent } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare, Save, FolderOpen, Tag, Edit, Percent, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 import {
@@ -53,6 +54,9 @@ export default function POSPage() {
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
   const [discountTypeForm, setDiscountTypeForm] = useState<'PERCENTAGE'|'NOMINAL'|null>(null);
   const [discountValueForm, setDiscountValueForm] = useState('');
+  
+  // Cart Drawer state
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   
   // Protect POS access
   useEffect(() => {
@@ -189,118 +193,7 @@ export default function POSPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FFFDF7] overflow-hidden">
-       {/* Top: Cart Area (Split View) */}
-       {items.length > 0 && (
-         <div className="h-[45vh] lg:h-[40vh] border-b-8 border-black flex flex-col bg-white shrink-0 shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] z-10 relative">
-            {/* Cart Header */}
-            <div className="p-3 md:p-4 border-b-4 border-black bg-[#FFD100] flex justify-between items-center shrink-0">
-               <div className="flex items-center gap-2">
-                 <ShoppingCart className="w-5 h-5 text-black" strokeWidth={2.5}/>
-                 <h2 className="font-space-grotesk font-black uppercase tracking-wider text-lg md:text-xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
-               </div>
-               
-               <div className="flex items-center gap-2">
-                 <button 
-                   onClick={() => setLoadBillOpen(true)}
-                   title="Buka Tagihan Tersimpan"
-                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
-                 >
-                   <FolderOpen className="w-4 h-4 text-black" />
-                   {savedBills.length > 0 && <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full border-2 border-black">{savedBills.length}</span>}
-                 </button>
-                 <button 
-                   onClick={() => setSaveBillOpen(true)}
-                   title="Simpan Tagihan (Open Tab)"
-                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
-                   disabled={items.length === 0}
-                 >
-                   <Save className="w-4 h-4 text-black" />
-                 </button>
-                 <button 
-                   onClick={() => setClearConfirmOpen(true)}
-                   title="Kosongkan Keranjang"
-                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
-                 >
-                   <Trash2 className="w-4 h-4 text-black" />
-                 </button>
-               </div>
-            </div>
-
-            {/* Cart Content (Split layout for Items and Footer) */}
-            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-               {/* Cart Items List */}
-               <div className="flex-1 overflow-y-auto p-4 flex flex-col md:flex-row md:flex-wrap gap-3 md:content-start border-b-4 md:border-b-0 md:border-r-4 border-black relative">
-                  {items.map(item => (
-                    <div key={item.id} className="w-full md:w-[calc(50%-0.375rem)] xl:w-[calc(33.333%-0.5rem)] border-4 border-black rounded-xl p-3 flex flex-col gap-2 relative group bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                       <div className="flex justify-between items-start">
-                          <span className="font-inter font-black text-sm uppercase pr-2 line-clamp-2">{item.product.name}</span>
-                       </div>
-                       
-                       <div className="flex items-center justify-between mt-auto pt-2">
-                         <span className="font-inter font-black text-[#FF6321] text-sm">{formatRupiah(item.product.basePrice * item.qty)}</span>
-                         <div className="flex items-center gap-3 bg-gray-100 border-2 border-black rounded-lg px-2">
-                            <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Minus className="w-4 h-4"/></button>
-                            <span className="font-black w-4 text-center">{item.qty}</span>
-                            <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Plus className="w-4 h-4"/></button>
-                         </div>
-                       </div>
-                    </div>
-                  ))}
-               </div>
-
-               {/* Cart Footer / Checkout Sticky Panel */}
-               <div className="w-full md:w-72 xl:w-80 p-4 bg-gray-50 flex flex-col justify-end gap-3 shrink-0 overflow-y-auto hide-scrollbar">
-                 <div className="flex flex-col gap-1 text-xs font-inter font-bold text-gray-500 uppercase">
-                   <div className="flex justify-between items-center">
-                      <span>Subtotal</span>
-                      <span>{formatRupiah(getSubtotal())}</span>
-                   </div>
-                   {(discountType || discountValue > 0) && (
-                     <div className="flex justify-between items-center text-[#FF6321]">
-                        <span className="flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors" onClick={() => setIsDiscountOpen(true)}>
-                          Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-3 h-3"/>
-                        </span>
-                        <span>-{formatRupiah(getDiscountAmount())}</span>
-                     </div>
-                   )}
-                   {!discountType && (
-                     <div className="flex justify-between items-center text-gray-400">
-                        <span className="flex items-center gap-1 cursor-pointer hover:text-black transition-colors" onClick={() => setIsDiscountOpen(true)}>
-                          Tambah Diskon <Tag className="w-3 h-3"/>
-                        </span>
-                     </div>
-                   )}
-                   {getServiceChargeAmount() > 0 && (
-                     <div className="flex justify-between items-center">
-                        <span>Service ({serviceChargeRate}%)</span>
-                        <span>{formatRupiah(getServiceChargeAmount())}</span>
-                     </div>
-                   )}
-                   {getTaxAmount() > 0 && (
-                     <div className="flex justify-between items-center">
-                        <span>Pajak ({taxRate}%)</span>
-                        <span>{formatRupiah(getTaxAmount())}</span>
-                     </div>
-                   )}
-                 </div>
-                 
-                 <div className="border-t-2 border-dashed border-gray-300 mt-1 pt-2 flex justify-between items-center font-space-grotesk font-black text-xl xl:text-2xl uppercase">
-                    <span>Total</span>
-                    <span>{formatRupiah(getTotal())}</span>
-                 </div>
-                 <Button 
-                   onClick={handleCheckoutClick}
-                   size="lg" 
-                   className="w-full text-lg h-14 mt-1 bg-[#00E5FF] hover:bg-cyan-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:translate-y-2 active:shadow-none transition-all"
-                 >
-                    BAYAR SEKARANG
-                 </Button>
-               </div>
-            </div>
-         </div>
-       )}
-
+    <div className="flex flex-col h-full bg-[#FFFDF7] overflow-hidden relative">
        {/* Bottom: Products Area */}
        <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden">
           
@@ -351,7 +244,7 @@ export default function POSPage() {
           </div>
 
           {/* Grid Products */}
-          <div className="flex-1 overflow-y-auto pr-2 pb-6">
+          <div className="flex-1 overflow-y-auto pr-2 pb-32">
              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 pt-1 pl-1">
                 {filteredProducts.map(p => {
                   const cat = categories.find(c => c.id === p.categoryId);
@@ -381,6 +274,168 @@ export default function POSPage() {
              </div>
           </div>
        </div>
+
+       {/* Floating Cart & Bottom Drawer overlay */}
+       <AnimatePresence>
+         {items.length > 0 && (
+           <>
+             {/* Floating sticky bar when drawer is CLOSED */}
+             {!isCartDrawerOpen && (
+               <motion.div
+                 initial={{ y: 100 }}
+                 animate={{ y: 0 }}
+                 exit={{ y: 100 }}
+                 className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-40 bg-transparent flex justify-center pointer-events-none"
+               >
+                  <button 
+                    className="pointer-events-auto bg-[#00E5FF] border-4 border-black px-6 py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group"
+                    onClick={() => setIsCartDrawerOpen(true)}
+                  >
+                      <div className="flex items-center gap-4">
+                         <div className="bg-black text-[#00E5FF] w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform">{items.reduce((a,b) => a+b.qty, 0)}</div>
+                         <div className="flex flex-col items-start gap-0">
+                             <span className="font-space-grotesk font-black uppercase text-xl leading-none">Keranjang</span>
+                             <span className="font-inter font-bold text-black/70 text-xs">Klik untuk buka pesanan</span>
+                         </div>
+                      </div>
+                      <span className="font-space-grotesk font-black text-2xl bg-white px-4 py-1.5 rounded-lg border-2 border-black">{formatRupiah(getTotal())}</span>
+                  </button>
+               </motion.div>
+             )}
+
+             {/* Backdrop when drawer is OPEN */}
+             {isCartDrawerOpen && (
+               <motion.div
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 0.6 }}
+                 exit={{ opacity: 0 }}
+                 className="absolute inset-0 bg-black z-40"
+                 onClick={() => setIsCartDrawerOpen(false)}
+               />
+             )}
+
+             {/* Bottom Drawer Cart Area */}
+             {isCartDrawerOpen && (
+               <motion.div
+                 initial={{ y: "100%" }}
+                 animate={{ y: 0 }}
+                 exit={{ y: "100%" }}
+                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                 className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-white border-t-8 border-x-8 border-black rounded-t-[2.5rem] z-50 flex flex-col shadow-[0px_-8px_0px_0px_rgba(0,0,0,0.5)] md:max-w-3xl md:mx-auto"
+               >
+                  {/* Handle & Header */}
+                  <div className="p-4 md:p-5 border-b-4 border-black bg-[#FFD100] flex justify-between items-center rounded-t-[2rem] shrink-0">
+                     <div className="flex items-center gap-3">
+                       <button onClick={() => setIsCartDrawerOpen(false)} className="p-2 bg-white border-4 border-black rounded-xl hover:translate-y-1 hover:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-2 transition-all">
+                          <ChevronDown className="w-5 h-5 font-black"/>
+                       </button>
+                       <h2 className="font-space-grotesk font-black uppercase tracking-wider text-xl md:text-2xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
+                     </div>
+                     
+                     <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => setLoadBillOpen(true)}
+                         title="Buka Tagihan"
+                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
+                       >
+                         <FolderOpen className="w-5 h-5 text-black" />
+                         {savedBills.length > 0 && <span className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-black px-2 py-0.5 rounded-full border-4 border-black">{savedBills.length}</span>}
+                       </button>
+                       <button 
+                         onClick={() => setSaveBillOpen(true)}
+                         title="Simpan Tagihan (Open Tab)"
+                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF90E8] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                         disabled={items.length === 0}
+                       >
+                         <Save className="w-5 h-5 text-black" />
+                       </button>
+                       <button 
+                         onClick={() => setClearConfirmOpen(true)}
+                         title="Kosongkan Keranjang"
+                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF6321] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                       >
+                         <Trash2 className="w-5 h-5" />
+                       </button>
+                     </div>
+                  </div>
+                  
+                  {/* Cart Items List */}
+                  <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 min-h-[30vh] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+                     {items.map(item => (
+                       <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                          <div className="flex-1 flex flex-col">
+                             <span className="font-space-grotesk font-black text-lg uppercase line-clamp-1">{item.product.name}</span>
+                             <span className="font-inter font-bold text-gray-500 text-sm">{formatRupiah(item.product.basePrice)}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
+                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(item.product.basePrice * item.qty)}</span>
+                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1">
+                                <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
+                                <span className="font-black text-lg w-8 text-center">{item.qty}</span>
+                                <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
+                             </div>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+
+                  {/* Cart Footer / Checkout Sticky Panel */}
+                  <div className="p-4 md:p-6 bg-white border-t-8 border-black shrink-0">
+                    <div className="flex flex-col gap-2 text-sm font-inter font-bold uppercase mb-4 px-2">
+                       <div className="flex justify-between items-center text-gray-600">
+                          <span>Subtotal</span>
+                          <span>{formatRupiah(getSubtotal())}</span>
+                       </div>
+                       {(discountType || discountValue > 0) && (
+                         <div className="flex justify-between items-center text-[#FF6321]">
+                            <span className="flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setIsDiscountOpen(true)}>
+                              Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-4 h-4"/>
+                            </span>
+                            <span>-{formatRupiah(getDiscountAmount())}</span>
+                         </div>
+                       )}
+                       {!discountType && (
+                         <div className="flex justify-between items-center text-gray-400">
+                            <span className="flex items-center gap-2 cursor-pointer hover:text-black transition-colors" onClick={() => setIsDiscountOpen(true)}>
+                              Tambah Diskon <Tag className="w-4 h-4"/>
+                            </span>
+                         </div>
+                       )}
+                       {getServiceChargeAmount() > 0 && (
+                         <div className="flex justify-between items-center text-gray-600">
+                            <span>Service ({serviceChargeRate}%)</span>
+                            <span>{formatRupiah(getServiceChargeAmount())}</span>
+                         </div>
+                       )}
+                       {getTaxAmount() > 0 && (
+                         <div className="flex justify-between items-center text-gray-600">
+                            <span>Pajak ({taxRate}%)</span>
+                            <span>{formatRupiah(getTaxAmount())}</span>
+                         </div>
+                       )}
+                    </div>
+                    
+                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">
+                       <span>Total</span>
+                       <span>{formatRupiah(getTotal())}</span>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        setIsCartDrawerOpen(false);
+                        handleCheckoutClick();
+                      }}
+                      size="lg" 
+                      className="w-full h-16 text-2xl bg-[#00E5FF] hover:bg-cyan-400 text-black border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:translate-y-2 active:shadow-none transition-all uppercase tracking-widest font-space-grotesk font-black"
+                    >
+                       BAYAR SEKARANG
+                    </Button>
+                  </div>
+               </motion.div>
+             )}
+           </>
+         )}
+       </AnimatePresence>
 
        {/* ================= PAYMENT MODAL ================= */}
        <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
