@@ -16,33 +16,73 @@ export function PinLoginTemplate() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
 
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownTime, setCooldownTime] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
   const { login } = useAuthStore();
   
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // Timer for cooldown
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (cooldownTime) {
+      interval = setInterval(() => {
+        const remaining = Math.ceil((cooldownTime - Date.now()) / 1000);
+        if (remaining <= 0) {
+          setCooldownTime(null);
+          setFailedAttempts(0);
+          setError('');
+          setTimeLeft(0);
+        } else {
+          setTimeLeft(remaining);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [cooldownTime]);
+
+  const handleLogin = (currentPin: string) => {
     setError('');
     
-    if (!username || !pin) {
-      setError('USERNAME & PIN WAJIB DIISI');
+    if (!username) {
+      setError('USERNAME WAJIB DIISI');
+      setPin('');
       return;
     }
 
-    const success = login(username, pin);
+    const success = login(username, currentPin);
     if (success) {
-       router.push('/pos');
+       router.push('/shift');
     } else {
-       setError('PIN ATAU USERNAME SALAH!');
+       const newAttempts = failedAttempts + 1;
+       setFailedAttempts(newAttempts);
+       
+       if (newAttempts >= 3) {
+         setCooldownTime(Date.now() + 3 * 60 * 1000); // 3 minutes
+         setTimeLeft(3 * 60);
+         setError('AKUN TERKUNCI. TUNGGU 3 MENIT.');
+       } else {
+         setError('PIN ATAU USERNAME SALAH!');
+       }
        setPin('');
     }
   };
 
+  React.useEffect(() => {
+    if (pin.length === 4 && !cooldownTime) {
+      handleLogin(pin);
+    }
+  }, [pin]);
+
   const handleKeyPress = (key: string) => {
+    if (cooldownTime) return;
     if (pin.length < 4) {
       setPin(prev => prev + key);
     }
   };
 
   const handleDelete = () => {
+    if (cooldownTime) return;
     setPin(prev => prev.slice(0, -1));
   };
 
@@ -71,7 +111,7 @@ export function PinLoginTemplate() {
 
         {/* Right Login Panel */}
         <div className="w-full md:w-1/2 p-8 lg:p-12 flex items-center justify-center bg-white relative">
-          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={handleLogin}>
+          <div className="w-full max-w-sm flex flex-col gap-6">
             
             <div className="flex flex-col gap-2">
               <Label htmlFor="username">Username</Label>
@@ -79,6 +119,7 @@ export function PinLoginTemplate() {
                  id="username"
                  value={username}
                  onChange={(e) => setUsername(e.target.value)}
+                 disabled={!!cooldownTime}
                  placeholder="admin"
                  className="text-lg bg-[#E6F8F9]"
               />
@@ -97,7 +138,7 @@ export function PinLoginTemplate() {
                      key={index} 
                      className={cn(
                        "w-full aspect-square border-4 border-black rounded-xl flex items-center justify-center transition-all",
-                       pin.length > index ? "bg-black" : "bg-white"
+                       pin.length > index ? "bg-black" : (cooldownTime ? "bg-gray-200" : "bg-white")
                      )}
                    >
                      {pin.length > index && (
@@ -124,6 +165,11 @@ export function PinLoginTemplate() {
                   className="font-inter font-bold text-red-500 bg-red-100 border-2 border-red-500 p-3 rounded-lg text-sm text-center"
                 >
                   {error}
+                  {cooldownTime && (
+                    <span className="block mt-1 font-mono text-lg">
+                      {timeLeft}s
+                    </span>
+                  )}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -132,16 +178,9 @@ export function PinLoginTemplate() {
                onKeyPress={handleKeyPress}
                onDelete={handleDelete}
                className="mt-4"
+               disabled={!!cooldownTime}
             />
-            
-            <Button 
-               type="submit" 
-               className="w-full mt-4" 
-               size="lg"
-            >
-              MASUK KE SISTEM
-            </Button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

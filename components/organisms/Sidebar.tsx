@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onNavigate }: SidebarProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
@@ -30,7 +31,7 @@ export function Sidebar({ className }: SidebarProps) {
       <nav className="flex-grow p-4 flex flex-col gap-2 overflow-y-auto">
         <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black mb-2 opacity-60">Operasional</span>
         
-        <Link href="/pos" className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group">
+        <Link href="/pos" onClick={onNavigate} className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group">
           <div className="flex items-center gap-3">
             <LayoutGrid className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Terminal Kasir</span>
@@ -38,7 +39,7 @@ export function Sidebar({ className }: SidebarProps) {
           <ChevronRight className="w-4 h-4 text-black opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={3}/>
         </Link>
         
-        <Link href="/shift" className="bg-[#FF90E8] border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
+        <Link href="/shift" onClick={onNavigate} className="bg-[#FF90E8] border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
           <div className="flex items-center gap-3">
             <CheckSquare className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Manajemen Shift</span>
@@ -47,28 +48,28 @@ export function Sidebar({ className }: SidebarProps) {
 
         <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black mt-6 mb-2 opacity-60">Backoffice</span>
         
-        <Link href="/backoffice/products" className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group">
+        <Link href="/backoffice/products" onClick={onNavigate} className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group">
           <div className="flex items-center gap-3">
             <Coffee className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Master Produk</span>
           </div>
         </Link>
 
-        <Link href="/backoffice/inventory" className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
+        <Link href="/backoffice/inventory" onClick={onNavigate} className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
           <div className="flex items-center gap-3">
             <PackageOpen className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Bahan Baku</span>
           </div>
         </Link>
 
-        <Link href="/backoffice/reports" className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
+        <Link href="/backoffice/reports" onClick={onNavigate} className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
           <div className="flex items-center gap-3">
             <PieChart className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Laporan</span>
           </div>
         </Link>
         
-        <Link href="/backoffice/settings" className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
+        <Link href="/backoffice/settings" onClick={onNavigate} className="bg-white border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group mt-2">
           <div className="flex items-center gap-3">
             <Settings className="w-5 h-5 text-black" strokeWidth={2.5}/>
             <span className="font-inter font-bold text-black uppercase tracking-wider">Pengaturan</span>
@@ -79,7 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* User Info & Logout */}
       <div className="p-4 border-t-8 border-black bg-white flex items-center justify-between">
-         <Link href="/profile" className="flex flex-col hover:bg-gray-100 p-2 rounded-lg transition-colors flex-grow mr-2">
+         <Link href="/profile" onClick={onNavigate} className="flex flex-col hover:bg-gray-100 p-2 rounded-lg transition-colors flex-grow mr-2">
            <span className="font-space-grotesk text-xs font-black uppercase text-gray-500">{user?.role || 'KASIR'} AKTIF</span>
            <span className="font-inter font-black text-black leading-tight line-clamp-1">{user?.fullName || 'Guest'}</span>
          </Link>

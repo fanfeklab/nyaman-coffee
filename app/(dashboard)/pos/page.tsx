@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useInventoryStore, Category, Product } from '@/store/useInventoryStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useShiftStore } from '@/store/useShiftStore';
@@ -22,9 +23,18 @@ const formatRupiah = (val: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
 
 export default function POSPage() {
+  const router = useRouter();
   const { categories, products } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
   const { items, addItem, removeItem, updateQty, clearCart, getTotal } = useCartStore();
+  
+  // Protect POS access
+  useEffect(() => {
+    if (!currentShift || currentShift.status !== 'OPEN') {
+      toast.error('AKSES DITOLAK', { description: 'Anda harus membuka shift terlebih dahulu.' });
+      router.push('/shift');
+    }
+  }, [currentShift, router]);
   
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,12 +50,13 @@ export default function POSPage() {
   const [recipeItem, setRecipeItem] = useState<Product | null>(null);
 
   const filteredProducts = products.filter(p => {
-    const matchesCat = activeCategory === 'all' || p.categoryId === activeCategory;
+    const matchesCat = activeCategory === 'all' || p.categoryId === activeCategory || searchQuery.length > 0;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCat && matchesSearch;
   });
 
   const total = getTotal();
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   const handleCheckoutClick = () => {
     if (!currentShift || currentShift.status !== 'OPEN') {
@@ -162,8 +173,26 @@ export default function POSPage() {
           </div>
        </div>
 
+       {/* Mobile Cart Floating Button */}
+       <div className="lg:hidden fixed bottom-0 left-0 w-full p-4 bg-white border-t-4 border-black z-20 flex justify-between items-center shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
+         <div className="flex flex-col">
+            <span className="font-space-grotesk font-black text-sm uppercase text-gray-500">{items.reduce((a,b) => a+b.qty, 0)} Items</span>
+            <span className="font-inter font-black text-xl text-black">{formatRupiah(total)}</span>
+         </div>
+         <Button onClick={() => setIsMobileCartOpen(true)} className="bg-[#FFD100] text-black border-2 border-black hover:bg-yellow-400 font-space-grotesk font-black uppercase hover:translate-y-1 transition-all h-12 px-6">Lihat Pesanan</Button>
+       </div>
+
        {/* Right: Cart Area */}
-       <div className="w-full lg:w-96 bg-white border-t-8 lg:border-t-0 lg:border-l-8 border-black flex flex-col h-[60vh] lg:h-full z-10 hidden lg:flex">
+       <div className={cn(
+           "w-full lg:w-96 bg-white border-black flex flex-col z-50 lg:z-10",
+           "lg:border-l-8 lg:relative lg:flex h-full",
+           isMobileCartOpen ? "fixed inset-0 border-0" : "hidden lg:flex"
+       )}>
+          {isMobileCartOpen && (
+             <div className="p-4 border-b-4 border-black bg-white flex justify-between items-center shrink-0 lg:hidden">
+                 <button onClick={() => setIsMobileCartOpen(false)} className="font-space-grotesk font-black uppercase text-xl">← KEMBALI</button>
+             </div>
+          )}
           {/* Cart Header */}
           <div className="p-4 border-b-4 border-black bg-[#FFD100] flex justify-between items-center shrink-0">
              <div className="flex items-center gap-2">
