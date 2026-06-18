@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useInventoryStore, Category, Product } from '@/store/useInventoryStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useShiftStore } from '@/store/useShiftStore';
-import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 import {
   Dialog,
@@ -25,10 +25,9 @@ const formatRupiah = (val: number) =>
 
 export default function POSPage() {
   const router = useRouter();
-  const { categories, products, processCheckoutInventory } = useInventoryStore();
+  const { categories, products } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
   const { items, addItem, removeItem, updateQty, clearCart, getTotal } = useCartStore();
-  const { addTransaction } = useTransactionStore();
   
   // Protect POS access
   useEffect(() => {
@@ -50,6 +49,7 @@ export default function POSPage() {
   // Receipt UI state
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [recipeItem, setRecipeItem] = useState<Product | null>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const filteredProducts = products.filter(p => {
     const matchesCat = activeCategory === 'all' || p.categoryId === activeCategory || searchQuery.length > 0;
@@ -85,28 +85,11 @@ export default function POSPage() {
       return;
     }
 
-    // Step 1: Inventory Deduction
-    const inventorySuccess = processCheckoutInventory(items.map(i => ({ product: i.product, qty: i.qty })));
-    if (!inventorySuccess) {
-      toast.error('Gagal memotong stok!', { description: 'Mode STRICT aktif. Bahan baku tidak mencukupi atau habis.' });
-      return;
-    }
-
-    // Step 2: Record Transaction
-    addTransaction({
-      shiftId: currentShift?.id || '',
-      cashierId: currentShift?.cashierId || 'kasir',
-      items: items,
-      subtotal: total,
-      paymentMethod: paymentMethod!
-    });
-
-    // Step 3: Shift Update
+    // Success
     addSalesToShift(total);
-    
-    // UI Update
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
+    // Note: Inventory decrement and Shift ledger update is mocked/omitted until Phase 6
   };
 
   const finishTransaction = () => {
@@ -219,9 +202,7 @@ export default function POSPage() {
                <h2 className="font-space-grotesk font-black uppercase tracking-wider text-xl text-black">Pesanan</h2>
              </div>
              <button 
-               onClick={() => {
-                 if (confirm('Kosongkan keranjang?')) clearCart();
-               }}
+               onClick={() => setClearConfirmOpen(true)}
                className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors"
                disabled={items.length === 0}
              >
@@ -288,17 +269,17 @@ export default function POSPage() {
                <div className="w-full md:w-1/3 flex flex-col gap-3">
                  <Button 
                    variant={paymentMethod === 'TUNAI' ? 'default' : 'outline'} 
-                   className={cn("h-16 justify-start px-4 text-lg", paymentMethod === 'TUNAI' && "bg-[#FF6321] text-black shadow-none translate-y-1")}
+                   className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'TUNAI' && "bg-[#FF6321] text-black shadow-none translate-y-1")}
                    onClick={() => setPaymentMethod('TUNAI')}
                  >
-                   💵 TUNAI
+                   TUNAI
                  </Button>
                  <Button 
                    variant={paymentMethod === 'QRIS' ? 'default' : 'outline'} 
-                   className={cn("h-16 justify-start px-4 text-lg", paymentMethod === 'QRIS' && "bg-[#FF6321] text-black shadow-none translate-y-1")}
+                   className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'QRIS' && "bg-[#00E5FF] text-black shadow-none translate-y-1")}
                    onClick={() => setPaymentMethod('QRIS')}
                  >
-                   📱 QRIS
+                   QRIS
                  </Button>
                </div>
 
@@ -312,10 +293,10 @@ export default function POSPage() {
                     <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
                        <Label className="text-lg">Diterima Tunai</Label>
                        <Input 
-                         type="number"
-                         value={cashGiven}
-                         onChange={(e) => setCashGiven(e.target.value)}
-                         className="text-2xl h-14"
+                         type="text"
+                         value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven)) : ''}
+                         onChange={(e) => setCashGiven(e.target.value.replace(/\D/g, ''))}
+                         className="text-2xl h-14 font-black"
                          placeholder="0"
                          autoFocus
                        />
@@ -395,7 +376,8 @@ export default function POSPage() {
                   </div>
                )}
 
-               <Button className="w-full text-lg" variant="secondary" onClick={() => toast('Mencetak struk... (Simulasi)')}>CETAK NOTA</Button>
+               <Button className="w-full text-lg bg-[#FFD100] text-black hover:bg-yellow-400" variant="secondary" onClick={() => {toast.success('Mencetak struk order untuk dapur...'); setTimeout(()=> {window.print()}, 300);}}>CETAK STRUK DAPUR</Button>
+               <Button className="w-full text-lg bg-[#00E5FF] text-black hover:bg-cyan-400" variant="secondary" onClick={() => {toast.success('Mencetak nota...'); setTimeout(()=> {window.print()}, 300);}}>CETAK NOTA</Button>
                <Button className="w-full text-lg" onClick={finishTransaction}>TUTUP & SELESAI</Button>
             </div>
          </DialogContent>
@@ -414,6 +396,13 @@ export default function POSPage() {
          </DialogContent>
        </Dialog>
 
+       <ConfirmDialog 
+         open={clearConfirmOpen} 
+         onOpenChange={setClearConfirmOpen}
+         title="Kosongkan Keranjang?"
+         description="Semua pesanan yang belum dibayar akan dihapus."
+         onConfirm={clearCart}
+       />
     </div>
   );
 }

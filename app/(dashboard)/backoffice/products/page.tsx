@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import React, { useState } from 'react';
 import { useInventoryStore, Product, Category } from '@/store/useInventoryStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,25 +9,17 @@ import { Plus, Edit2, Trash2, Search, Coffee, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function ProductsPage() {
-  const router = useRouter();
-  const { user } = useAuthStore();
   const { products, categories, deleteProduct, deleteCategory, addCategory } = useInventoryStore(); // Assuming deleteCategory isn't there, we'll mock it or add it later. Wait, we'll just mock here for UI.
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
   const [search, setSearch] = useState('');
 
-  // Role Guard
-  useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Master Produk.' });
-      router.push('/shift');
-    }
-  }, [user, router]);
-
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#00E5FF');
+  const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
   const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
@@ -150,7 +140,7 @@ export default function ProductsPage() {
                             <button className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                               <Edit2 className="w-4 h-4"/>
                             </button>
-                            <button onClick={() => { if(confirm('Hapus menu?')) deleteProduct(p.id) }} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
+                            <button onClick={() => setDeleteProductConfirm(p.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                               <Trash2 className="w-4 h-4"/>
                             </button>
                           </div>
@@ -213,6 +203,19 @@ export default function ProductsPage() {
            </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog 
+        open={!!deleteProductConfirm}
+        onOpenChange={(open) => !open && setDeleteProductConfirm(null)}
+        title="Hapus Menu?"
+        description="Menu yang dihapus tidak akan tampil lagi di kasir."
+        onConfirm={() => {
+          if (deleteProductConfirm) {
+            deleteProduct(deleteProductConfirm);
+            toast.success("Menu berhasil dihapus");
+          }
+        }}
+      />
     </div>
   );
 }

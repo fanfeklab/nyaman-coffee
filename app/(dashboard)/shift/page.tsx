@@ -49,9 +49,9 @@ export default function ShiftPage() {
               <div className="flex flex-col gap-2">
                  <Label>Uang Fisik Laci Saat Ini (Blind Close)</Label>
                  <Input 
-                   type="number" 
-                   value={actualCash} 
-                   onChange={(e) => setActualCash(e.target.value)} 
+                   type="text" 
+                   value={actualCash ? new Intl.NumberFormat('id-ID').format(parseInt(actualCash)) : ''} 
+                   onChange={(e) => setActualCash(e.target.value.replace(/\D/g, ''))} 
                    placeholder="Contoh: 150000"
                  />
                  <small className="font-inter font-bold text-gray-500">Hitung total uang tunai yang ada di dalam laci kasir sekarang.</small>
@@ -102,9 +102,9 @@ export default function ShiftPage() {
             <div className="flex flex-col gap-2">
                <Label>Modal Awal (Tunai)</Label>
                <Input 
-                 type="number" 
-                 value={startingCash} 
-                 onChange={(e) => setStartingCash(e.target.value)} 
+                 type="text" 
+                 value={startingCash ? new Intl.NumberFormat('id-ID').format(parseInt(startingCash)) : ''} 
+                 onChange={(e) => setStartingCash(e.target.value.replace(/\D/g, ''))} 
                  placeholder="Contoh: 50000"
                />
                <small className="font-inter font-bold text-gray-500">Nilai fisik uang modal sebelum transaksi dimulai.</small>

@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import React, { useState } from 'react';
 import { useInventoryStore, RawMaterial } from '@/store/useInventoryStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,24 +9,16 @@ import { Plus, Edit2, Trash2, Search, PackageOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function InventoryPage() {
-  const router = useRouter();
-  const { user } = useAuthStore();
   const { rawMaterials, addRawMaterial, deleteRawMaterial, updateRawMaterial } = useInventoryStore();
   const [search, setSearch] = useState('');
-
-  // Role Guard
-  useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Bahan Baku.' });
-      router.push('/shift');
-    }
-  }, [user, router]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<RawMaterial>>({ name: '', unit: '', currentStock: 0 });
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const filteredMaterials = rawMaterials.filter(rm => rm.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -119,7 +109,7 @@ export default function InventoryPage() {
                           <button onClick={() => handleOpenEdit(rm)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                             <Edit2 className="w-4 h-4"/>
                           </button>
-                          <button onClick={() => { if(confirm('Hapus bahan ini?')) deleteRawMaterial(rm.id) }} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
+                          <button onClick={() => setDeleteConfirmId(rm.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                             <Trash2 className="w-4 h-4"/>
                           </button>
                         </div>
@@ -166,6 +156,19 @@ export default function InventoryPage() {
            </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog 
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+        title="Hapus Bahan Baku?"
+        description="Data bahan baku tidak dapat dikembalikan."
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            deleteRawMaterial(deleteConfirmId);
+            toast.success("Bahan baku dihapus");
+          }
+        }}
+      />
     </div>
   );
 }
