@@ -75,7 +75,7 @@ export default function ProductsPage() {
        toast.success('Menu diubah!');
     } else {
        addProduct({
-          id: 'p' + Math.random().toString(36).substring(2,6),
+          id: 'p' + Date.now().toString(36).substring(3, 7) + Math.floor(Math.random() * 1000).toString(),
           name: productForm.name,
           categoryId: productForm.categoryId,
           basePrice: finalPrice,
@@ -108,7 +108,7 @@ export default function ProductsPage() {
       toast.success('Kategori berhasil diubah!');
     } else {
       addCategory({
-        id: 'cat_' + Math.random().toString(36).substr(2, 6),
+        id: 'cat_' + Date.now().toString(36),
         name: newCatName,
         color: newCatColor
       });
@@ -354,7 +354,7 @@ export default function ProductsPage() {
 
                   <div className="flex gap-2">
                     <select 
-                      className="flex-grow h-10 rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                      className="flex-grow h-12 w-full min-w-0 rounded-xl border-4 border-black bg-white px-4 py-2 text-base transition-all outline-none font-inter font-bold focus-visible:shadow-[4px_4px_0_0_#000]"
                       onChange={(e) => {
                          const val = e.target.value;
                          if (!val) return;
@@ -385,7 +385,7 @@ export default function ProductsPage() {
                    value={productForm.recipe}
                    onChange={e => setProductForm({...productForm, recipe: e.target.value})}
                    rows={5}
-                   className="flex w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                   className="flex w-full min-w-0 rounded-xl border-4 border-black bg-white px-4 py-2 text-base transition-all outline-none font-inter font-bold placeholder:font-normal placeholder:text-gray-400 focus-visible:shadow-[4px_4px_0_0_#000]"
                    placeholder="Tuliskan resep, instruksi, takaran gramasi untuk barista / dapur disini..."
                  />
                  <small className="font-inter font-bold text-gray-500">Akan dicetak di struk dapur jika diperlukan.</small>

@@ -57,7 +57,7 @@ export default function InventoryPage() {
        toast.success('Bahan baku diperbaharui');
     } else {
        addRawMaterial({
-         id: 'rm_' + Math.random().toString(36).substr(2, 6),
+         id: 'rm_' + Date.now().toString(36),
          name: form.name as string,
          unit: form.unit as string,
          currentStock: form.currentStock || 0

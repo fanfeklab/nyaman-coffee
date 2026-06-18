@@ -31,7 +31,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         };
       }
       return {
-        items: [...state.items, { id: Math.random().toString(36).substr(2, 9), product, qty: 1 }]
+        items: [...state.items, { id: 'cart_' + Date.now().toString(36), product, qty: 1 }]
       };
     });
   },

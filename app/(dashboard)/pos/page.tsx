@@ -63,7 +63,6 @@ export default function POSPage() {
   });
 
   const total = getTotal();
-  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   const handleCheckoutClick = () => {
     if (!currentShift || currentShift.status !== 'OPEN') {
@@ -98,8 +97,11 @@ export default function POSPage() {
     }
 
     // Add transaction to history
+    // eslint-disable-next-line react-hooks/purity
+    const txId = 'TXN' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2,6).toUpperCase();
+    
     addTransaction({
-      id: 'TXN' + Date.now().toString(36).toUpperCase() + Math.floor(Date.now() / 1000).toString().substring(5),
+      id: txId,
       shiftId: currentShift?.id || 'unknown',
       cashierId: user?.id || 'unknown',
       items: [...items],
@@ -124,17 +126,78 @@ export default function POSPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
-       {/* Left: Products Area */}
-       <div className="flex-1 flex flex-col p-4 md:p-6 bg-[#FFFDF7] h-full overflow-hidden">
+    <div className="flex flex-col h-full bg-[#FFFDF7] overflow-hidden">
+       {/* Top: Cart Area (Split View) */}
+       {items.length > 0 && (
+         <div className="h-[45vh] lg:h-[40vh] border-b-8 border-black flex flex-col bg-white shrink-0 shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] z-10 relative">
+            {/* Cart Header */}
+            <div className="p-3 md:p-4 border-b-4 border-black bg-[#FFD100] flex justify-between items-center shrink-0">
+               <div className="flex items-center gap-2">
+                 <ShoppingCart className="w-5 h-5 text-black" strokeWidth={2.5}/>
+                 <h2 className="font-space-grotesk font-black uppercase tracking-wider text-lg md:text-xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
+               </div>
+               <button 
+                 onClick={() => setClearConfirmOpen(true)}
+                 className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+               >
+                 <Trash2 className="w-4 h-4 text-black" />
+               </button>
+            </div>
+
+            {/* Cart Content (Split layout for Items and Footer) */}
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+               {/* Cart Items List */}
+               <div className="flex-1 overflow-y-auto p-4 flex flex-col md:flex-row md:flex-wrap gap-3 md:content-start border-b-4 md:border-b-0 md:border-r-4 border-black relative">
+                  {items.map(item => (
+                    <div key={item.id} className="w-full md:w-[calc(50%-0.375rem)] xl:w-[calc(33.333%-0.5rem)] border-4 border-black rounded-xl p-3 flex flex-col gap-2 relative group bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                       <div className="flex justify-between items-start">
+                          <span className="font-inter font-black text-sm uppercase pr-2 line-clamp-2">{item.product.name}</span>
+                       </div>
+                       
+                       <div className="flex items-center justify-between mt-auto pt-2">
+                         <span className="font-inter font-black text-[#FF6321] text-sm">{formatRupiah(item.product.basePrice * item.qty)}</span>
+                         <div className="flex items-center gap-3 bg-gray-100 border-2 border-black rounded-lg px-2">
+                            <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Minus className="w-4 h-4"/></button>
+                            <span className="font-black w-4 text-center">{item.qty}</span>
+                            <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Plus className="w-4 h-4"/></button>
+                         </div>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+
+               {/* Cart Footer / Checkout Sticky Panel */}
+               <div className="w-full md:w-72 xl:w-80 p-4 bg-gray-50 flex flex-col justify-end gap-3 shrink-0">
+                 <div className="flex justify-between items-center font-inter font-black text-xs text-gray-500 uppercase">
+                    <span>Subtotal</span>
+                    <span>{formatRupiah(total)}</span>
+                 </div>
+                 <div className="flex justify-between items-center font-space-grotesk font-black text-xl xl:text-2xl uppercase">
+                    <span>Total</span>
+                    <span>{formatRupiah(total)}</span>
+                 </div>
+                 <Button 
+                   onClick={handleCheckoutClick}
+                   size="lg" 
+                   className="w-full text-lg h-14 mt-1 bg-[#00E5FF] hover:bg-cyan-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:translate-y-2 active:shadow-none transition-all"
+                 >
+                    BAYAR SEKARANG
+                 </Button>
+               </div>
+            </div>
+         </div>
+       )}
+
+       {/* Bottom: Products Area */}
+       <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden">
           
           {/* Header & Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6 shrink-0">
+          <div className="flex flex-col md:flex-row gap-4 mb-4 md:mb-6 shrink-0">
              <div className="relative flex-grow">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                <Input 
                  placeholder="Cari Menu..." 
-                 className="pl-10 text-lg bg-white"
+                 className="pl-10 h-12 border-4 border-black text-lg bg-white rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
                />
@@ -142,7 +205,7 @@ export default function POSPage() {
           </div>
 
           {/* Categories */}
-          <div className="flex gap-3 mb-6 overflow-x-auto pb-2 shrink-0 hide-scrollbar">
+          <div className="flex gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 shrink-0 hide-scrollbar pt-1 pl-1">
              <button 
                onClick={() => setActiveCategory('all')}
                className={cn(
@@ -168,8 +231,8 @@ export default function POSPage() {
           </div>
 
           {/* Grid Products */}
-          <div className="flex-1 overflow-y-auto pr-2 pb-24 lg:pb-4">
-             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          <div className="flex-1 overflow-y-auto pr-2 pb-6">
+             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 pt-1 pl-1">
                 {filteredProducts.map(p => {
                   const cat = categories.find(c => c.id === p.categoryId);
                   return (
@@ -185,7 +248,7 @@ export default function POSPage() {
                              <Coffee className="w-12 h-12 text-gray-300" />
                           )}
                        </div>
-                       <span className="font-space-grotesk font-black uppercase text-black line-clamp-1 flex-grow mb-1">{p.name}</span>
+                       <span className="font-space-grotesk font-black uppercase text-black line-clamp-2 flex-grow mb-1">{p.name}</span>
                        <span className="font-inter font-black text-[#FF6321]">{formatRupiah(p.basePrice)}</span>
                        {cat && (
                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 border-2 border-black rounded-md w-max mt-2" style={{ backgroundColor: cat.color }}>
@@ -199,173 +262,107 @@ export default function POSPage() {
           </div>
        </div>
 
-       {/* Mobile Cart Floating Button */}
-       <div className="lg:hidden fixed bottom-0 left-0 w-full p-4 bg-white border-t-4 border-black z-20 flex justify-between items-center shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
-         <div className="flex flex-col">
-            <span className="font-space-grotesk font-black text-sm uppercase text-gray-500">{items.reduce((a,b) => a+b.qty, 0)} Items</span>
-            <span className="font-inter font-black text-xl text-black">{formatRupiah(total)}</span>
-         </div>
-         <Button onClick={() => setIsMobileCartOpen(true)} className="bg-[#FFD100] text-black border-2 border-black hover:bg-yellow-400 font-space-grotesk font-black uppercase hover:translate-y-1 transition-all h-12 px-6">Lihat Pesanan</Button>
-       </div>
-
-       {/* Right: Cart Area */}
-       <div className={cn(
-           "w-full lg:w-96 bg-white border-black flex flex-col z-50 lg:z-10",
-           "lg:border-l-8 lg:relative lg:flex h-full",
-           isMobileCartOpen ? "fixed inset-0 border-0" : "hidden lg:flex"
-       )}>
-          {isMobileCartOpen && (
-             <div className="p-4 border-b-4 border-black bg-white flex justify-between items-center shrink-0 lg:hidden">
-                 <button onClick={() => setIsMobileCartOpen(false)} className="font-space-grotesk font-black uppercase text-xl">← KEMBALI</button>
-             </div>
-          )}
-          {/* Cart Header */}
-          <div className="p-4 border-b-4 border-black bg-[#FFD100] flex justify-between items-center shrink-0">
-             <div className="flex items-center gap-2">
-               <ShoppingCart className="w-5 h-5 text-black" strokeWidth={2.5}/>
-               <h2 className="font-space-grotesk font-black uppercase tracking-wider text-xl text-black">Pesanan</h2>
-             </div>
-             <button 
-               onClick={() => setClearConfirmOpen(true)}
-               className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors"
-               disabled={items.length === 0}
-             >
-               <Trash2 className="w-4 h-4 text-black" />
-             </button>
-          </div>
-
-          {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative">
-             {items.length === 0 ? (
-               <div className="absolute inset-0 flex flex-col items-center justify-center text-center opacity-50 p-4">
-                 <ShoppingCart className="w-12 h-12 mb-2" strokeWidth={1} />
-                 <p className="font-space-grotesk font-black uppercase tracking-widest">Belum ada pesanan</p>
-               </div>
-             ) : (
-               items.map(item => (
-                 <div key={item.id} className="border-4 border-black rounded-xl p-3 flex flex-col gap-2 relative group bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex justify-between items-start">
-                       <span className="font-inter font-black text-sm uppercase pr-6">{item.product.name}</span>
-                       <span className="font-inter font-black text-[#FF6321] text-sm">{formatRupiah(item.product.basePrice * item.qty)}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="flex items-center gap-3 bg-gray-100 border-2 border-black rounded-lg px-2">
-                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Minus className="w-4 h-4"/></button>
-                         <span className="font-black w-4 text-center">{item.qty}</span>
-                         <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-1 hover:bg-white rounded transition-colors active:scale-95"><Plus className="w-4 h-4"/></button>
-                      </div>
-                    </div>
-                 </div>
-               ))
-             )}
-          </div>
-
-          {/* Cart Footer / Checkout */}
-          <div className="border-t-8 border-black p-4 bg-white shrink-0 flex flex-col gap-3">
-             <div className="flex justify-between items-center font-inter font-black text-sm text-gray-500 uppercase">
-                <span>Subtotal</span>
-                <span>{formatRupiah(total)}</span>
-             </div>
-             <div className="flex justify-between items-center font-space-grotesk font-black text-2xl uppercase">
-                <span>Total</span>
-                <span>{formatRupiah(total)}</span>
-             </div>
-             <Button 
-               disabled={items.length === 0}
-               onClick={handleCheckoutClick}
-               size="lg" 
-               className="w-full text-lg h-14 mt-2"
-             >
-                BAYAR
-             </Button>
-          </div>
-       </div>
-
        {/* ================= PAYMENT MODAL ================= */}
        <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-         <DialogContent className="border-8 border-black rounded-[2rem] max-w-2xl bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+         <DialogContent className="border-8 border-black rounded-[2rem] max-w-4xl bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div className="p-6 bg-[#00A19D] border-b-8 border-black">
                <h2 className="font-space-grotesk font-black text-3xl uppercase text-black text-center">Pilih Metode Bayar</h2>
             </div>
             
-            <div className="p-6 flex flex-col md:flex-row gap-6">
-               <div className="w-full md:w-1/3 flex flex-col gap-3">
-                 <Button 
-                   variant={paymentMethod === 'TUNAI' ? 'default' : 'outline'} 
-                   className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'TUNAI' && "bg-[#FF6321] text-black shadow-none translate-y-1")}
-                   onClick={() => setPaymentMethod('TUNAI')}
-                 >
-                   TUNAI
-                 </Button>
-                 <Button 
-                   variant={paymentMethod === 'QRIS' ? 'default' : 'outline'} 
-                   className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'QRIS' && "bg-[#00E5FF] text-black shadow-none translate-y-1")}
-                   onClick={() => setPaymentMethod('QRIS')}
-                 >
-                   QRIS
-                 </Button>
+            <div className="flex flex-col md:flex-row min-h-[400px]">
+               {/* Left: Summary Pesanan */}
+               <div className="w-full md:w-1/2 p-6 border-b-8 md:border-b-0 md:border-r-8 border-black bg-white flex flex-col hide-scrollbar overflow-y-auto max-h-[50vh]">
+                  <h3 className="font-space-grotesk font-black text-xl uppercase mb-4 border-b-4 border-black pb-2">Ringkasan Pesanan</h3>
+                  <div className="flex-1 flex flex-col gap-3">
+                     {items.map(item => (
+                       <div key={item.id} className="flex justify-between items-start font-inter font-bold text-sm border-b-2 border-dashed border-gray-200 pb-2">
+                         <div>
+                            <span className="block uppercase text-black">{item.product.name}</span>
+                            <span className="text-gray-500">{item.qty}x @ {formatRupiah(item.product.basePrice)}</span>
+                         </div>
+                         <span className="text-black text-right">{formatRupiah(item.product.basePrice * item.qty)}</span>
+                       </div>
+                     ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t-4 border-black border-solid flex justify-between items-center bg-[#FFD100] p-4 border-4 rounded-xl">
+                      <span className="font-space-grotesk font-black uppercase text-xl text-black">Tagihan</span>
+                      <span className="font-space-grotesk font-black uppercase text-2xl text-black">{formatRupiah(total)}</span>
+                  </div>
                </div>
 
-               <div className="w-full md:w-2/3 border-4 border-black rounded-2xl bg-white p-6 relative">
-                  <div className="flex justify-between mb-6 pb-4 border-b-4 border-black border-dashed">
-                     <span className="font-space-grotesk font-black uppercase text-xl">Tagihan</span>
-                     <span className="font-space-grotesk font-black uppercase text-2xl">{formatRupiah(total)}</span>
-                  </div>
+               {/* Right: Payment Methods */}
+               <div className="w-full md:w-1/2 p-6 flex flex-col gap-6 bg-gray-50">
+                   <div className="grid grid-cols-2 gap-4 shrink-0">
+                     <Button 
+                       variant={paymentMethod === 'TUNAI' ? 'default' : 'outline'} 
+                       className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'TUNAI' && "bg-[#FF6321] text-black shadow-none translate-y-1")}
+                       onClick={() => setPaymentMethod('TUNAI')}
+                     >
+                       TUNAI
+                     </Button>
+                     <Button 
+                       variant={paymentMethod === 'QRIS' ? 'default' : 'outline'} 
+                       className={cn("h-16 justify-center px-4 text-lg font-space-grotesk font-black uppercase tracking-widest", paymentMethod === 'QRIS' && "bg-[#00E5FF] text-black shadow-none translate-y-1")}
+                       onClick={() => setPaymentMethod('QRIS')}
+                     >
+                       QRIS
+                     </Button>
+                   </div>
+                   
+                   <div className="flex-1 flex flex-col">
+                      {paymentMethod === 'TUNAI' && (
+                        <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 h-full justify-center">
+                           <Label className="text-lg">Diterima Tunai</Label>
+                           <Input 
+                             type="text"
+                             value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven)) : ''}
+                             onChange={(e) => setCashGiven(e.target.value.replace(/\D/g, ''))}
+                             className="text-2xl h-14 font-black"
+                             placeholder="0"
+                             autoFocus
+                           />
+                           
+                           <div className="grid grid-cols-3 gap-2 mt-2">
+                              <Button variant="outline" onClick={() => setCashGiven(total.toString())}>Uang Pas</Button>
+                              <Button variant="outline" onClick={() => setCashGiven('50000')}>50rb</Button>
+                              <Button variant="outline" onClick={() => setCashGiven('100000')}>100rb</Button>
+                           </div>
 
-                  {paymentMethod === 'TUNAI' && (
-                    <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-                       <Label className="text-lg">Diterima Tunai</Label>
-                       <Input 
-                         type="text"
-                         value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven)) : ''}
-                         onChange={(e) => setCashGiven(e.target.value.replace(/\D/g, ''))}
-                         className="text-2xl h-14 font-black"
-                         placeholder="0"
-                         autoFocus
-                       />
-                       
-                       {/* Shortcut Buttons */}
-                       <div className="grid grid-cols-3 gap-2">
-                          <Button variant="outline" onClick={() => setCashGiven(total.toString())}>Uang Pas</Button>
-                          <Button variant="outline" onClick={() => setCashGiven('50000')}>50rb</Button>
-                          <Button variant="outline" onClick={() => setCashGiven('100000')}>100rb</Button>
-                       </div>
+                           {!!cashGiven && parseInt(cashGiven) >= total && (
+                              <div className="bg-[#00A19D] border-4 border-black rounded-xl p-4 mt-2 flex justify-between items-center text-black">
+                                <span className="font-space-grotesk font-black uppercase text-sm">Kembalian</span>
+                                <span className="font-space-grotesk font-black uppercase text-3xl">{formatRupiah(parseInt(cashGiven) - total)}</span>
+                              </div>
+                           )}
+                        </div>
+                      )}
 
-                       {!!cashGiven && parseInt(cashGiven) >= total && (
-                          <div className="bg-[#00A19D] border-4 border-black rounded-xl p-4 mt-2 flex justify-between items-center text-black">
-                            <span className="font-space-grotesk font-black uppercase text-sm">Kembalian</span>
-                            <span className="font-space-grotesk font-black uppercase text-3xl">{formatRupiah(parseInt(cashGiven) - total)}</span>
-                          </div>
-                       )}
-                    </div>
-                  )}
+                      {paymentMethod === 'QRIS' && (
+                        <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 h-full justify-center">
+                           <Label className="text-lg">No Referensi Transaksi</Label>
+                           <Input 
+                             value={qrisRef}
+                             onChange={(e) => setQrisRef(e.target.value)}
+                             className="text-xl h-14 uppercase"
+                             placeholder="INPUT REF ID"
+                             autoFocus
+                           />
+                           <p className="font-inter font-bold text-sm text-gray-500">Pastikan pembeli melihatkan layar sukses pada HP-nya dan masukkan 4-6 digit terakhir referensi.</p>
+                        </div>
+                      )}
 
-                  {paymentMethod === 'QRIS' && (
-                    <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-                       <Label className="text-lg">No Referensi Transaksi</Label>
-                       <Input 
-                         value={qrisRef}
-                         onChange={(e) => setQrisRef(e.target.value)}
-                         className="text-xl h-14 uppercase"
-                         placeholder="INPUT REF ID"
-                         autoFocus
-                       />
-                       <p className="font-inter font-bold text-sm text-gray-500">Pastikan pembeli melihatkan layar sukses pada HP-nya dan masukkan 4-6 digit terakhir referensi.</p>
-                    </div>
-                  )}
-
-                  {!paymentMethod && (
-                    <div className="h-full flex items-center justify-center opacity-30 font-space-grotesk font-black uppercase tracking-widest text-center">
-                       Pilih metode di samping.
-                    </div>
-                  )}
+                      {!paymentMethod && (
+                        <div className="flex-1 flex items-center justify-center opacity-30 font-space-grotesk font-black uppercase tracking-widest text-center mt-4">
+                           Pilih metode pembayaran<br />di atas.
+                        </div>
+                      )}
+                   </div>
                </div>
             </div>
 
-            <div className="p-6 border-t-8 border-black bg-gray-100 flex justify-end gap-4">
+            <div className="p-6 border-t-8 border-black bg-white flex justify-end gap-4">
                <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>BATAL</Button>
-               <Button onClick={handleProcessPayment} disabled={!paymentMethod} className="px-8 text-lg">PROSES TRANSAKSI</Button>
+               <Button onClick={handleProcessPayment} disabled={!paymentMethod} className="px-8 text-lg bg-[#00E5FF] hover:bg-cyan-400">PROSES TRANSAKSI</Button>
             </div>
          </DialogContent>
        </Dialog>

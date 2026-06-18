@@ -25,7 +25,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
 
   openShift: (cashierId: string, startingCash: number) => {
     const newShift: Shift = {
-      id: Math.random().toString(36).substring(7),
+      id: 'shift_' + Date.now().toString(36),
       cashierId,
       startTime: new Date(),
       endTime: null,
