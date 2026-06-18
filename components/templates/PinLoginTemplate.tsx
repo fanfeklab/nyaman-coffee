@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { PinKeypad } from '../organisms/PinKeypad';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
 
@@ -15,15 +15,26 @@ export function PinLoginTemplate() {
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [cooldownTime, setCooldownTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   const { login } = useAuthStore();
+
+  useEffect(() => {
+    const cachedUser = localStorage.getItem('pos_cached_username');
+    if (cachedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUsername(cachedUser);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRememberMe(true);
+    }
+  }, []);
   
   // Timer for cooldown
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (cooldownTime) {
       interval = setInterval(() => {
@@ -52,6 +63,11 @@ export function PinLoginTemplate() {
 
     const success = login(username, currentPin);
     if (success) {
+       if (rememberMe) {
+         localStorage.setItem('pos_cached_username', username);
+       } else {
+         localStorage.removeItem('pos_cached_username');
+       }
        router.push('/shift');
     } else {
        const newAttempts = failedAttempts + 1;
@@ -85,62 +101,77 @@ export function PinLoginTemplate() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF7] flex bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] p-4 lg:p-0">
-      <div className="m-auto w-full max-w-5xl flex flex-col md:flex-row bg-white border-8 border-black rounded-[2rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+    <div className="min-h-screen bg-[#FFFDF7] flex bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] p-4 items-center justify-center">
+      <div className="w-full max-w-4xl flex flex-col md:flex-row bg-white border-8 border-black rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         
         {/* Left Branding Panel */}
-        <div className="w-full md:w-1/2 bg-[#FF6321] p-12 flex flex-col justify-between border-b-8 md:border-b-0 md:border-r-8 border-black">
+        <div className="w-full md:w-5/12 bg-[#FF6321] p-8 flex flex-col justify-center border-b-8 md:border-b-0 md:border-r-8 border-black">
            <div>
               <motion.div 
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white border-4 border-black w-max px-4 py-2 rounded-xl mb-8 -rotate-2"
+                className="bg-white border-4 border-black w-max px-3 py-1 rounded-lg mb-6 -rotate-2"
               >
-                 <span className="font-space-grotesk font-black text-black tracking-widest uppercase">SandBox Mode</span>
+                 <span className="font-space-grotesk font-black text-black tracking-wider uppercase text-sm">Nyaman POS</span>
               </motion.div>
-              <h1 className="font-space-grotesk text-5xl lg:text-7xl font-black text-black leading-[0.9] uppercase mb-6">
-                Mulai<br />Shift<br />Anda.
+              <h1 className="font-space-grotesk text-4xl lg:text-5xl font-black text-black leading-[0.9] uppercase mb-4">
+                Mulai<br />Sesi<br />Kasir.
               </h1>
-              <p className="font-inter font-bold text-black/80 max-w-sm text-lg">
-                Masuk untuk memulai melayani pelanggan dan mencatat penjualan hari ini.
+              <p className="font-inter font-bold text-black/80 text-sm">
+                Akses terminal untuk memproses transaksi.
               </p>
            </div>
         </div>
 
         {/* Right Login Panel */}
-        <div className="w-full md:w-1/2 p-8 lg:p-12 flex items-center justify-center bg-white relative">
-          <div className="w-full max-w-sm flex flex-col gap-6">
+        <div className="w-full md:w-7/12 p-6 lg:p-10 flex items-center justify-center bg-white">
+          <div className="w-full max-w-[320px] flex flex-col gap-5">
             
             <div className="flex flex-col gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="font-black uppercase text-sm">Username POS</Label>
               <Input 
                  id="username"
                  value={username}
                  onChange={(e) => setUsername(e.target.value)}
                  disabled={!!cooldownTime}
-                 placeholder="admin"
-                 className="text-lg bg-[#E6F8F9]"
+                 placeholder="Masukkan username"
+                 className="text-base bg-[#E6F8F9] h-12 border-4 border-black"
               />
+            </div>
+
+            <div className="flex items-center space-x-2 bg-gray-50 border-2 border-black p-2 rounded-lg w-max">
+              <Checkbox 
+                id="remember" 
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                className="border-2 border-black data-[state=checked]:bg-[#FFD100] data-[state=checked]:text-black"
+              />
+              <label
+                htmlFor="remember"
+                className="text-xs font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer uppercase"
+              >
+                Ingat Username
+              </label>
             </div>
 
             <div className="flex flex-col gap-2 relative">
                <div className="flex justify-between items-center">
-                 <Label>PIN Akses</Label>
-                 <span className="text-xs font-bold text-gray-400">4 DIGIT</span>
+                 <Label className="font-black uppercase text-sm">PIN Akses</Label>
+                 <span className="text-[10px] font-black tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md border-2 border-transparent">4 DIGIT</span>
                </div>
                
                {/* 4 Digit Visual indicators */}
-               <div className="flex gap-4 justify-between">
+               <div className="flex gap-3 justify-between">
                  {[0, 1, 2, 3].map((index) => (
                    <div 
                      key={index} 
                      className={cn(
-                       "w-full aspect-square border-4 border-black rounded-xl flex items-center justify-center transition-all",
+                       "w-full h-12 border-4 border-black rounded-xl flex items-center justify-center transition-all",
                        pin.length > index ? "bg-black" : (cooldownTime ? "bg-gray-200" : "bg-white")
                      )}
                    >
                      {pin.length > index && (
-                        <div className="w-4 h-4 bg-[#FFD100] rounded-full" />
+                        <div className="w-3 h-3 bg-[#FFD100] rounded-full" />
                      )}
                    </div>
                  ))}
@@ -160,11 +191,11 @@ export function PinLoginTemplate() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="font-inter font-bold text-red-500 bg-red-100 border-2 border-red-500 p-3 rounded-lg text-sm text-center"
+                  className="font-inter font-black text-red-500 bg-red-100 border-4 border-red-500 p-2 rounded-lg text-xs tracking-wider uppercase text-center"
                 >
                   {error}
                   {cooldownTime && (
-                    <span className="block mt-1 font-mono text-lg">
+                    <span className="block mt-1 font-mono text-base">
                       {timeLeft}s
                     </span>
                   )}
@@ -175,7 +206,7 @@ export function PinLoginTemplate() {
             <PinKeypad 
                onKeyPress={handleKeyPress}
                onDelete={handleDelete}
-               className="mt-4"
+               className="mt-2"
                disabled={!!cooldownTime}
             />
           </div>
