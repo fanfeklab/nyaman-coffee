@@ -97,7 +97,7 @@ export default function ShiftPage() {
     <div className="p-6 md:p-12 max-w-xl mx-auto flex flex-col gap-8 mt-12">
        <div className="bg-white border-4 border-black p-8 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <h1 className="font-space-grotesk font-black text-3xl uppercase tracking-widest text-black mb-2">Buka Laci / Shift Baru</h1>
-          <p className="font-inter font-bold text-gray-600 mb-6 font-sm">Masukkan modal uang kembalian untuk memulai shift.</p>
+          <p className="font-inter font-bold text-gray-600 mb-6 text-sm">Masukkan modal uang kembalian untuk memulai shift.</p>
           <form onSubmit={handleOpenShift} className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
                <Label>Modal Awal (Tunai)</Label>

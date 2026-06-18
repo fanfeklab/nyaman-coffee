@@ -1,9 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Coffee, LayoutGrid, PackageOpen, PieChart, CheckSquare, Settings, LogOut, ChevronRight } from 'lucide-react';
-
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 

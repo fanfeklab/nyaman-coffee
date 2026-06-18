@@ -14,20 +14,20 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 
 - [x] **Task 1.1:** Setup framework (Next.js 15, Tailwind v4, Lucide, Motion). *(Ref: AGENTS.md)*
 - [x] **Task 1.2:** Setup design system (Neobrutalism, Atomic styling, Font). *(Ref: AGENTS.md)*
-- [ ] **Task 1.3:** Instalasi library UI core dari Shadcn UI (`button`, `input`, `form`, `dialog`, `toast`/`sonner`, `table`). *(Ref: AGENTS.md)*
-- [ ] **Task 1.4:** Instalasi `zustand` untuk *global mock state* manajemen.
-- [ ] **Task 1.5:** Pembuatan layout root dan navigasi *dumb* (Sidebar/Navbar) untuk Kasir dan Backoffice. *(Ref: 01-ARCHITECTURE_&_PATTERNS.md)*
+- [x] **Task 1.3:** Instalasi library UI core dari Shadcn UI (`button`, `input`, `form`, `dialog`, `toast`/`sonner`, `table`). *(Ref: AGENTS.md)*
+- [x] **Task 1.4:** Instalasi `zustand` untuk *global mock state* manajemen.
+- [x] **Task 1.5:** Pembuatan layout root dan navigasi *dumb* (Sidebar/Navbar) untuk Kasir dan Backoffice. *(Ref: 01-ARCHITECTURE_&_PATTERNS.md)*
 
 ---
 
 ## FASE 2: Auth & Shift Management UI (Mock Data)
 *Fokus: Simulasi login PIN dan alur buka/tutup kasir.*
 
-- [ ] **Task 2.1:** Pembuatan halaman Login PIN. (Default Superuser: `admin` / `1235`). *(Ref: 04-RBAC_&_SECURITY.md)*
-- [ ] **Task 2.2:** Pembuatan UI *Open Shift* (Input Modal Awal Laci). *(Ref: 03-CORE_FLOW.md Poin 1)*
-- [ ] **Task 2.3:** Pembuatan UI *Close Shift* (Laporan akhir laci, Blind Close).
-- [ ] **Task 2.4:** Pembuatan halaman Profil untuk fungsionalitas "Ubah PIN" dan "Ubah Nama Lengkap".
-- [ ] **Task 2.5:** Integrasi state `useAuthStore` dan `useShiftStore` (Mock). *(Ref: 06-UI_UX_STATE.md)*
+- [x] **Task 2.1:** Pembuatan halaman Login PIN. (Default Superuser: `admin` / `1235`). *(Ref: 04-RBAC_&_SECURITY.md)*
+- [x] **Task 2.2:** Pembuatan UI *Open Shift* (Input Modal Awal Laci). *(Ref: 03-CORE_FLOW.md Poin 1)*
+- [x] **Task 2.3:** Pembuatan UI *Close Shift* (Laporan akhir laci, Blind Close).
+- [x] **Task 2.4:** Pembuatan halaman Profil untuk fungsionalitas "Ubah PIN" dan "Ubah Nama Lengkap".
+- [x] **Task 2.5:** Integrasi state `useAuthStore` dan `useShiftStore` (Mock). *(Ref: 06-UI_UX_STATE.md)*
 
 ---
 
@@ -47,11 +47,11 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 ## FASE 4: Backoffice & Inventory UI (Mock Data)
 *Fokus: Manajemen produk, kombinasi, dan stok.*
 
-- [ ] **Task 4.1:** Pembuatan halaman Master Kategori.
-- [ ] **Task 4.2:** Pembuatan halaman Master Bahan Baku (Inventory Item CRUD). *(Ref: 02-DATABASE_SCHEMA.md)*
-- [ ] **Task 4.3:** Pembuatan form "Tambah/Edit Produk SINGLE" (Input harga, bahan baku, instruksi masak). *(Ref: 05-INVENTORY_&_PDF_REPORTING.md Poin 1)*
-- [ ] **Task 4.4:** Pembuatan form "Tambah/Edit Produk COMBO" (Multi-select referensi harga single menu).
-- [ ] **Task 4.5:** Setting Dashboard Konfigurasi Global (Inventory Mode: LOOSE, STRICT, OFF).
+- [x] **Task 4.1:** Pembuatan halaman Master Kategori.
+- [x] **Task 4.2:** Pembuatan halaman Master Bahan Baku (Inventory Item CRUD). *(Ref: 02-DATABASE_SCHEMA.md)*
+- [x] **Task 4.3:** Pembuatan form "Tambah/Edit Produk SINGLE" (Input harga, bahan baku, instruksi masak). *(Ref: 05-INVENTORY_&_PDF_REPORTING.md Poin 1)*
+- [x] **Task 4.4:** Pembuatan form "Tambah/Edit Produk COMBO" (Multi-select referensi harga single menu).
+- [x] **Task 4.5:** Setting Dashboard Konfigurasi Global (Inventory Mode: LOOSE, STRICT, OFF).
 
 ---
 

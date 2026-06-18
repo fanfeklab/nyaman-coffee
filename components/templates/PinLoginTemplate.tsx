@@ -8,7 +8,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { useAuthStore } from '@/store/useAuthStore';
-import { cn } from '@/lib/utils'; // Will implement mock store next
+import { cn } from '@/lib/utils';
 
 export function PinLoginTemplate() {
   const router = useRouter();
