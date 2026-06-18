@@ -1,25 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import { useShiftStore } from '@/store/useShiftStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Ban, Search, FileText } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 
 const formatRupiah = (val: number) => 
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
 
 export default function ReportsPage() {
+  const router = useRouter();
   const { transactions, voidTransaction } = useTransactionStore();
   const { revertCheckoutInventory } = useInventoryStore();
   const { user } = useAuthStore();
-  
+  const { currentShift, subtractSalesFromShift } = useShiftStore();
+
+  useEffect(() => {
+    if (user && user.role !== 'SUPER_ADMIN' && user.role !== 'MANAGER') {
+       router.replace('/pos');
+       toast.error('Akses ditolak: Anda tidak memiliki izin ke halaman ini');
+    }
+  }, [user, router]);
+
   const [search, setSearch] = useState('');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [adminPin, setAdminPin] = useState('');
@@ -47,6 +59,12 @@ export default function ReportsPage() {
     
     // void
     voidTransaction(voidConfirmId);
+    
+    // subtract from current shift if applicable
+    if (currentShift?.id === tx.shiftId) {
+       subtractSalesFromShift(tx.total);
+    }
+
     toast.success('Transaksi berhasil di-void (dibatalkan). Stok dikembalikan.');
     setVoidConfirmId(null);
     setAdminPin('');
@@ -71,6 +89,29 @@ export default function ReportsPage() {
          <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <span className="font-space-grotesk font-black uppercase text-gray-500 text-sm">Void / Batal</span>
             <div className="text-3xl font-black text-red-500">{transactions.filter(t => t.status === 'VOID').length} <span className="text-sm">dibatalkan</span></div>
+         </div>
+      </div>
+
+      <div className="bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
+         <h2 className="font-space-grotesk font-black text-xl uppercase mb-4">Grafik Transaksi</h2>
+         <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+               <BarChart data={
+                 // Group by hour for simple chart
+                 Object.values(transactions.filter(t => t.status === 'COMPLETED').reduce((acc, tx) => {
+                   const d = new Date(tx.timestamp);
+                   const key = `${d.getHours()}:00`;
+                   if (!acc[key]) acc[key] = { label: key, Total: 0 };
+                   acc[key].Total += tx.total;
+                   return acc;
+                 }, {} as Record<string, any>))
+               }>
+                 <XAxis dataKey="label" stroke="#000" tick={{fontFamily: 'Inter', fontWeight: 700}}/>
+                 <YAxis stroke="#000" tick={{fontFamily: 'Inter', fontWeight: 700}} tickFormatter={(val) => `Rp ${val/1000}k`}/>
+                 <Tooltip contentStyle={{border: '4px solid black', borderRadius: '12px', fontWeight: 'bold'}} />
+                 <Bar dataKey="Total" fill="#FFD100" stroke="#000" strokeWidth={3} radius={[4, 4, 0, 0]} />
+               </BarChart>
+            </ResponsiveContainer>
          </div>
       </div>
 

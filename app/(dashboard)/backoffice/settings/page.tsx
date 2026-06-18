@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
@@ -12,11 +12,10 @@ export default function SettingsPage() {
   const { user } = useAuthStore();
   const { inventoryMode, setInventoryMode } = useInventoryStore();
 
-  // Role Guard
   useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Pengaturan.' });
-      router.push('/shift');
+    if (user && user.role !== 'SUPER_ADMIN' && user.role !== 'MANAGER') {
+       router.replace('/pos');
+       toast.error('Akses ditolak: Anda tidak memiliki izin ke halaman ini');
     }
   }, [user, router]);
 

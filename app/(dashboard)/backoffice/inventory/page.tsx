@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInventoryStore, RawMaterial } from '@/store/useInventoryStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +14,16 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function InventoryPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  
+  useEffect(() => {
+    if (user && user.role !== 'SUPER_ADMIN' && user.role !== 'MANAGER') {
+       router.replace('/pos');
+       toast.error('Akses ditolak: Anda tidak memiliki izin ke halaman ini');
+    }
+  }, [user, router]);
+
   const { rawMaterials, addRawMaterial, deleteRawMaterial, updateRawMaterial } = useInventoryStore();
   const [search, setSearch] = useState('');
 

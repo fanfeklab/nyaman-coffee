@@ -58,10 +58,10 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 ## FASE 5: Laporan & PDF Renderer UI
 *Fokus: Analitik dan ekspor dokumen.*
 
-- [x] **Task 5.1:** Pembuatan halaman "My Sales Performance" (Laporan mandiri Kasir). *(Ref: 03-CORE_FLOW.md Poin 3)*
-- [x] **Task 5.2:** Pembuatan Dashboard Analytics Super Admin (Grafik omzet, Grid transaksi filterable).
-- [x] **Task 5.3:** Instalasi PDF renderer (`@react-pdf/renderer` atau setara). *(Ref: 05-INVENTORY_&_PDF_REPORTING.md Poin 2)*
-- [x] **Task 5.4:** Desain PDF Template (Layout Kertas A4 Laporan Penjualan).
+- [x] **Task 5.1:** Pembuatan halaman "My Sales Performance" (Laporan mandiri Kasir). *(Dilayani oleh /shift dan /pos struk)*
+- [x] **Task 5.2:** Pembuatan Dashboard Analytics Super Admin (Grafik omzet, Grid transaksi filterable). *(Dilayani oleh /backoffice/reports)*
+- [x] **Task 5.3:** Instalasi PDF renderer (`@react-pdf/renderer` atau setara). *(Diganti dengan native CSS Print API untuk resi dan report yang terpadu dengan style)*
+- [x] **Task 5.4:** Desain PDF Template (Layout Kertas A4 Laporan Penjualan). *(Diimplementasi via CSS media queries `@media print`)*
 - [x] **Task 5.5:** Pembuatan Modal "Void Transaksi" dengan validasi PIN admin. *(Ref: 03-CORE_FLOW.md Poin 4)*
 
 ---

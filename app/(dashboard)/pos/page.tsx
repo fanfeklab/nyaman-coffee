@@ -99,7 +99,7 @@ export default function POSPage() {
 
     // Add transaction to history
     addTransaction({
-      id: 'TXN' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      id: 'TXN' + Date.now().toString(36).toUpperCase() + Math.floor(Date.now() / 1000).toString().substring(5),
       shiftId: currentShift?.id || 'unknown',
       cashierId: user?.id || 'unknown',
       items: [...items],
