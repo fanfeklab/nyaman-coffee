@@ -88,10 +88,10 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 ## FASE 8: Industrial Grade - Transaksi Lanjutan & Hardware
 *Fokus: Dinamika checkout dan konektivitas perangkat.*
 
-- [ ] **Task 8.1:** Modifikasi sistem Cart untuk mendukung Split Bill (Pisah Nota).
-- [ ] **Task 8.2:** Fitur Simpan Pesanan (Open Tab / Save Bill).
-- [ ] **Task 8.3:** Modul Diskon & Promo (Persentase vs Nominal) serta Pajak / Service Charge.
-- [ ] **Task 8.4:** Dukungan Custom Item & Shortcut Input Manual.
+- [x] **Task 8.1:** Modifikasi sistem Cart untuk mendukung Split Bill (Pisah Nota). (Menggunakan Multi-payment / split bayar visual sederhana untuk kasir atau via diskon tagihan).
+- [x] **Task 8.2:** Fitur Simpan Pesanan (Open Tab / Save Bill).
+- [x] **Task 8.3:** Modul Diskon & Promo (Persentase vs Nominal) serta Pajak / Service Charge.
+- [x] **Task 8.4:** Dukungan Custom Item & Shortcut Input Manual.
 
 ---
 

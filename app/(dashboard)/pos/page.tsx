@@ -10,7 +10,7 @@ import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare, Save, FolderOpen, Tag, Edit, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -32,7 +32,27 @@ export default function POSPage() {
   const { user } = useAuthStore();
   const { addTransaction } = useTransactionStore();
   const { processCheckoutInventory } = useInventoryStore();
-  const { items, addItem, removeItem, updateQty, clearCart, getTotal } = useCartStore();
+  const { 
+    items, addItem, removeItem, updateQty, clearCart, 
+    getTotal, getSubtotal, getDiscountAmount, getTaxAmount, getServiceChargeAmount,
+    discountType, discountValue, taxRate, serviceChargeRate,
+    setDiscount, saveBill, loadBill, savedBills, deleteSavedBill
+  } = useCartStore();
+  
+  // Custom item form state
+  const [customItemOpen, setCustomItemOpen] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
+  
+  // Save/Load bill form state
+  const [saveBillOpen, setSaveBillOpen] = useState(false);
+  const [loadBillOpen, setLoadBillOpen] = useState(false);
+  const [billName, setBillName] = useState('');
+
+  // Discount form state
+  const [isDiscountOpen, setIsDiscountOpen] = useState(false);
+  const [discountTypeForm, setDiscountTypeForm] = useState<'PERCENTAGE'|'NOMINAL'|null>(null);
+  const [discountValueForm, setDiscountValueForm] = useState('');
   
   // Protect POS access
   useEffect(() => {
@@ -132,6 +152,42 @@ export default function POSPage() {
     toast.success('Transaksi Selesai & Keranjang Direset');
   };
 
+  const handleAddCustomItem = () => {
+    if (!customName || !customPrice) {
+      toast.error('Gagal', { description: 'Nama dan Harga harus diisi' });
+      return;
+    }
+    const product: Product = {
+      id: 'custom_' + Date.now(),
+      name: customName,
+      basePrice: parseInt(customPrice.replace(/\D/g, '')) || 0,
+      categoryId: 'custom',
+      type: 'SINGLE'
+    };
+    addItem(product);
+    setCustomItemOpen(false);
+    setCustomName('');
+    setCustomPrice('');
+    toast.success('Custom Item Ditambahkan');
+  };
+
+  const handleSaveBill = () => {
+    if (!billName) {
+      toast.error('Gagal', { description: 'Nama meja / pemesan harus diisi' });
+      return;
+    }
+    saveBill(billName);
+    setSaveBillOpen(false);
+    setBillName('');
+    toast.success('Tagihan Disimpan');
+  };
+
+  const handleApplyDiscount = () => {
+    setDiscount(discountTypeForm, parseFloat(discountValueForm) || 0);
+    setIsDiscountOpen(false);
+    toast.success('Diskon Diterapkan');
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#FFFDF7] overflow-hidden">
        {/* Top: Cart Area (Split View) */}
@@ -143,12 +199,32 @@ export default function POSPage() {
                  <ShoppingCart className="w-5 h-5 text-black" strokeWidth={2.5}/>
                  <h2 className="font-space-grotesk font-black uppercase tracking-wider text-lg md:text-xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
                </div>
-               <button 
-                 onClick={() => setClearConfirmOpen(true)}
-                 className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
-               >
-                 <Trash2 className="w-4 h-4 text-black" />
-               </button>
+               
+               <div className="flex items-center gap-2">
+                 <button 
+                   onClick={() => setLoadBillOpen(true)}
+                   title="Buka Tagihan Tersimpan"
+                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
+                 >
+                   <FolderOpen className="w-4 h-4 text-black" />
+                   {savedBills.length > 0 && <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full border-2 border-black">{savedBills.length}</span>}
+                 </button>
+                 <button 
+                   onClick={() => setSaveBillOpen(true)}
+                   title="Simpan Tagihan (Open Tab)"
+                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                   disabled={items.length === 0}
+                 >
+                   <Save className="w-4 h-4 text-black" />
+                 </button>
+                 <button 
+                   onClick={() => setClearConfirmOpen(true)}
+                   title="Kosongkan Keranjang"
+                   className="p-2 border-2 border-black rounded-lg hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                 >
+                   <Trash2 className="w-4 h-4 text-black" />
+                 </button>
+               </div>
             </div>
 
             {/* Cart Content (Split layout for Items and Footer) */}
@@ -174,14 +250,44 @@ export default function POSPage() {
                </div>
 
                {/* Cart Footer / Checkout Sticky Panel */}
-               <div className="w-full md:w-72 xl:w-80 p-4 bg-gray-50 flex flex-col justify-end gap-3 shrink-0">
-                 <div className="flex justify-between items-center font-inter font-black text-xs text-gray-500 uppercase">
-                    <span>Subtotal</span>
-                    <span>{formatRupiah(total)}</span>
+               <div className="w-full md:w-72 xl:w-80 p-4 bg-gray-50 flex flex-col justify-end gap-3 shrink-0 overflow-y-auto hide-scrollbar">
+                 <div className="flex flex-col gap-1 text-xs font-inter font-bold text-gray-500 uppercase">
+                   <div className="flex justify-between items-center">
+                      <span>Subtotal</span>
+                      <span>{formatRupiah(getSubtotal())}</span>
+                   </div>
+                   {(discountType || discountValue > 0) && (
+                     <div className="flex justify-between items-center text-[#FF6321]">
+                        <span className="flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors" onClick={() => setIsDiscountOpen(true)}>
+                          Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-3 h-3"/>
+                        </span>
+                        <span>-{formatRupiah(getDiscountAmount())}</span>
+                     </div>
+                   )}
+                   {!discountType && (
+                     <div className="flex justify-between items-center text-gray-400">
+                        <span className="flex items-center gap-1 cursor-pointer hover:text-black transition-colors" onClick={() => setIsDiscountOpen(true)}>
+                          Tambah Diskon <Tag className="w-3 h-3"/>
+                        </span>
+                     </div>
+                   )}
+                   {getServiceChargeAmount() > 0 && (
+                     <div className="flex justify-between items-center">
+                        <span>Service ({serviceChargeRate}%)</span>
+                        <span>{formatRupiah(getServiceChargeAmount())}</span>
+                     </div>
+                   )}
+                   {getTaxAmount() > 0 && (
+                     <div className="flex justify-between items-center">
+                        <span>Pajak ({taxRate}%)</span>
+                        <span>{formatRupiah(getTaxAmount())}</span>
+                     </div>
+                   )}
                  </div>
-                 <div className="flex justify-between items-center font-space-grotesk font-black text-xl xl:text-2xl uppercase">
+                 
+                 <div className="border-t-2 border-dashed border-gray-300 mt-1 pt-2 flex justify-between items-center font-space-grotesk font-black text-xl xl:text-2xl uppercase">
                     <span>Total</span>
-                    <span>{formatRupiah(total)}</span>
+                    <span>{formatRupiah(getTotal())}</span>
                  </div>
                  <Button 
                    onClick={handleCheckoutClick}
@@ -199,7 +305,7 @@ export default function POSPage() {
        <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden">
           
           {/* Header & Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-4 md:mb-6 shrink-0">
+          <div className="flex flex-col md:flex-row gap-4 mb-4 md:mb-6 shrink-0 z-10 relative">
              <div className="relative flex-grow">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                <Input 
@@ -209,6 +315,13 @@ export default function POSPage() {
                  onChange={(e) => setSearchQuery(e.target.value)}
                />
              </div>
+             <Button 
+               onClick={() => setCustomItemOpen(true)}
+               className="h-12 bg-black text-white hover:bg-gray-800 border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
+             >
+               <Plus className="w-5 h-5 mr-2" />
+               Custom Item
+             </Button>
           </div>
 
           {/* Categories */}
@@ -454,6 +567,145 @@ export default function POSPage() {
          title="Konfirmasi Pembayaran"
          description={`Apakah Anda yakin ingin memproses pembayaran ini? Tagihan: ${formatRupiah(total)} menggunakan metode ${paymentMethod}.`}
        />
+
+       {/* ================= CUSTOM ITEM MODAL ================= */}
+       <Dialog open={customItemOpen} onOpenChange={setCustomItemOpen}>
+         <DialogContent className="border-8 border-black rounded-[2rem] bg-[#FFFDF7] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+           <DialogHeader>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">Tambah Custom Item</DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-4 mt-4">
+             <div className="flex flex-col gap-2">
+               <Label>Nama Item</Label>
+               <Input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Contoh: Plastik Tambahan" />
+             </div>
+             <div className="flex flex-col gap-2">
+               <Label>Harga</Label>
+               <Input 
+                 value={customPrice ? formatRupiah(parseInt(customPrice)) : ''} 
+                 onChange={e => setCustomPrice(e.target.value.replace(/\D/g, ''))} 
+                 inputMode="numeric"
+                 placeholder="Rp 0" 
+               />
+             </div>
+             <Button onClick={handleAddCustomItem} className="mt-4 bg-[#00E5FF] text-black hover:bg-cyan-400 font-bold">TAMBAH KE KERANJANG</Button>
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       {/* ================= SAVE BILL MODAL ================= */}
+       <Dialog open={saveBillOpen} onOpenChange={setSaveBillOpen}>
+         <DialogContent className="border-8 border-black rounded-[2rem] bg-[#FFFDF7] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+           <DialogHeader>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">Simpan Open Tab</DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-4 mt-4">
+             <div className="flex flex-col gap-2">
+               <Label>Nama Pemesan / No Meja</Label>
+               <Input value={billName} onChange={e => setBillName(e.target.value)} placeholder="Contoh: Meja 4 / Budi" />
+             </div>
+             <Button onClick={handleSaveBill} className="mt-4 bg-[#FFD100] text-black hover:bg-yellow-400 font-bold">SIMPAN TAGIHAN</Button>
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       {/* ================= LOAD BILL MODAL ================= */}
+       <Dialog open={loadBillOpen} onOpenChange={setLoadBillOpen}>
+         <DialogContent className="border-8 border-black rounded-[2rem] bg-[#FFFDF7] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[80vh] flex flex-col">
+           <DialogHeader className="shrink-0">
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">Tagihan Tersimpan ({savedBills.length})</DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-3 mt-4 overflow-y-auto">
+             {savedBills.length === 0 ? (
+               <div className="text-center py-8 text-gray-500 font-bold">Belum ada tagihan yang disimpan.</div>
+             ) : (
+               savedBills.map(bill => (
+                 <div key={bill.id} className="border-4 border-black p-4 rounded-xl flex justify-between items-center bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                   <div className="flex flex-col">
+                     <span className="font-space-grotesk font-black text-lg uppercase">{bill.name}</span>
+                     <span className="text-xs text-gray-500 font-bold">{bill.items.length} item - {new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(bill.timestamp))}</span>
+                   </div>
+                   <div className="flex gap-2">
+                     <Button 
+                       variant="outline" 
+                       size="icon" 
+                       onClick={() => deleteSavedBill(bill.id)}
+                     >
+                       <Trash2 className="w-4 h-4" />
+                     </Button>
+                     <Button 
+                       className="bg-[#00E5FF] text-black hover:bg-cyan-400"
+                       onClick={() => {
+                         if (items.length > 0) {
+                           toast.error('Gagal', { description: 'Harap kosongkan keranjang saat ini terlebih dahulu.' });
+                           return;
+                         }
+                         loadBill(bill.id);
+                         setLoadBillOpen(false);
+                         toast.success('Tagihan Dibuka');
+                       }}
+                     >
+                       BUKA
+                     </Button>
+                   </div>
+                 </div>
+               ))
+             )}
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       {/* ================= DISCOUNT MODAL ================= */}
+       <Dialog open={isDiscountOpen} onOpenChange={(open) => {
+         setIsDiscountOpen(open);
+         if (open) {
+           setDiscountTypeForm(discountType);
+           setDiscountValueForm(discountValue ? discountValue.toString() : '');
+         }
+       }}>
+         <DialogContent className="border-8 border-black rounded-[2rem] bg-[#FFFDF7] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+           <DialogHeader>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">Pengaturan Diskon</DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-4 mt-4">
+             <div className="grid grid-cols-3 gap-2">
+               <Button 
+                 variant={discountTypeForm === null ? 'default' : 'outline'} 
+                 onClick={() => { setDiscountTypeForm(null); setDiscountValueForm(''); }}
+                 className={cn(discountTypeForm === null && "bg-black text-white hover:bg-gray-800 border-2 border-black")}
+               >Tanpa Diskon</Button>
+               <Button 
+                 variant={discountTypeForm === 'PERCENTAGE' ? 'default' : 'outline'} 
+                 onClick={() => setDiscountTypeForm('PERCENTAGE')}
+                 className={cn(discountTypeForm === 'PERCENTAGE' && "bg-[#FF90E8] text-black border-2 border-black hover:bg-pink-300")}
+               >Persen (%)</Button>
+               <Button 
+                 variant={discountTypeForm === 'NOMINAL' ? 'default' : 'outline'} 
+                 onClick={() => setDiscountTypeForm('NOMINAL')}
+                 className={cn(discountTypeForm === 'NOMINAL' && "bg-[#FFD100] text-black border-2 border-black hover:bg-yellow-400")}
+               >Nominal (Rp)</Button>
+             </div>
+             
+             {discountTypeForm && (
+               <div className="flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-200">
+                 <Label>Nilai Diskon</Label>
+                 <Input 
+                   value={discountTypeForm === 'NOMINAL' && discountValueForm ? formatRupiah(parseInt(discountValueForm.replace(/\D/g, ''))) : discountValueForm}
+                   onChange={e => {
+                     const val = e.target.value.replace(/\D/g, '');
+                     if (discountTypeForm === 'PERCENTAGE' && parseInt(val) > 100) return;
+                     setDiscountValueForm(val);
+                   }}
+                   inputMode="numeric"
+                   placeholder={discountTypeForm === 'PERCENTAGE' ? 'Contoh: 10' : 'Contoh: 15000'} 
+                 />
+               </div>
+             )}
+             
+             <Button onClick={handleApplyDiscount} className="mt-4 bg-[#00E5FF] text-black hover:bg-cyan-400 font-bold">TERAPKAN DISKON</Button>
+           </div>
+         </DialogContent>
+       </Dialog>
 
        <ConfirmDialog 
          open={clearConfirmOpen} 
