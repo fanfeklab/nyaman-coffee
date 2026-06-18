@@ -12,11 +12,12 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function ProductsPage() {
-  const { products, categories, rawMaterials, deleteProduct, deleteCategory, addCategory, addProduct, updateProduct } = useInventoryStore();
+  const { products, categories, rawMaterials, deleteProduct, deleteCategory, addCategory, addProduct, updateProduct, updateCategory } = useInventoryStore();
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
   const [search, setSearch] = useState('');
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#00E5FF');
   const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
@@ -74,16 +75,34 @@ export default function ProductsPage() {
     setIsProductModalOpen(false);
   };
 
-  const handleAddCategory = () => {
-    if (!newCatName) return;
-    addCategory({
-      id: 'cat_' + Math.random().toString(36).substr(2, 6),
-      name: newCatName,
-      color: newCatColor
-    });
+  const handleOpenAddCategory = () => {
+    setEditingCategoryId(null);
     setNewCatName('');
+    setNewCatColor('#00E5FF');
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleOpenEditCategory = (c: Category) => {
+    setEditingCategoryId(c.id);
+    setNewCatName(c.name);
+    setNewCatColor(c.color);
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (!newCatName) return;
+    if (editingCategoryId) {
+      updateCategory(editingCategoryId, { name: newCatName, color: newCatColor });
+      toast.success('Kategori berhasil diubah!');
+    } else {
+      addCategory({
+        id: 'cat_' + Math.random().toString(36).substr(2, 6),
+        name: newCatName,
+        color: newCatColor
+      });
+      toast.success('Kategori berhasil ditambahkan!');
+    }
     setIsCategoryModalOpen(false);
-    toast.success('Kategori berhasil ditambahkan!');
   };
 
   const formatRupiah = (val: number) => 
@@ -133,7 +152,7 @@ export default function ProductsPage() {
                  </Button>
                </div>
             ) : (
-               <Button onClick={() => setIsCategoryModalOpen(true)} className="gap-2 bg-[#00E5FF] text-black hover:bg-cyan-300">
+               <Button onClick={handleOpenAddCategory} className="gap-2 bg-[#00E5FF] text-black hover:bg-cyan-300">
                  <Plus className="w-5 h-5"/> KATEGORI BARU
                </Button>
             )}
@@ -205,7 +224,7 @@ export default function ProductsPage() {
                       <TableCell className="border-r-2 border-gray-200 uppercase">{c.name}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <button className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
+                          <button onClick={() => handleOpenEditCategory(c)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                             <Edit2 className="w-4 h-4"/>
                           </button>
                           <button onClick={() => setDeleteCategoryConfirm(c.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
@@ -371,7 +390,9 @@ export default function ProductsPage() {
       <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
         <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm">
            <DialogHeader>
-             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">Kategori Baru</DialogTitle>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase">
+               {editingCategoryId ? 'Edit Kategori' : 'Kategori Baru'}
+             </DialogTitle>
            </DialogHeader>
            <div className="flex flex-col gap-4 py-4">
               <div className="flex flex-col gap-2">
@@ -388,7 +409,7 @@ export default function ProductsPage() {
            </div>
            <DialogFooter>
              <Button variant="outline" onClick={() => setIsCategoryModalOpen(false)}>BATAL</Button>
-             <Button onClick={handleAddCategory}>SIMPAN</Button>
+             <Button onClick={handleSaveCategory}>SIMPAN</Button>
            </DialogFooter>
         </DialogContent>
       </Dialog>

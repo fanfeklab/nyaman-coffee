@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Ban, Search, FileText } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const formatRupiah = (val: number) => 
@@ -21,6 +22,7 @@ export default function ReportsPage() {
   
   const [search, setSearch] = useState('');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
+  const [adminPin, setAdminPin] = useState('');
 
   const filteredData = transactions.filter(tx => 
     tx.id.toLowerCase().includes(search.toLowerCase()) || 
@@ -30,6 +32,12 @@ export default function ReportsPage() {
   const totalRevenue = transactions.filter(t => t.status === 'COMPLETED').reduce((sum, t) => sum + t.total, 0);
 
   const handleVoid = () => {
+    // Basic mock validation for PIN admin
+    if (adminPin !== '1235' && adminPin !== '1111' && adminPin !== '5555') {
+       toast.error('PIN Admin salah / tidak dikenali!');
+       return;
+    }
+
     if (!voidConfirmId) return;
     const tx = transactions.find(t => t.id === voidConfirmId);
     if (!tx) return;
@@ -41,6 +49,7 @@ export default function ReportsPage() {
     voidTransaction(voidConfirmId);
     toast.success('Transaksi berhasil di-void (dibatalkan). Stok dikembalikan.');
     setVoidConfirmId(null);
+    setAdminPin('');
   };
 
   return (
@@ -135,13 +144,33 @@ export default function ReportsPage() {
          </div>
       </div>
       
-      <ConfirmDialog 
-        open={!!voidConfirmId}
-        onOpenChange={(open) => !open && setVoidConfirmId(null)}
-        title="Void Transaksi?"
-        description="Transaksi akan dibatalkan, nominal dikurangi dari total, dan stok bahan baku akan dikembalikan."
-        onConfirm={handleVoid}
-      />
+      <Dialog open={!!voidConfirmId} onOpenChange={(open) => !open && setVoidConfirmId(null)}>
+        <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm">
+           <DialogHeader>
+             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase text-red-600">Otorisasi Void</DialogTitle>
+           </DialogHeader>
+           <div className="flex flex-col gap-4 py-4">
+              <p className="font-inter font-bold text-sm text-gray-500">
+                 Transaksi akan dibatalkan, nominal dikurangi dari total, dan stok bahan baku akan dikembalikan.
+                 <strong>Masukkan PIN Manager/Admin untuk menyetujui pembatalan.</strong>
+              </p>
+              <div className="flex flex-col gap-2">
+                 <Input 
+                   type="password"
+                   maxLength={4} 
+                   value={adminPin} 
+                   onChange={e => setAdminPin(e.target.value.replace(/\D/g, ''))} 
+                   placeholder="PIN 4 Digit" 
+                   className="text-center text-2xl tracking-widest h-14 font-black"
+                 />
+              </div>
+           </div>
+           <DialogFooter>
+             <Button variant="outline" onClick={() => { setVoidConfirmId(null); setAdminPin(''); }}>Batal</Button>
+             <Button onClick={handleVoid} className="bg-red-600 text-white hover:bg-red-700">VOID TRANSAKSI</Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
