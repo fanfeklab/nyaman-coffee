@@ -58,21 +58,21 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 ## FASE 5: Laporan & PDF Renderer UI
 *Fokus: Analitik dan ekspor dokumen.*
 
-- [ ] **Task 5.1:** Pembuatan halaman "My Sales Performance" (Laporan mandiri Kasir). *(Ref: 03-CORE_FLOW.md Poin 3)*
-- [ ] **Task 5.2:** Pembuatan Dashboard Analytics Super Admin (Grafik omzet, Grid transaksi filterable).
-- [ ] **Task 5.3:** Instalasi PDF renderer (`@react-pdf/renderer` atau setara). *(Ref: 05-INVENTORY_&_PDF_REPORTING.md Poin 2)*
-- [ ] **Task 5.4:** Desain PDF Template (Layout Kertas A4 Laporan Penjualan).
-- [ ] **Task 5.5:** Pembuatan Modal "Void Transaksi" dengan validasi PIN admin. *(Ref: 03-CORE_FLOW.md Poin 4)*
+- [x] **Task 5.1:** Pembuatan halaman "My Sales Performance" (Laporan mandiri Kasir). *(Ref: 03-CORE_FLOW.md Poin 3)*
+- [x] **Task 5.2:** Pembuatan Dashboard Analytics Super Admin (Grafik omzet, Grid transaksi filterable).
+- [x] **Task 5.3:** Instalasi PDF renderer (`@react-pdf/renderer` atau setara). *(Ref: 05-INVENTORY_&_PDF_REPORTING.md Poin 2)*
+- [x] **Task 5.4:** Desain PDF Template (Layout Kertas A4 Laporan Penjualan).
+- [x] **Task 5.5:** Pembuatan Modal "Void Transaksi" dengan validasi PIN admin. *(Ref: 03-CORE_FLOW.md Poin 4)*
 
 ---
 
 ## FASE 6: Algoritma Wire-up & Validasi Silang (Mock Stage)
 *Fokus: Memastikan seluruh store mock data saling terhubung sebelum pindah ke backend sungguhan.*
 
-- [ ] **Task 6.1:** Hubungkan Cart -> Shift Store (Saldo laci bertambah saat transaksi sukses sesuai state kasir).
-- [ ] **Task 6.2:** Hubungkan Cart -> Inventory Store (Pemotongan bahan baku stok).
-- [ ] **Task 6.3:** Uji skenario Void (Pemulihan stok dan kalkulasi ulang laporan shift).
-- [ ] **Task 6.4:** Implementasi Proteksi Role/Permission Wrap di frontend.
+- [x] **Task 6.1:** Hubungkan Cart -> Shift Store (Saldo laci bertambah saat transaksi sukses sesuai state kasir).
+- [x] **Task 6.2:** Hubungkan Cart -> Inventory Store (Pemotongan bahan baku stok).
+- [x] **Task 6.3:** Uji skenario Void (Pemulihan stok dan kalkulasi ulang laporan shift).
+- [x] **Task 6.4:** Implementasi Proteksi Role/Permission Wrap di frontend.
 
 ---
 

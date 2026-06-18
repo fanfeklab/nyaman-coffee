@@ -46,6 +46,8 @@ interface InventoryState {
   addRawMaterial: (material: RawMaterial) => void;
   updateRawMaterial: (id: string, material: Partial<RawMaterial>) => void;
   deleteRawMaterial: (id: string) => void;
+  processCheckoutInventory: (items: { product: Product, qty: number }[]) => boolean;
+  revertCheckoutInventory: (items: { product: Product, qty: number }[]) => void;
   
   setInventoryMode: (mode: 'LOOSE' | 'STRICT' | 'OFF') => void;
 }
@@ -107,5 +109,93 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   })),
   deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
   
+  processCheckoutInventory: (items) => {
+    let success = true;
+    set(state => {
+      if (state.inventoryMode === 'OFF') return state;
+
+      const newRawMaterials = [...state.rawMaterials];
+      const inventoryDiffs: Record<string, number> = {};
+
+      // Calculate diffs
+      items.forEach(({ product, qty }) => {
+        if (product.type === 'SINGLE' && product.ingredients) {
+          product.ingredients.forEach(ing => {
+             inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
+          });
+        }
+        if (product.type === 'COMBO' && product.comboItems) {
+          product.comboItems.forEach(itemId => {
+             const subProduct = state.products.find(p => p.id === itemId);
+             if (subProduct?.ingredients) {
+                subProduct.ingredients.forEach(ing => {
+                   inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
+                });
+             }
+          });
+        }
+      });
+
+      // Verification for STRICT mode
+      if (state.inventoryMode === 'STRICT') {
+        const strictFailed = Object.entries(inventoryDiffs).some(([rmId, deductAmount]) => {
+           const rm = newRawMaterials.find(m => m.id === rmId);
+           return !rm || rm.currentStock < deductAmount;
+        });
+        if (strictFailed) {
+           success = false;
+           return state; // Do not apply changes
+        }
+      }
+
+      // Apply deductions
+      Object.entries(inventoryDiffs).forEach(([rmId, deductAmount]) => {
+         const index = newRawMaterials.findIndex(m => m.id === rmId);
+         if (index !== -1) {
+            newRawMaterials[index] = { ...newRawMaterials[index], currentStock: newRawMaterials[index].currentStock - deductAmount };
+         }
+      });
+
+      return { rawMaterials: newRawMaterials };
+    });
+    return success;
+  },
+
+  revertCheckoutInventory: (items) => {
+    set(state => {
+      if (state.inventoryMode === 'OFF') return state;
+
+      const newRawMaterials = [...state.rawMaterials];
+      const inventoryDiffs: Record<string, number> = {};
+
+      items.forEach(({ product, qty }) => {
+        if (product.type === 'SINGLE' && product.ingredients) {
+          product.ingredients.forEach(ing => {
+             inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
+          });
+        }
+        if (product.type === 'COMBO' && product.comboItems) {
+          product.comboItems.forEach(itemId => {
+             const subProduct = state.products.find(p => p.id === itemId);
+             if (subProduct?.ingredients) {
+                subProduct.ingredients.forEach(ing => {
+                   inventoryDiffs[ing.rawMaterialId] = (inventoryDiffs[ing.rawMaterialId] || 0) + (ing.amount * qty);
+                });
+             }
+          });
+        }
+      });
+
+      Object.entries(inventoryDiffs).forEach(([rmId, refundAmount]) => {
+         const index = newRawMaterials.findIndex(m => m.id === rmId);
+         if (index !== -1) {
+            newRawMaterials[index] = { ...newRawMaterials[index], currentStock: newRawMaterials[index].currentStock + refundAmount };
+         }
+      });
+
+      return { rawMaterials: newRawMaterials };
+    });
+  },
+
   setInventoryMode: (mode) => set({ inventoryMode: mode }),
 }));

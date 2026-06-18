@@ -17,6 +17,7 @@ interface ShiftState {
   closeShift: (actualEndingCash: number) => void;
   forceCloseShift: (shiftId: string) => void;
   addSalesToShift: (amount: number) => void;
+  deductSalesFromShift: (amount: number) => void;
 }
 
 export const useShiftStore = create<ShiftState>((set, get) => ({
@@ -72,6 +73,18 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
         currentShift: {
           ...state.currentShift,
           expectedEndingCash: state.currentShift.expectedEndingCash + amount
+        }
+      };
+    });
+  },
+
+  deductSalesFromShift: (amount: number) => {
+    set((state) => {
+      if (!state.currentShift || state.currentShift.status !== 'OPEN') return state;
+      return {
+        currentShift: {
+          ...state.currentShift,
+          expectedEndingCash: Math.max(state.currentShift.startingCash, state.currentShift.expectedEndingCash - amount)
         }
       };
     });

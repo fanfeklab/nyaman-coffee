@@ -1,12 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const { inventoryMode, setInventoryMode } = useInventoryStore();
+
+  // Role Guard
+  useEffect(() => {
+    if (user?.role !== 'ADMIN') {
+      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Pengaturan.' });
+      router.push('/shift');
+    }
+  }, [user, router]);
 
   const handleModeChange = (mode: 'LOOSE' | 'STRICT' | 'OFF') => {
     setInventoryMode(mode);

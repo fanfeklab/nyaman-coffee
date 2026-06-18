@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useInventoryStore, Product, Category } from '@/store/useInventoryStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +13,19 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function ProductsPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const { products, categories, deleteProduct, deleteCategory, addCategory } = useInventoryStore(); // Assuming deleteCategory isn't there, we'll mock it or add it later. Wait, we'll just mock here for UI.
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
   const [search, setSearch] = useState('');
+
+  // Role Guard
+  useEffect(() => {
+    if (user?.role !== 'ADMIN') {
+      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Master Produk.' });
+      router.push('/shift');
+    }
+  }, [user, router]);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');

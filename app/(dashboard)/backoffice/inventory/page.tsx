@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useInventoryStore, RawMaterial } from '@/store/useInventoryStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +13,18 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function InventoryPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const { rawMaterials, addRawMaterial, deleteRawMaterial, updateRawMaterial } = useInventoryStore();
   const [search, setSearch] = useState('');
+
+  // Role Guard
+  useEffect(() => {
+    if (user?.role !== 'ADMIN') {
+      toast.error('AKSES DITOLAK', { description: 'Hanya Admin yang dapat mengakses Bahan Baku.' });
+      router.push('/shift');
+    }
+  }, [user, router]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useInventoryStore, Category, Product } from '@/store/useInventoryStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useShiftStore } from '@/store/useShiftStore';
+import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,9 +25,10 @@ const formatRupiah = (val: number) =>
 
 export default function POSPage() {
   const router = useRouter();
-  const { categories, products } = useInventoryStore();
+  const { categories, products, processCheckoutInventory } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
   const { items, addItem, removeItem, updateQty, clearCart, getTotal } = useCartStore();
+  const { addTransaction } = useTransactionStore();
   
   // Protect POS access
   useEffect(() => {
@@ -83,11 +85,28 @@ export default function POSPage() {
       return;
     }
 
-    // Success
+    // Step 1: Inventory Deduction
+    const inventorySuccess = processCheckoutInventory(items.map(i => ({ product: i.product, qty: i.qty })));
+    if (!inventorySuccess) {
+      toast.error('Gagal memotong stok!', { description: 'Mode STRICT aktif. Bahan baku tidak mencukupi atau habis.' });
+      return;
+    }
+
+    // Step 2: Record Transaction
+    addTransaction({
+      shiftId: currentShift?.id || '',
+      cashierId: currentShift?.cashierId || 'kasir',
+      items: items,
+      subtotal: total,
+      paymentMethod: paymentMethod!
+    });
+
+    // Step 3: Shift Update
     addSalesToShift(total);
+    
+    // UI Update
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
-    // Note: Inventory decrement and Shift ledger update is mocked/omitted until Phase 6
   };
 
   const finishTransaction = () => {
