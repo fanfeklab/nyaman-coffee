@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInventoryStore, Category, Product } from '@/store/useInventoryStore';
 import { useCartStore } from '@/store/useCartStore';
@@ -10,11 +10,12 @@ import { useTransactionStore } from '@/store/useTransactionStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare, Save, FolderOpen, Tag, Edit, Percent, ChevronDown, X } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, Coffee, BookOpen, CheckSquare, Check, Save, FolderOpen, Tag, Edit, Percent, ChevronDown, X, AlignJustify, Grid3X3, ArrowDownAZ, ArrowUpZA, ArrowDown10, ArrowUp01, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import {
   Dialog,
@@ -25,6 +26,9 @@ import {
 
 const formatRupiah = (val: number) => 
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
+
+type SortOption = 'A-Z' | 'Z-A' | 'Highest' | 'Lowest';
+type ViewOption = 'Grid' | 'Compact';
 
 export default function POSPage() {
   const router = useRouter();
@@ -39,6 +43,31 @@ export default function POSPage() {
     discountType, discountValue, taxRate, serviceChargeRate,
     setDiscount, saveBill, loadBill, savedBills, deleteSavedBill
   } = useCartStore();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  
+  // UI Preferences
+  const [sortOption, setSortOption] = useState<SortOption>('A-Z');
+  const [viewOption, setViewOption] = useState<ViewOption>('Grid');
+
+  useEffect(() => {
+    // Load preferences from local storage
+    const savedSort = localStorage.getItem('pos_sort_pref') as SortOption;
+    const savedView = localStorage.getItem('pos_view_pref') as ViewOption;
+    if (savedSort) setSortOption(savedSort);
+    if (savedView) setViewOption(savedView);
+  }, []);
+
+  const handleSortChange = (opt: SortOption) => {
+    setSortOption(opt);
+    localStorage.setItem('pos_sort_pref', opt);
+  };
+
+  const handleViewChange = (opt: ViewOption) => {
+    setViewOption(opt);
+    localStorage.setItem('pos_view_pref', opt);
+  };
   
   // Custom item form state
   const [customItemOpen, setCustomItemOpen] = useState(false);
@@ -65,9 +94,6 @@ export default function POSPage() {
       router.push('/shift');
     }
   }, [currentShift, router]);
-  
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Payment UI state
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -81,11 +107,24 @@ export default function POSPage() {
   const [recipeItem, setRecipeItem] = useState<Product | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
-  const filteredProducts = products.filter(p => {
-    const matchesCat = activeCategory === 'all' || p.categoryId === activeCategory || searchQuery.length > 0;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
+  const filteredProducts = useMemo(() => {
+    let result = products;
+    if (activeCategory !== 'all') {
+      result = result.filter(p => p.categoryId === activeCategory);
+    }
+    if (searchQuery) {
+      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    
+    // Sort
+    return [...result].sort((a, b) => {
+      if (sortOption === 'A-Z') return a.name.localeCompare(b.name);
+      if (sortOption === 'Z-A') return b.name.localeCompare(a.name);
+      if (sortOption === 'Highest') return b.basePrice - a.basePrice;
+      if (sortOption === 'Lowest') return a.basePrice - b.basePrice;
+      return 0;
+    });
+  }, [products, activeCategory, searchQuery, sortOption]);
 
   const total = getTotal();
 
@@ -208,13 +247,61 @@ export default function POSPage() {
                  onChange={(e) => setSearchQuery(e.target.value)}
                />
              </div>
-             <Button 
-               onClick={() => setCustomItemOpen(true)}
-               className="h-12 bg-black text-white hover:bg-gray-800 border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
-             >
-               <Plus className="w-5 h-5 mr-2" />
-               Custom Item
-             </Button>
+             
+             {/* Views & Filters */}
+             <div className="flex items-center gap-3">
+                 <Popover>
+                   <PopoverTrigger className="h-12 w-12 border-4 border-black shadow-[4px_4px_0_0_#000] p-0 flex items-center justify-center rounded-xl bg-white hover:bg-gray-100 transition-colors" title="Urutkan" type="button">
+                     <Filter className="w-5 h-5"/>
+                   </PopoverTrigger>
+                   <PopoverContent align="end" className="w-56 p-2 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-2xl bg-white">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-space-grotesk font-black uppercase text-xs tracking-widest text-gray-500 mb-2 px-2">Urutkan Berdasarkan</span>
+                        {[
+                          { id: 'A-Z', label: 'Nama A - Z', icon: ArrowDownAZ },
+                          { id: 'Z-A', label: 'Nama Z - A', icon: ArrowUpZA },
+                          { id: 'Highest', label: 'Harga Tertinggi', icon: ArrowDown10 },
+                          { id: 'Lowest', label: 'Harga Terendah', icon: ArrowUp01 },
+                        ].map(opt => (
+                           <button 
+                             key={opt.id}
+                             onClick={() => handleSortChange(opt.id as SortOption)}
+                             className={cn("flex items-center gap-2 px-3 py-2 text-sm font-inter font-bold rounded-xl text-left transition-colors", sortOption === opt.id ? "bg-[#00E5FF] border-2 border-black" : "hover:bg-gray-100 border-2 border-transparent")}
+                           >
+                             <opt.icon className="w-4 h-4"/>
+                             {opt.label}
+                             {sortOption === opt.id && <Check className="w-4 h-4 ml-auto"/>}
+                           </button>
+                        ))}
+                      </div>
+                   </PopoverContent>
+                 </Popover>
+
+                 <div className="flex items-center bg-white border-4 border-black rounded-xl p-1 shadow-[4px_4px_0_0_#000]">
+                    <button 
+                      onClick={() => handleViewChange('Grid')}
+                      className={cn("p-2 rounded-lg transition-colors", viewOption === 'Grid' ? "bg-black text-white" : "text-gray-500 hover:text-black")}
+                      title="Tampilan Grid (Gambar)"
+                    >
+                      <Grid3X3 className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => handleViewChange('Compact')}
+                      className={cn("p-2 rounded-lg transition-colors", viewOption === 'Compact' ? "bg-black text-white" : "text-gray-500 hover:text-black")}
+                      title="Tampilan Kompak (Tanpa Gambar)"
+                    >
+                      <AlignJustify className="w-5 h-5" />
+                    </button>
+                 </div>
+
+                 <Button 
+                   onClick={() => setCustomItemOpen(true)}
+                   className="h-12 bg-black text-white hover:bg-gray-800 border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
+                 >
+                   <Plus className="w-5 h-5 mr-0 md:mr-2" />
+                   <span className="hidden md:inline">Custom Item</span>
+                 </Button>
+             </div>
           </div>
 
           {/* Categories */}
@@ -245,9 +332,36 @@ export default function POSPage() {
 
           {/* Grid Products */}
           <div className="flex-1 overflow-y-auto pr-2 pb-32">
-             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 pt-1 pl-1">
+             <div className={cn("grid gap-4 md:gap-6 pt-1 pl-1", viewOption === 'Grid' ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3")}>
                 {filteredProducts.map(p => {
                   const cat = categories.find(c => c.id === p.categoryId);
+                  
+                  if (viewOption === 'Compact') {
+                    return (
+                      <div 
+                        key={p.id}
+                        onClick={() => addItem(p)}
+                        className="bg-white border-4 border-black rounded-2xl p-4 flex justify-between items-center cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 active:translate-x-2 transition-all select-none group"
+                      >
+                         <div className="flex flex-col">
+                           <span className="font-space-grotesk font-black uppercase text-black line-clamp-1 text-lg mb-1">{p.name}</span>
+                           <div className="flex items-center gap-2">
+                             <span className="font-inter font-black text-[#FF6321]">{formatRupiah(p.basePrice)}</span>
+                             {cat && (
+                               <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 border-2 border-black rounded-md" style={{ backgroundColor: cat.color }}>
+                                  {cat.name}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                         <Button variant="outline" className="h-10 w-10 p-0 border-2 border-black bg-[#FFD100] group-hover:bg-[#FFD100]">
+                           <Plus className="w-5 h-5 text-black" />
+                         </Button>
+                      </div>
+                    );
+                  }
+
+                  // Grid View (Default)
                   return (
                     <div 
                       key={p.id}

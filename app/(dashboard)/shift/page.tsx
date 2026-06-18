@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { LayoutGrid, Coffee, PieChart, PackageOpen, ArrowRight } from 'lucide-react';
+import { LayoutGrid, Coffee, PieChart, PackageOpen, ArrowRight, User, Clock, Wallet, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ShiftPage() {
@@ -42,94 +42,106 @@ export default function ShiftPage() {
 
   if (currentShift?.status === 'OPEN') {
     return (
-      <div className="p-4 md:p-8 flex flex-col gap-8 h-full overflow-y-auto bg-[#FFFDF7] hide-scrollbar">
-         <div className="flex flex-col gap-4">
-           <h1 className="font-space-grotesk font-black text-3xl md:text-4xl uppercase tracking-widest text-black">Dashboard</h1>
-           <div className="bg-[#FFD100] border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row justify-between md:items-center gap-4">
-              <div>
-                <p className="font-space-grotesk font-black uppercase text-xl mb-1 text-black">Sesi Shift Aktif</p>
-                <div className="flex flex-col md:flex-row gap-2 md:gap-6 font-inter font-bold text-black/80">
-                  <span>Kasir: {user?.fullName}</span>
-                  <span>Waktu Mulai: {currentShift.startTime.toLocaleTimeString()}</span>
-                  <span>Modal: {formatRupiah(currentShift.startingCash)}</span>
-                </div>
-              </div>
-           </div>
+      <div className="p-4 md:p-8 flex flex-col gap-6 h-full overflow-y-auto bg-[#FFFDF7] hide-scrollbar">
+         {/* BENTO GRID LAYOUT */}
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           
+            {/* 1. PROFILE & SHIFT INFO CARD (Bento Left) */}
+            <div className="lg:col-span-1 bg-[#FFD100] border-4 border-black p-6 rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+               <div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000]">
+                       <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.username}&backgroundColor=ffffff`} alt="Avatar" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="font-space-grotesk font-black uppercase text-2xl text-black leading-none">{user?.fullName}</p>
+                      <p className="font-inter font-bold text-black/70 text-sm mt-1 uppercase">Kasir Aktif</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 bg-white p-4 rounded-xl border-4 border-black font-inter font-bold">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-black" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 uppercase tracking-widest">Waktu Mulai</span>
+                        <span className="text-black">{new Date(currentShift.startTime).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Wallet className="w-5 h-5 text-black" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 uppercase tracking-widest">Modal Laci Awal</span>
+                        <span className="text-black">{formatRupiah(currentShift.startingCash)}</span>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+
+               <div className="mt-8">
+                 <Button onClick={() => setConfirmClose(true)} variant="outline" className="w-full h-14 bg-white hover:bg-gray-100 text-red-500 hover:text-red-600 border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
+                    AKHIRI SHIFT KASIR
+                 </Button>
+               </div>
+            </div>
+
+            {/* 2. SHORTCUTS & ACTIONS (Bento Right) */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+               <h2 className="font-space-grotesk font-black uppercase text-2xl tracking-widest text-black">Akses Cepat</h2>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                  {/* Action Card: POS */}
+                  <Link href="/pos" className="bg-[#00E5FF] border-4 border-black p-6 md:p-8 rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col justify-between aspect-[4/3] group">
+                     <div className="bg-white border-4 border-black p-4 rounded-2xl w-max shadow-[4px_4px_0_0_#000]">
+                       <LayoutGrid className="w-8 h-8 md:w-10 md:h-10 text-black" strokeWidth={2.5}/>
+                     </div>
+                     <div className="flex justify-between items-end mt-4">
+                       <span className="font-space-grotesk font-black text-2xl md:text-3xl uppercase leading-tight">Buka<br/>Terminal</span>
+                       <ArrowRight className="w-8 h-8 transform group-hover:translate-x-2 transition-transform"/>
+                     </div>
+                  </Link>
+                  
+                  {/* Action Card: Orders/Receipts (Dummy for now, links to pos) */}
+                  <Link href="/pos" className="bg-white border-4 border-black p-6 md:p-8 rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col justify-between aspect-[4/3] group">
+                     <div className="bg-[#FF90E8] border-4 border-black p-4 rounded-2xl w-max shadow-[4px_4px_0_0_#000]">
+                       <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-black" strokeWidth={2.5}/>
+                     </div>
+                     <div className="flex justify-between items-end mt-4">
+                       <span className="font-space-grotesk font-black text-2xl md:text-3xl uppercase leading-tight text-gray-400">Riwayat<br/>Tagihan</span>
+                       <ArrowRight className="w-8 h-8 transform group-hover:translate-x-2 transition-transform text-gray-400"/>
+                     </div>
+                  </Link>
+               </div>
+            </div>
          </div>
 
-         {/* DASHBOARD SHORTCUTS */}
-         <div className="flex flex-col gap-4">
-           <h2 className="font-space-grotesk font-black uppercase text-2xl">Akses Cepat</h2>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <Link href="/pos" className="bg-[#00E5FF] border-4 border-black p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col justify-between aspect-square group">
-                 <div className="bg-white border-4 border-black p-3 rounded-xl w-max">
-                   <LayoutGrid className="w-8 h-8 text-black" strokeWidth={2.5}/>
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <span className="font-space-grotesk font-black text-2xl uppercase leading-tight">Terminal<br/>Kasir</span>
-                   <ArrowRight className="w-6 h-6 transform group-hover:translate-x-2 transition-transform"/>
-                 </div>
-              </Link>
-              
-              <Link href="/backoffice/products" className="bg-[#FF90E8] border-4 border-black p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col justify-between aspect-square group">
-                 <div className="bg-white border-4 border-black p-3 rounded-xl w-max">
-                   <Coffee className="w-8 h-8 text-black" strokeWidth={2.5}/>
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <span className="font-space-grotesk font-black text-2xl uppercase leading-tight">Master<br/>Produk</span>
-                   <ArrowRight className="w-6 h-6 transform group-hover:translate-x-2 transition-transform"/>
-                 </div>
-              </Link>
-              
-              <Link href="/backoffice/reports" className="bg-white border-4 border-black p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col justify-between aspect-square group">
-                 <div className="bg-[#FFD100] border-4 border-black p-3 rounded-xl w-max">
-                   <PieChart className="w-8 h-8 text-black" strokeWidth={2.5}/>
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <span className="font-space-grotesk font-black text-2xl uppercase leading-tight">Analisis<br/>Laporan</span>
-                   <ArrowRight className="w-6 h-6 transform group-hover:translate-x-2 transition-transform"/>
-                 </div>
-              </Link>
-              
-              <Link href="/backoffice/inventory" className="bg-[#FF6321] text-white border-4 border-black p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col justify-between aspect-square group">
-                 <div className="bg-white border-4 border-black p-3 rounded-xl w-max">
-                   <PackageOpen className="w-8 h-8 text-black" strokeWidth={2.5}/>
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <span className="font-space-grotesk font-black text-2xl uppercase leading-tight">Cek Stok<br/>Bahan</span>
-                   <ArrowRight className="w-6 h-6 text-white transform group-hover:translate-x-2 transition-transform"/>
-                 </div>
-              </Link>
-           </div>
-         </div>
-
-         {/* CLOSE SHIFT FORM */}
-         <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-4">
-            <h2 className="font-space-grotesk font-black text-xl text-black mb-4 uppercase text-red-600">Akhiri Sesi (Tutup Shift)</h2>
-            <form onSubmit={(e) => { e.preventDefault(); setConfirmClose(true); }} className="flex flex-col gap-6 max-w-xl">
-              <div className="flex flex-col gap-2">
-                 <Label>Uang Fisik Laci Saat Ini (Blind Close)</Label>
-                 <Input 
-                   type="text" 
-                   value={actualCash ? new Intl.NumberFormat('id-ID').format(parseInt(actualCash.replace(/\D/g, ''))) : ''} 
-                   onChange={(e) => setActualCash(e.target.value.replace(/\D/g, ''))} 
-                   placeholder="Contoh: 150000"
-                   className="h-12 text-lg font-bold"
-                 />
-                 <small className="font-inter font-bold text-gray-500">Hitung total uang fisik tunai yang ada di dalam laci kasir sekarang secara cermat sebelum ditutup.</small>
-              </div>
-              <Button type="submit" variant="destructive" className="w-full md:w-max px-8 h-12 text-lg font-space-grotesk font-black uppercase">
-                 KUNCI LACI & TUTUP SHIFT
-              </Button>
-            </form>
-         </div>
-
+         {/* END SHIFT DIALOG MODAL (Clean, no form on dashboard itself) */}
          <ConfirmDialog 
            open={confirmClose}
            onOpenChange={setConfirmClose}
            onConfirm={handleCloseShift}
            title="Akhiri Sesi Shift?"
-           description={`Total uang dicatat: ${formatRupiah(parseInt(actualCash.replace(/\D/g, '')) || 0)}. Aksi ini akan mencatat laporan akhir shift dan mengharuskan login shift lagi.`}
+           confirmLabel="Tutup Laci"
+           cancelLabel="Batal"
+           description={(
+              <div className="flex flex-col gap-4 mt-4 text-left">
+                 <p className="font-inter font-bold text-gray-600">Hitung total uang fisik tunai yang ada di dalam laci kasir sekarang secara cermat (Blind Close).</p>
+                 <div className="flex flex-col gap-2">
+                    <Label className="text-black uppercase font-black uppercase text-xs tracking-widest">Fisik Laci</Label>
+                    <Input 
+                      type="text" 
+                      value={actualCash ? new Intl.NumberFormat('id-ID').format(parseInt(actualCash.replace(/\D/g, ''))) : ''} 
+                      onChange={(e) => setActualCash(e.target.value.replace(/\D/g, ''))} 
+                      placeholder="Rp 0"
+                      className="h-16 text-3xl font-black text-black border-4 border-black rounded-xl text-center shadow-[4px_4px_0_0_#000] mb-2"
+                      inputMode="numeric"
+                      autoFocus
+                    />
+                 </div>
+                 <div className="bg-red-100 p-4 border-2 border-red-500 rounded-xl">
+                    <p className="font-inter font-bold text-red-600 text-xs text-center">Tindakan ini akan mengunci terminal kasir dan mencetak laporan akhir shift. Tindakan ini tidak dapat dibatalkan.</p>
+                 </div>
+              </div>
+           ) as any}
          />
       </div>
     );
@@ -139,33 +151,39 @@ export default function ShiftPage() {
      const selisih = currentShift.actualEndingCash - currentShift.expectedEndingCash;
      
      return (
-       <div className="p-6 md:p-12 max-w-3xl mx-auto flex flex-col gap-8 h-full justify-center">
-          <div className="bg-[#00E5FF] border-4 border-black p-6 md:p-8 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-             <h1 className="font-space-grotesk font-black text-3xl uppercase tracking-widest text-black mb-2 text-center border-b-4 border-black pb-4">Laporan Akhir Shift</h1>
+       <div className="p-4 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center">
+          <div className="bg-white border-8 border-black p-6 md:p-10 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
+             <div className="flex justify-center mb-6">
+                <div className="bg-[#FFD100] border-4 border-black p-4 rounded-full shadow-[4px_4px_0_0_#000]">
+                   <CheckCircle2 className="w-12 h-12 text-black" strokeWidth={3} />
+                </div>
+             </div>
+             <h1 className="font-space-grotesk font-black text-3xl uppercase tracking-widest text-black text-center mb-2">Shift Selesai</h1>
+             <p className="font-inter font-bold text-gray-500 text-center mb-8">Laporan akhir shift Anda telah disimpan.</p>
              
-             <div className="flex flex-col gap-3 font-inter font-bold text-lg mt-6">
-               <div className="flex justify-between bg-white border-2 border-black p-3 rounded-lg">
-                 <span>Modal Awal:</span> 
-                 <span>{formatRupiah(currentShift.startingCash)}</span>
+             <div className="flex flex-col gap-3 font-inter font-bold bg-gray-50 p-6 rounded-2xl border-4 border-black">
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 pb-3">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Modal Awal</span> 
+                 <span className="text-lg">{formatRupiah(currentShift.startingCash)}</span>
                </div>
-               <div className="flex justify-between bg-white border-2 border-black p-3 rounded-lg">
-                 <span>Sistem (Estimasi Akhir):</span> 
-                 <span>{formatRupiah(currentShift.expectedEndingCash)}</span>
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Sistem (Estimasi)</span> 
+                 <span className="text-lg">{formatRupiah(currentShift.expectedEndingCash)}</span>
                </div>
-               <div className="flex justify-between bg-white border-2 border-black p-3 rounded-lg">
-                 <span>Fisik Laci (Aktual):</span> 
-                 <span>{formatRupiah(currentShift.actualEndingCash)}</span>
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Fisik Laci (Aktual)</span> 
+                 <span className="text-lg font-black">{formatRupiah(currentShift.actualEndingCash)}</span>
                </div>
-               <div className={`flex justify-between p-4 rounded-xl border-4 border-black mt-4 font-black uppercase text-xl ${selisih < 0 ? 'bg-red-400 text-white' : 'bg-[#FFD100] text-black'}`}>
-                 <span>Selisih (Variance):</span> 
+               <div className={`flex justify-between items-center p-4 rounded-xl border-4 border-black mt-3 font-black uppercase text-xl ${selisih < 0 ? 'bg-red-500 text-white shadow-[4px_4px_0_0_#000]' : 'bg-[#00E5FF] text-black shadow-[4px_4px_0_0_#000]'}`}>
+                 <span>Selisih</span> 
                  <span>
                     {selisih > 0 ? "+" : ""}{formatRupiah(selisih)}
                  </span>
                </div>
              </div>
 
-             <Button className="w-full mt-8 h-12 text-lg font-space-grotesk font-black tracking-wider uppercase border-4 border-black" onClick={() => window.location.reload()}>
-               SELESAI & LOGOUT
+             <Button className="w-full mt-8 h-16 text-xl font-space-grotesk font-black tracking-widest uppercase border-4 border-black bg-[#FF6321] hover:bg-[#ff7a40] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all text-white" onClick={() => window.location.reload()}>
+               KEMBALI KE LOGIN
              </Button>
           </div>
        </div>
@@ -174,27 +192,32 @@ export default function ShiftPage() {
 
   // default: NO OPEN SHIFT
   return (
-    <div className="p-6 md:p-12 flex flex-col h-full items-center justify-center bg-[#FFFDF7]">
-       <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full">
-          <h1 className="font-space-grotesk font-black text-3xl md:text-4xl uppercase tracking-widest text-black mb-2">Buka Shift</h1>
-          <p className="font-inter font-bold text-gray-600 mb-8">Halo {user?.fullName}, masukkan modal uang kembalian untuk memulai shift Anda hari ini.</p>
+    <div className="p-6 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+       <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full flex flex-col items-center">
           
-          <form onSubmit={(e) => { e.preventDefault(); setConfirmOpen(true); }} className="flex flex-col gap-6">
+          <div className="w-20 h-20 bg-gray-100 border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000] mb-6">
+             <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.username}&backgroundColor=ffffff`} alt="Avatar" className="w-full h-full object-cover" />
+          </div>
+
+          <h1 className="font-space-grotesk font-black text-3xl md:text-4xl uppercase tracking-widest text-black mb-2 text-center">Mulai Shift</h1>
+          <p className="font-inter font-bold text-gray-500 text-center mb-8">Halo <span className="text-black uppercase">{user?.fullName}</span>, siapkan modal kembalian laci.</p>
+          
+          <form onSubmit={(e) => { e.preventDefault(); setConfirmOpen(true); }} className="flex flex-col gap-6 w-full">
             <div className="flex flex-col gap-2">
-               <Label className="text-lg">Modal Awal Laci (Tunai)</Label>
+               <Label className="text-xs uppercase font-black text-gray-500 tracking-widest text-center">Modal Uang Tunai Awal (Rp)</Label>
                <Input 
                  type="text" 
                  value={startingCash ? new Intl.NumberFormat('id-ID').format(parseInt(startingCash.replace(/\D/g, ''))) : ''} 
                  onChange={(e) => setStartingCash(e.target.value.replace(/\D/g, ''))} 
-                 placeholder="Contoh: 100000"
-                 className="h-14 text-2xl font-black"
+                 placeholder="0"
+                 className="h-16 text-3xl font-black border-4 border-black shadow-[4px_4px_0_0_#000] text-center rounded-xl bg-gray-50 focus:bg-white"
                  inputMode="numeric"
                />
-               <small className="font-inter font-bold text-gray-500 mt-1">Uang fisik yang ada di laci sebelum transaksi dimulai.</small>
+               <small className="font-inter font-bold text-gray-400 mt-2 text-center text-xs">Pastikan fisik lembaran uang sesuai.</small>
             </div>
             
-            <Button type="submit" className="w-full h-14 text-xl bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase tracking-wider border-4 border-black">
-               MULAI SESI SHIFT
+            <Button type="submit" className="w-full mt-4 h-16 text-xl bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase tracking-widest border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none active:translate-y-2 transition-all">
+               BUKA KASIR
             </Button>
           </form>
        </div>
@@ -203,9 +226,27 @@ export default function ShiftPage() {
          open={confirmOpen}
          onOpenChange={setConfirmOpen}
          onConfirm={handleOpenShift}
-         title="Konfirmasi Buka Shift"
-         description={`Apakah data sudah benar?\nKasir: ${user?.fullName}\nModal: ${formatRupiah(parseInt(startingCash.replace(/\D/g, '')) || 0)}\nWaktu: ${new Date().toLocaleTimeString()}`}
+         title="Buka Shift?"
+         confirmLabel="Buka Shift"
+         cancelLabel="Batal"
+         description={(
+            <div className="flex flex-col gap-2 mt-4 text-left font-inter font-bold border-4 border-black p-4 rounded-xl bg-gray-50">
+               <div className="flex justify-between">
+                 <span className="text-gray-500 uppercase text-xs">Kasir</span>
+                 <span className="text-black uppercase text-sm">{user?.fullName}</span>
+               </div>
+               <div className="flex justify-between">
+                 <span className="text-gray-500 uppercase text-xs">Modal Laci</span>
+                 <span className="text-black text-sm">{formatRupiah(parseInt(startingCash.replace(/\D/g, '')) || 0)}</span>
+               </div>
+               <div className="flex justify-between">
+                 <span className="text-gray-500 uppercase text-xs">Waktu</span>
+                 <span className="text-black text-sm">{new Date().toLocaleTimeString()}</span>
+               </div>
+            </div>
+         ) as any}
        />
     </div>
   );
 }
+
