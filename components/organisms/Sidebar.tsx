@@ -20,7 +20,15 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     router.push('/login');
   };
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/pos') return pathname === '/pos' || pathname.startsWith('/pos/');
+    if (path === '/shift') return pathname === '/shift' || pathname.startsWith('/shift/');
+    if (path === '/backoffice/products') return pathname.startsWith('/backoffice/products');
+    if (path === '/backoffice/inventory') return pathname.startsWith('/backoffice/inventory');
+    if (path === '/backoffice/reports') return pathname.startsWith('/backoffice/reports');
+    if (path === '/backoffice/settings') return pathname.startsWith('/backoffice/settings');
+    return pathname === path;
+  };
 
   return (
     <aside className={cn("w-64 md:w-72 bg-[#00A19D] border-r-8 border-black flex flex-col h-screen", className)}>
