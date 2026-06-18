@@ -50,6 +50,7 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState<'TUNAI' | 'QRIS' | null>(null);
   const [cashGiven, setCashGiven] = useState<string>('');
   const [qrisRef, setQrisRef] = useState('');
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
 
   // Receipt UI state
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
@@ -76,23 +77,27 @@ export default function POSPage() {
     setQrisRef('');
   };
 
-  const handleProcessPayment = () => {
+  const handleOpenPaymentConfirm = () => {
     if (paymentMethod === 'TUNAI') {
       const given = parseInt(cashGiven.replace(/\D/g, ''));
       if (isNaN(given) || given < total) {
-        toast.error('PEMBAYARAN KURANG!');
+        toast.error('UANG KURANG!', { description: 'Pembayaran tunai tidak mencukupi tagihan.', duration: 3000 });
         return;
       }
     }
     if (paymentMethod === 'QRIS' && !qrisRef) {
-      toast.error('MOHON ISI NOMOR REFERENSI QRIS!');
+      toast.error('REF ID KOSONG!', { description: 'Mohon masukkan nomor referensi QRIS pelanggan.', duration: 3000 });
       return;
     }
+    setConfirmPaymentOpen(true);
+  };
 
+  const handleProcessPayment = () => {
     // Process Inventory
     const invRes = processCheckoutInventory(items.map(i => ({ productId: i.product.id, qty: i.qty })));
     if (!invRes.success) {
-      toast.error(invRes.reason || 'Gagal potong stok');
+      toast.error('GAGAL POTONG STOK!', { description: invRes.reason });
+      setConfirmPaymentOpen(false);
       return;
     }
 
@@ -114,8 +119,10 @@ export default function POSPage() {
 
     // Success
     addSalesToShift(total);
+    setConfirmPaymentOpen(false);
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
+    toast.success('TRANSAKSI BERHASIL', { description: 'Pembayaran telah diterima dan dicatat.', duration: 3000 });
   };
 
   const finishTransaction = () => {
@@ -264,16 +271,16 @@ export default function POSPage() {
 
        {/* ================= PAYMENT MODAL ================= */}
        <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-         <DialogContent className="border-8 border-black rounded-[2rem] max-w-4xl bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="p-6 bg-[#00A19D] border-b-8 border-black">
+         <DialogContent className="border-8 border-black rounded-[2rem] max-w-4xl bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[95vh] flex flex-col">
+            <div className="p-6 bg-[#00A19D] border-b-8 border-black shrink-0">
                <h2 className="font-space-grotesk font-black text-3xl uppercase text-black text-center">Pilih Metode Bayar</h2>
             </div>
             
-            <div className="flex flex-col md:flex-row min-h-[400px]">
+            <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
                {/* Left: Summary Pesanan */}
-               <div className="w-full md:w-1/2 p-6 border-b-8 md:border-b-0 md:border-r-8 border-black bg-white flex flex-col hide-scrollbar overflow-y-auto max-h-[50vh]">
-                  <h3 className="font-space-grotesk font-black text-xl uppercase mb-4 border-b-4 border-black pb-2">Ringkasan Pesanan</h3>
-                  <div className="flex-1 flex flex-col gap-3">
+               <div className="w-full md:w-1/2 p-6 border-b-8 md:border-b-0 md:border-r-8 border-black bg-white flex flex-col">
+                  <h3 className="font-space-grotesk font-black text-xl uppercase mb-4 border-b-4 border-black pb-2 shrink-0">Ringkasan Pesanan</h3>
+                  <div className="flex-1 flex flex-col gap-3 overflow-y-auto hide-scrollbar min-h-[min(30vh,200px)]">
                      {items.map(item => (
                        <div key={item.id} className="flex justify-between items-start font-inter font-bold text-sm border-b-2 border-dashed border-gray-200 pb-2">
                          <div>
@@ -284,14 +291,14 @@ export default function POSPage() {
                        </div>
                      ))}
                   </div>
-                  <div className="mt-4 pt-4 border-t-4 border-black border-solid flex justify-between items-center bg-[#FFD100] p-4 border-4 rounded-xl">
+                  <div className="mt-4 pt-4 shrink-0 flex justify-between items-center bg-[#FFD100] p-4 border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000]">
                       <span className="font-space-grotesk font-black uppercase text-xl text-black">Tagihan</span>
                       <span className="font-space-grotesk font-black uppercase text-2xl text-black">{formatRupiah(total)}</span>
                   </div>
                </div>
 
                {/* Right: Payment Methods */}
-               <div className="w-full md:w-1/2 p-6 flex flex-col gap-6 bg-gray-50">
+               <div className="w-full md:w-1/2 p-6 flex flex-col gap-6 bg-gray-50 overflow-y-auto hide-scrollbar">
                    <div className="grid grid-cols-2 gap-4 shrink-0">
                      <Button 
                        variant={paymentMethod === 'TUNAI' ? 'default' : 'outline'} 
@@ -315,7 +322,8 @@ export default function POSPage() {
                            <Label className="text-lg">Diterima Tunai</Label>
                            <Input 
                              type="text"
-                             value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven)) : ''}
+                             inputMode="numeric"
+                             value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven.replace(/\D/g, '')) || 0) : ''}
                              onChange={(e) => setCashGiven(e.target.value.replace(/\D/g, ''))}
                              className="text-2xl h-14 font-black"
                              placeholder="0"
@@ -328,10 +336,10 @@ export default function POSPage() {
                               <Button variant="outline" onClick={() => setCashGiven('100000')}>100rb</Button>
                            </div>
 
-                           {!!cashGiven && parseInt(cashGiven) >= total && (
-                              <div className="bg-[#00A19D] border-4 border-black rounded-xl p-4 mt-2 flex justify-between items-center text-black">
-                                <span className="font-space-grotesk font-black uppercase text-sm">Kembalian</span>
-                                <span className="font-space-grotesk font-black uppercase text-3xl">{formatRupiah(parseInt(cashGiven) - total)}</span>
+                           {!!cashGiven && (
+                              <div className={cn("border-4 border-black rounded-xl p-4 mt-2 flex justify-between items-center text-black shadow-[4px_4px_0_0_#000]", parseInt(cashGiven.replace(/\D/g, '')) >= total ? "bg-[#00A19D]" : "bg-red-400 text-white")}>
+                                <span className="font-space-grotesk font-black uppercase text-sm">{parseInt(cashGiven.replace(/\D/g, '')) >= total ? "Kembalian" : "Kurang"}</span>
+                                <span className="font-space-grotesk font-black uppercase text-3xl">{formatRupiah(Math.abs(parseInt(cashGiven.replace(/\D/g, '')) - total))}</span>
                               </div>
                            )}
                         </div>
@@ -360,9 +368,9 @@ export default function POSPage() {
                </div>
             </div>
 
-            <div className="p-6 border-t-8 border-black bg-white flex justify-end gap-4">
+            <div className="p-6 border-t-8 border-black bg-white flex justify-end gap-4 shrink-0">
                <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>BATAL</Button>
-               <Button onClick={handleProcessPayment} disabled={!paymentMethod} className="px-8 text-lg bg-[#00E5FF] hover:bg-cyan-400">PROSES TRANSAKSI</Button>
+               <Button onClick={handleOpenPaymentConfirm} disabled={!paymentMethod} className="px-8 text-lg bg-[#00E5FF] hover:bg-cyan-400">PROSES TRANSAKSI</Button>
             </div>
          </DialogContent>
        </Dialog>
@@ -375,7 +383,7 @@ export default function POSPage() {
                  <CheckSquare className="w-8 h-8 text-black" strokeWidth={3} />
                </div>
                <h2 className="font-space-grotesk font-black text-3xl uppercase text-black text-center mb-1">Transaksi<br/>Selesai!</h2>
-               <p className="font-inter font-bold text-gray-500 text-sm">Kembalian: {paymentMethod === 'TUNAI' ? formatRupiah(parseInt(cashGiven) - total) : 'Rp 0'}</p>
+               <p className="font-inter font-bold text-gray-500 text-sm">Kembalian: {paymentMethod === 'TUNAI' ? formatRupiah(parseInt(cashGiven.replace(/\D/g, '')) - total) : 'Rp 0'}</p>
             </div>
             
             <div className="p-6 flex flex-col gap-4 bg-gray-100">
@@ -413,7 +421,7 @@ export default function POSPage() {
                     {paymentMethod === 'TUNAI' && (
                       <div className="flex justify-between mt-1">
                          <span>TUNAI</span>
-                         <span>{formatRupiah(parseInt(cashGiven))}</span>
+                         <span>{formatRupiah(parseInt(cashGiven.replace(/\D/g, '')))}</span>
                       </div>
                     )}
                  </div>
@@ -438,6 +446,14 @@ export default function POSPage() {
             <Button className="mt-4" onClick={() => setRecipeItem(null)}>MENGERTI</Button>
          </DialogContent>
        </Dialog>
+
+       <ConfirmDialog 
+         open={confirmPaymentOpen}
+         onOpenChange={setConfirmPaymentOpen}
+         onConfirm={handleProcessPayment}
+         title="Konfirmasi Pembayaran"
+         description={`Apakah Anda yakin ingin memproses pembayaran ini? Tagihan: ${formatRupiah(total)} menggunakan metode ${paymentMethod}.`}
+       />
 
        <ConfirmDialog 
          open={clearConfirmOpen} 
