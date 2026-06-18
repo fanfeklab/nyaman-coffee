@@ -40,14 +40,21 @@ export function ConfirmDialog({
         <div className="py-2 text-center text-gray-600 font-inter font-bold text-sm">
           {description}
         </div>
-        <DialogFooter className="mt-4 flex gap-2 w-full sm:justify-between">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-            {cancelLabel}
-          </Button>
-          <Button variant="destructive" className="flex-1" onClick={() => { onConfirm(); onOpenChange(false); }}>
+        <div className="mt-6 flex flex-col gap-3 w-full">
+          <Button 
+            className="w-full h-14 font-space-grotesk font-black text-lg bg-[#FF6321] hover:bg-[#ff7a40] text-white border-4 border-black shadow-[4px_4px_0_0_#000] uppercase" 
+            onClick={() => { onConfirm(); onOpenChange(false); }}
+          >
             {confirmLabel}
           </Button>
-        </DialogFooter>
+          <Button 
+            variant="outline" 
+            className="w-full h-14 font-space-grotesk font-black text-lg bg-white hover:bg-gray-50 border-4 border-black shadow-[4px_4px_0_0_#000] uppercase" 
+            onClick={() => onOpenChange(false)}
+          >
+            {cancelLabel}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
