@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { LayoutGrid, Coffee, PieChart, PackageOpen, ArrowRight, User, Clock, Wallet, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { DashboardOverview } from '@/components/organisms/DashboardOverview';
 
 export default function ShiftPage() {
   const { user, users } = useAuthStore();
@@ -128,6 +129,8 @@ export default function ShiftPage() {
             </div>
          </div>
 
+         <DashboardOverview />
+
          {/* END SHIFT DIALOG MODAL (Clean, no form on dashboard itself) */}
          <ConfirmDialog 
            open={confirmClose}
@@ -217,6 +220,10 @@ export default function ShiftPage() {
             <h1 className="font-space-grotesk font-black text-2xl md:text-3xl uppercase tracking-widest text-black mb-2 text-center">Tidak Ada Shift Aktif</h1>
             <p className="font-inter font-bold text-gray-500 text-center mb-8">Saat ini tidak ada kasir yang sedang membuka shift. Anda tidak dapat melakukan transaksi.</p>
          </div>
+
+         <div className="w-full mt-8 max-w-5xl">
+            <DashboardOverview />
+         </div>
       </div>
     );
   }
@@ -250,6 +257,10 @@ export default function ShiftPage() {
                BUKA KASIR
             </Button>
           </form>
+       </div>
+
+       <div className="w-full mt-8 max-w-5xl">
+          <DashboardOverview />
        </div>
 
        <ConfirmDialog 

@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { PinKeypad } from '../organisms/PinKeypad';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
+import { Coffee, ArrowRight, User, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function PinLoginTemplate() {
   const router = useRouter();
@@ -52,7 +54,10 @@ export function PinLoginTemplate() {
     return () => clearInterval(interval);
   }, [cooldownTime]);
 
-  const handleLogin = (currentPin: string) => {
+  const handleLogin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (cooldownTime) return;
+    
     setError('');
     
     if (!username) {
@@ -60,14 +65,19 @@ export function PinLoginTemplate() {
       setPin('');
       return;
     }
+    if (pin.length < 4) {
+      setError('PIN MINIMAL 4 DIGIT');
+      return;
+    }
 
-    const success = login(username, currentPin);
+    const success = login(username, pin);
     if (success) {
        if (rememberMe) {
          localStorage.setItem('pos_cached_username', username);
        } else {
          localStorage.removeItem('pos_cached_username');
        }
+       toast.success('Login berhasil!');
        router.push('/shift');
     } else {
        const newAttempts = failedAttempts + 1;
@@ -84,133 +94,104 @@ export function PinLoginTemplate() {
     }
   };
 
-  const handleKeyPress = (key: string) => {
-    if (cooldownTime) return;
-    if (pin.length < 4) {
-      const newPin = pin + key;
-      setPin(newPin);
-      if (newPin.length === 4) {
-        handleLogin(newPin);
-      }
-    }
-  };
-
-  const handleDelete = () => {
-    if (cooldownTime) return;
-    setPin(prev => prev.slice(0, -1));
-  };
-
   return (
-    <div className="min-h-screen bg-[#FFFDF7] flex bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] p-4 items-center justify-center">
-      <div className="w-full max-w-4xl flex flex-col md:flex-row bg-white border-8 border-black rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-        
-        {/* Left Branding Panel */}
-        <div className="w-full md:w-5/12 bg-[#FF6321] p-8 flex flex-col justify-center border-b-8 md:border-b-0 md:border-r-8 border-black">
-           <div>
-              <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border-4 border-black w-max px-3 py-1 rounded-lg mb-6 -rotate-2"
-              >
-                 <span className="font-space-grotesk font-black text-black tracking-wider uppercase text-sm">Nyaman POS</span>
-              </motion.div>
-              <h1 className="font-space-grotesk text-4xl lg:text-5xl font-black text-black leading-[0.9] uppercase mb-4">
-                Mulai<br />Sesi<br />Kasir.
-              </h1>
-              <p className="font-inter font-bold text-black/80 text-sm">
-                Akses terminal untuk memproses transaksi.
-              </p>
-           </div>
+    <div className="min-h-screen bg-[#FFFDF7] flex flex-col justify-center items-center p-4 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+      
+      {/* Branding Header Area */}
+      <div className="mb-8 text-center flex flex-col items-center gap-3">
+        <div className="bg-[#FFD100] border-4 border-black p-4 rounded-3xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] w-max transform -rotate-2">
+           <Coffee className="w-12 h-12 text-black" strokeWidth={2.5} />
         </div>
+        <h1 className="font-space-grotesk font-black text-4xl md:text-5xl uppercase tracking-tight text-black mt-2">
+           NYAMAN COFFEE
+        </h1>
+        <p className="font-space-grotesk font-bold text-gray-500 uppercase tracking-widest text-sm bg-white border-2 border-black px-4 py-1 rounded-full shadow-[2px_2px_0_0_#000]">
+           Point of Sale Terminal
+        </p>
+      </div>
 
-        {/* Right Login Panel */}
-        <div className="w-full md:w-7/12 p-6 lg:p-10 flex items-center justify-center bg-white">
-          <div className="w-full max-w-[320px] flex flex-col gap-5">
-            
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="username" className="font-black uppercase text-sm">Username POS</Label>
-              <Input 
-                 id="username"
-                 value={username}
-                 onChange={(e) => setUsername(e.target.value)}
-                 disabled={!!cooldownTime}
-                 placeholder="Masukkan username"
-                 className="text-base bg-[#E6F8F9] h-12 border-4 border-black"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2 bg-gray-50 border-2 border-black p-2 rounded-lg w-max">
-              <Checkbox 
-                id="remember" 
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                className="border-2 border-black data-[state=checked]:bg-[#FFD100] data-[state=checked]:text-black"
-              />
-              <label
-                htmlFor="remember"
-                className="text-xs font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer uppercase"
-              >
-                Ingat Username
-              </label>
-            </div>
-
-            <div className="flex flex-col gap-2 relative">
-               <div className="flex justify-between items-center">
-                 <Label className="font-black uppercase text-sm">PIN Akses</Label>
-                 <span className="text-[10px] font-black tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md border-2 border-transparent">4 DIGIT</span>
-               </div>
-               
-               {/* 4 Digit Visual indicators */}
-               <div className="flex gap-3 justify-between">
-                 {[0, 1, 2, 3].map((index) => (
-                   <div 
-                     key={index} 
-                     className={cn(
-                       "w-full h-12 border-4 border-black rounded-xl flex items-center justify-center transition-all",
-                       pin.length > index ? "bg-black" : (cooldownTime ? "bg-gray-200" : "bg-white")
-                     )}
-                   >
-                     {pin.length > index && (
-                        <div className="w-3 h-3 bg-[#FFD100] rounded-full" />
-                     )}
-                   </div>
-                 ))}
-               </div>
-               {/* Hidden Actual Input */}
-               <input 
-                 type="password" 
-                 className="hidden" 
-                 value={pin}
-                 readOnly 
-               />
-            </div>
-
-            <AnimatePresence>
-              {error && (
-                <motion.p 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="font-inter font-black text-red-500 bg-red-100 border-4 border-red-500 p-2 rounded-lg text-xs tracking-wider uppercase text-center"
-                >
-                  {error}
-                  {cooldownTime && (
-                    <span className="block mt-1 font-mono text-base">
-                      {timeLeft}s
-                    </span>
-                  )}
-                </motion.p>
-              )}
-            </AnimatePresence>
-
-            <PinKeypad 
-               onKeyPress={handleKeyPress}
-               onDelete={handleDelete}
-               className="mt-2"
-               disabled={!!cooldownTime}
+      <div className="w-full max-w-md bg-white border-8 border-black rounded-[2rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-6 md:p-8 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300">
+        
+        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="username" className="font-space-grotesk font-black uppercase tracking-widest text-sm flex items-center gap-2">
+              <User className="w-4 h-4" /> Username Sistem
+            </Label>
+            <Input 
+              id="username"
+              type="text" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              disabled={!!cooldownTime}
+              placeholder="Contoh: hanif_kasir" 
+              className="h-14 font-inter text-lg font-bold border-4 border-black rounded-xl bg-gray-50 focus:bg-white shadow-[4px_4px_0_0_#000] focus:shadow-none focus:translate-y-1 transition-all"
+              autoComplete="username"
             />
           </div>
-        </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="pin" className="font-space-grotesk font-black uppercase tracking-widest text-sm flex items-center gap-2">
+              <KeyRound className="w-4 h-4" /> KODE PIN (MIN 4 DIGIT)
+            </Label>
+            <Input 
+              id="pin"
+              type="password" 
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} 
+              disabled={!!cooldownTime}
+              placeholder="****" 
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="current-password"
+              className="h-14 font-black tracking-[1rem] text-2xl text-center border-4 border-black rounded-xl bg-gray-50 focus:bg-white shadow-[4px_4px_0_0_#000] focus:shadow-none focus:translate-y-1 transition-all placeholder:tracking-normal placeholder:font-inter placeholder:text-base placeholder:text-left placeholder:pl-4"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 bg-gray-50 border-4 border-black p-3 rounded-xl mt-1">
+            <Checkbox 
+              id="remember" 
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              className="border-2 border-black data-[state=checked]:bg-[#FFD100] data-[state=checked]:text-black w-6 h-6 rounded"
+            />
+            <label
+              htmlFor="remember"
+              className="text-sm font-space-grotesk font-black leading-none uppercase cursor-pointer"
+            >
+              Simpan Username di perangkat ini
+            </label>
+          </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="font-space-grotesk font-black text-white bg-red-500 border-4 border-black p-3 rounded-xl text-xs tracking-widest uppercase text-center mt-2 shadow-[4px_4px_0_0_#000]"
+              >
+                {error}
+                {cooldownTime && (
+                  <span className="block mt-1 font-mono text-base">
+                    {timeLeft} Detik
+                  </span>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Button 
+            type="submit" 
+            disabled={!!cooldownTime}
+            className="w-full h-16 text-xl bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase tracking-widest border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none active:translate-y-2 transition-all flex items-center justify-center gap-2 mt-2 disabled:bg-gray-300 disabled:shadow-none disabled:translate-y-1"
+          >
+            Masuk <ArrowRight className="w-6 h-6" />
+          </Button>
+        </form>
+      </div>
+      
+      <div className="mt-8 font-space-grotesk font-black uppercase text-sm text-gray-500 tracking-widest">
+        Ver 1.1 Live Production
       </div>
     </div>
   );

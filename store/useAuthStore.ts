@@ -31,30 +31,30 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       users: [
         {
-          id: '1',
+          id: 'u_1',
           username: 'fanfeklab',
-          fullName: 'Fanfeklab',
+          fullName: 'Super Admin Fanfeklab',
           role: 'SUPER_ADMIN',
           pin: '8686'
         },
         {
-          id: '2',
+          id: 'u_2',
           username: 'faldi',
-          fullName: 'Faldi',
+          fullName: 'SPV Faldi',
           role: 'MANAGER',
           pin: '0000'
         },
         {
-          id: '3',
+          id: 'u_3',
           username: 'hanif',
-          fullName: 'Hanif',
+          fullName: 'Kasir Hanif',
           role: 'CASHIER',
           pin: '1234'
         },
         {
-          id: '4',
+          id: 'u_4',
           username: 'desi',
-          fullName: 'Desi',
+          fullName: 'Kasir Desi',
           role: 'CASHIER',
           pin: '1234'
         }
@@ -77,108 +77,107 @@ export const useAuthStore = create<AuthState>()(
         }
         return false;
       },
-      
-      logout: () => {
-        const { user } = get();
-        if (user) {
-           useAuditStore.getState().addLog({
-             userId: user.id,
-             userName: user.fullName,
-             userRole: user.role,
-             action: 'LOGOUT',
-             details: `Pengguna ${user.fullName} keluar dari sistem.`
-           });
-        }
-        set({ user: null, isAuthenticated: false });
-      },
-
-      updateProfile: (fullName: string, newPin?: string) => {
-        set((state) => {
-           if (!state.user) return state;
-           
-           const updatedUser = {
-             ...state.user,
-             fullName,
-             ...(newPin ? { pin: newPin } : {})
-           };
-           
-           const updatedUsers = state.users.map(u => 
-             u.id === state.user!.id ? updatedUser : u
-           );
-
-           useAuditStore.getState().addLog({
-             userId: updatedUser.id,
-             userName: updatedUser.fullName,
-             userRole: updatedUser.role,
-             action: 'UPDATE_PROFILE',
-             details: `Pengguna memperbarui profilnya sendiri.`
-           });
-
-           return {
-             ...state,
-             user: updatedUser,
-             users: updatedUsers
-           };
-        });
-      },
-
-      addUser: (userData) => {
-        const currentUser = get().user;
-        set((state) => {
-          const newUser = { ...userData, id: 'usr_' + Date.now().toString(36) };
-          if (currentUser) {
-             useAuditStore.getState().addLog({
-               userId: currentUser.id,
-               userName: currentUser.fullName,
-               userRole: currentUser.role,
-               action: 'TAMBAH_KARYAWAN',
-               details: `Menambahkan karyawan baru: ${userData.fullName} (${userData.role})`
-             });
-          }
-          return { users: [...state.users, newUser] };
-        });
-      },
-
-      updateUser: (id, userData) => {
-        const currentUser = get().user;
-        set((state) => {
-          if (currentUser) {
-             const target = state.users.find(u => u.id === id);
-             useAuditStore.getState().addLog({
-               userId: currentUser.id,
-               userName: currentUser.fullName,
-               userRole: currentUser.role,
-               action: 'UBAH_KARYAWAN',
-               details: `Mengubah data karyawan: ${target?.fullName}`
-             });
-          }
-          return {
-            users: state.users.map((u) => (u.id === id ? { ...u, ...userData } : u))
-          };
-        });
-      },
-
-      deleteUser: (id) => {
-        const currentUser = get().user;
-        set((state) => {
-          if (currentUser) {
-             const target = state.users.find(u => u.id === id);
-             useAuditStore.getState().addLog({
-               userId: currentUser.id,
-               userName: currentUser.fullName,
-               userRole: currentUser.role,
-               action: 'HAPUS_KARYAWAN',
-               details: `Menghapus karyawan: ${target?.fullName}`
-             });
-          }
-          return {
-            users: state.users.filter((u) => u.id !== id)
-          };
-        });
-      }
-    }),
-    {
-      name: 'auth-storage',
+  
+  logout: () => {
+    const { user } = get();
+    if (user) {
+       useAuditStore.getState().addLog({
+         userId: user.id,
+         userName: user.fullName,
+         userRole: user.role,
+         action: 'LOGOUT',
+         details: `Pengguna ${user.fullName} keluar dari sistem.`
+       });
     }
-  )
-);
+    set({ user: null, isAuthenticated: false });
+  },
+
+  updateProfile: (fullName: string, newPin?: string) => {
+    set((state) => {
+       if (!state.user) return state;
+       
+       const updatedUser = {
+         ...state.user,
+         fullName,
+         ...(newPin ? { pin: newPin } : {})
+       };
+       
+       const updatedUsers = state.users.map(u => 
+         u.id === state.user!.id ? updatedUser : u
+       );
+
+       useAuditStore.getState().addLog({
+         userId: updatedUser.id,
+         userName: updatedUser.fullName,
+         userRole: updatedUser.role,
+         action: 'UPDATE_PROFILE',
+         details: `Pengguna memperbarui profilnya sendiri.`
+       });
+
+       return {
+         ...state,
+         user: updatedUser,
+         users: updatedUsers
+       };
+    });
+  },
+
+  addUser: (userData) => {
+    const currentUser = get().user;
+    set((state) => {
+      const newUser = { ...userData, id: 'usr_' + Date.now().toString(36) };
+      if (currentUser) {
+         useAuditStore.getState().addLog({
+           userId: currentUser.id,
+           userName: currentUser.fullName,
+           userRole: currentUser.role,
+           action: 'TAMBAH_KARYAWAN',
+           details: `Menambahkan karyawan baru: ${userData.fullName} (${userData.role})`
+         });
+      }
+      return { users: [...state.users, newUser] };
+    });
+  },
+
+  updateUser: (id, userData) => {
+    const currentUser = get().user;
+    set((state) => {
+      if (currentUser) {
+         const target = state.users.find(u => u.id === id);
+         useAuditStore.getState().addLog({
+           userId: currentUser.id,
+           userName: currentUser.fullName,
+           userRole: currentUser.role,
+           action: 'UBAH_KARYAWAN',
+           details: `Mengubah data karyawan: ${target?.fullName}`
+         });
+      }
+      return {
+        users: state.users.map((u) => (u.id === id ? { ...u, ...userData } : u))
+      };
+    });
+  },
+
+  deleteUser: (id) => {
+    const currentUser = get().user;
+    set((state) => {
+      if (currentUser) {
+         const target = state.users.find(u => u.id === id);
+         useAuditStore.getState().addLog({
+           userId: currentUser.id,
+           userName: currentUser.fullName,
+           userRole: currentUser.role,
+           action: 'HAPUS_KARYAWAN',
+           details: `Menghapus karyawan: ${target?.fullName}`
+         });
+      }
+      return {
+        users: state.users.filter((u) => u.id !== id)
+      };
+    });
+  }
+}),
+{
+  name: 'pos-auth-storage'
+}
+));

@@ -53,7 +53,6 @@ interface InventoryState {
   
   processCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => { success: boolean; reason?: string };
   revertCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => void;
-  clearInventory: () => void;
 }
 
 const mockCategories: Category[] = [
@@ -256,14 +255,10 @@ export const useInventoryStore = create<InventoryState>()(
           
           return { rawMaterials: nextMaterials };
         });
-      },
-
-      clearInventory: () => {
-        set({ categories: [], products: [], rawMaterials: [] });
       }
     }),
     {
-      name: 'inventory-storage',
+      name: 'pos-inventory-storage'
     }
   )
 );
