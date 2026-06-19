@@ -22,7 +22,9 @@ interface CartState {
   discountType: 'PERCENTAGE' | 'NOMINAL' | null;
   discountValue: number;
   taxRate: number;
+  enableTax: boolean;
   serviceChargeRate: number;
+  enableServiceCharge: boolean;
   savedBills: SavedBill[];
 
   addItem: (product: Product) => void;
@@ -32,7 +34,9 @@ interface CartState {
   
   setDiscount: (type: 'PERCENTAGE' | 'NOMINAL' | null, value: number) => void;
   setTaxRate: (rate: number) => void;
+  setEnableTax: (enable: boolean) => void;
   setServiceChargeRate: (rate: number) => void;
+  setEnableServiceCharge: (enable: boolean) => void;
 
   saveBill: (name: string) => void;
   loadBill: (id: string) => void;
@@ -51,7 +55,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   discountType: null,
   discountValue: 0,
   taxRate: 11, // Default PPN 11%
+  enableTax: true,
   serviceChargeRate: 0,
+  enableServiceCharge: true,
   savedBills: [],
   
   addItem: (product) => {
@@ -90,7 +96,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   setTaxRate: (rate) => set({ taxRate: rate }),
+  setEnableTax: (enable) => set({ enableTax: enable }),
   setServiceChargeRate: (rate) => set({ serviceChargeRate: rate }),
+  setEnableServiceCharge: (enable) => set({ enableServiceCharge: enable }),
 
   clearCart: () => {
     const settings = useSettingsStore.getState();
@@ -99,7 +107,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       discountType: null, 
       discountValue: 0,
       taxRate: settings.taxRate,
-      serviceChargeRate: settings.serviceChargeRate
+      enableTax: settings.enableTax,
+      serviceChargeRate: settings.serviceChargeRate,
+      enableServiceCharge: settings.enableServiceCharge
     });
   },
 
@@ -158,13 +168,15 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   getServiceChargeAmount: () => {
-    const { getSubtotal, getDiscountAmount, serviceChargeRate } = get();
+    const { getSubtotal, getDiscountAmount, serviceChargeRate, enableServiceCharge } = get();
+    if (!enableServiceCharge) return 0;
     const dpp = Math.max(0, getSubtotal() - getDiscountAmount());
     return dpp * (serviceChargeRate / 100);
   },
 
   getTaxAmount: () => {
-    const { getSubtotal, getDiscountAmount, getServiceChargeAmount, taxRate } = get();
+    const { getSubtotal, getDiscountAmount, getServiceChargeAmount, taxRate, enableTax } = get();
+    if (!enableTax) return 0;
     const dpp = Math.max(0, getSubtotal() - getDiscountAmount()) + getServiceChargeAmount();
     return dpp * (taxRate / 100);
   },

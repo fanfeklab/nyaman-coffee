@@ -55,39 +55,97 @@ interface InventoryState {
 }
 
 const mockCategories: Category[] = [
-  { id: 'cat_coffee', name: 'Coffee', color: '#00E5FF' },
-  { id: 'cat_noncoffee', name: 'Non-Coffee', color: '#FF90E8' },
-  { id: 'cat_snack', name: 'Snack & Food', color: '#FFD100' },
+  { id: 'cat_paket_murah', name: 'Paket Murah', color: '#FF5722' },
+  { id: 'cat_minuman', name: 'Minuman', color: '#00E5FF' },
+  { id: 'cat_makanan', name: 'Makanan & Snack', color: '#FFD100' },
 ];
 
 const mockRawMaterials: RawMaterial[] = [
-  { id: 'rm_espresso', name: 'Beans (Espresso)', unit: 'gram', currentStock: 1000 },
-  { id: 'rm_milk', name: 'Fresh Milk', unit: 'ml', currentStock: 5000 },
-  { id: 'rm_aren', name: 'Gula Aren', unit: 'ml', currentStock: 2000 },
-  { id: 'rm_matcha', name: 'Matcha Powder', unit: 'gram', currentStock: 500 },
-  { id: 'rm_croissant', name: 'Frozen Croissant', unit: 'pcs', currentStock: 20 },
+  { id: 'rm_espresso', name: 'Espresso', unit: 'ml', currentStock: 5000 },
+  { id: 'rm_air', name: 'Air Putih', unit: 'ml', currentStock: 20000 },
+  { id: 'rm_susu', name: 'Susu UHT / Fresh Milk', unit: 'ml', currentStock: 10000 },
+  { id: 'rm_es_batu', name: 'Es Batu', unit: 'gram', currentStock: 20000 },
+  { id: 'rm_syrup_strawberry', name: 'Syrup Strawberry', unit: 'ml', currentStock: 2000 },
+  { id: 'rm_syrup_pandan', name: 'Syrup Pandan', unit: 'ml', currentStock: 2000 },
+  { id: 'rm_syrup_almond', name: 'Syrup Almond', unit: 'ml', currentStock: 2000 },
+  { id: 'rm_syrup_orange', name: 'Syrup Orange', unit: 'ml', currentStock: 2000 },
+  { id: 'rm_syrup_cocopandan', name: 'Syrup Cocopandan', unit: 'ml', currentStock: 2000 },
+  { id: 'rm_powder_tea', name: 'Powder Tea', unit: 'gram', currentStock: 2000 },
+  { id: 'rm_powder_thai_tea', name: 'Powder Thai Tea', unit: 'gram', currentStock: 2000 },
+  { id: 'rm_powder_coklat', name: 'Powder Coklat', unit: 'gram', currentStock: 2000 },
+  { id: 'rm_powder_taro', name: 'Powder Taro', unit: 'gram', currentStock: 2000 },
+  { id: 'rm_sosis_telor', name: 'Sosis Telor', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_risol', name: 'Risol', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_makaroni', name: 'Makaroni', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_keripik', name: 'Keripik', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_le_minerale', name: 'Le Minerale', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_pocary_sweat', name: 'Pocary Sweat', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_pop_mie', name: 'Pop Mie', unit: 'pcs', currentStock: 100 },
+  { id: 'rm_mix_platter', name: 'Mix Platter', unit: 'pcs', currentStock: 50 },
+  { id: 'rm_snack_tray', name: 'Snack Tray', unit: 'pcs', currentStock: 50 },
 ];
 
 const mockProducts: Product[] = [
+  // MAKANAN
+  { id: 'p_sosis_telor', name: 'Sosis Telor', categoryId: 'cat_makanan', basePrice: 11000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_sosis_telor', amount: 1 }] },
+  { id: 'p_mix_platter', name: 'Mix Platter', categoryId: 'cat_makanan', basePrice: 20000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_mix_platter', amount: 1 }] },
+  { id: 'p_risol', name: 'Risol', categoryId: 'cat_makanan', basePrice: 5000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_risol', amount: 1 }] },
+  { id: 'p_pop_mie', name: 'Pop Mie', categoryId: 'cat_makanan', basePrice: 10000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_pop_mie', amount: 1 }] },
+  { id: 'p_makaroni', name: 'Makaroni', categoryId: 'cat_makanan', basePrice: 5000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_makaroni', amount: 1 }] },
+  { id: 'p_keripik', name: 'Keripik', categoryId: 'cat_makanan', basePrice: 5000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_keripik', amount: 1 }] },
+  { id: 'p_snack_tray', name: 'Snack Tray', categoryId: 'cat_makanan', basePrice: 25000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_snack_tray', amount: 1 }] },
+  
+  // MINUMAN KEMASAN
+  { id: 'p_le_minerale', name: 'Le Minerale', categoryId: 'cat_minuman', basePrice: 5000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_le_minerale', amount: 1 }] },
+  { id: 'p_pocary_sweat', name: 'Pocary Sweat', categoryId: 'cat_minuman', basePrice: 10000, type: 'SINGLE', ingredients: [{ rawMaterialId: 'rm_pocary_sweat', amount: 1 }] },
+
+  // MINUMAN (RACIKAN)
   { 
-    id: 'p1', name: 'Ice Americano', categoryId: 'cat_coffee', basePrice: 18000, type: 'SINGLE', 
-    recipe: '1. 1 shot espresso\n2. 180ml air dingin\n3. Es batu secukupnya',
-    ingredients: [{ rawMaterialId: 'rm_espresso', amount: 18 }]
+    id: 'p_americano', name: 'Americano', categoryId: 'cat_minuman', basePrice: 13000, type: 'SINGLE',
+    recipe: '1. Masukkan espresso 30ml ke dalam cup 14 Oz\n2. Tuang air 150ml',
+    ingredients: [{ rawMaterialId: 'rm_espresso', amount: 30 }, { rawMaterialId: 'rm_air', amount: 150 }]
   },
   { 
-    id: 'p2', name: 'Aren Latte', categoryId: 'cat_coffee', basePrice: 22000, type: 'SINGLE',
-    recipe: '1. 1 shot espresso\n2. 15ml gula aren\n3. 120ml susu fresh milk\n4. Es batu',
-    ingredients: [
-      { rawMaterialId: 'rm_espresso', amount: 18 },
-      { rawMaterialId: 'rm_milk', amount: 120 },
-      { rawMaterialId: 'rm_aren', amount: 15 }
-    ]
+    id: 'p_americano_strawberry', name: 'Americano Strawberry', categoryId: 'cat_minuman', basePrice: 14000, type: 'SINGLE',
+    recipe: '1. Masukkan espresso 20ml ke dalam cup 14 Oz\n2. Tuang syrup strawberry 20ml\n3. Tuang air 170ml',
+    ingredients: [{ rawMaterialId: 'rm_espresso', amount: 20 }, { rawMaterialId: 'rm_syrup_strawberry', amount: 20 }, { rawMaterialId: 'rm_air', amount: 170 }]
   },
-  { id: 'p3', name: 'Matcha Latte', categoryId: 'cat_noncoffee', basePrice: 25000, type: 'SINGLE', recipe: '1. 10g matcha powder\n2. 30ml air hangat\n3. 120ml fresh milk\n4. Es batu' },
-  { id: 'p4', name: 'Red Velvet', categoryId: 'cat_noncoffee', basePrice: 25000, type: 'SINGLE' },
-  { id: 'p5', name: 'Croissant Butter', categoryId: 'cat_snack', basePrice: 20000, type: 'SINGLE', recipe: '1. Panaskan di oven 180C selama 3 menit.' },
-  { id: 'p6', name: 'Dimsum Mentai', categoryId: 'cat_snack', basePrice: 22000, type: 'SINGLE', recipe: '1. Kukus dimsum 10 menit.\n2. Beri saus mentai\n3. Torch sampai wangi.' },
-  { id: 'p7', name: 'Paket Sarapan', categoryId: 'cat_snack', basePrice: 35000, type: 'COMBO', comboItems: ['p1', 'p5'] },
+  { 
+    id: 'p_kopi_susu_almond', name: 'Kopi Susu Almond', categoryId: 'cat_minuman', basePrice: 14000, type: 'SINGLE',
+    recipe: '1. Tuang syrup almond 20ml ke dalam gelas HI BALL 14 OZ\n2. Tuang susu UHT 100ml lalu stir dengan mixer\n3. Masukkan es batu 150g\n4. Tuang espresso 20ml\n5. Tambahkan air 60ml',
+    ingredients: [{ rawMaterialId: 'rm_syrup_almond', amount: 20 }, { rawMaterialId: 'rm_susu', amount: 100 }, { rawMaterialId: 'rm_es_batu', amount: 150 }, { rawMaterialId: 'rm_espresso', amount: 20 }, { rawMaterialId: 'rm_air', amount: 60 }]
+  },
+  { 
+    id: 'p_thai_tea', name: 'Thai Tea', categoryId: 'cat_minuman', basePrice: 10000, type: 'SINGLE',
+    recipe: '1. Tuang powder thai tea 20g\n2. Tuang susu 100ml dan air putih 100ml\n3. Isi gelas dengan es batu 150g',
+    ingredients: [{ rawMaterialId: 'rm_powder_thai_tea', amount: 20 }, { rawMaterialId: 'rm_susu', amount: 100 }, { rawMaterialId: 'rm_air', amount: 100 }, { rawMaterialId: 'rm_es_batu', amount: 150 }]
+  },
+  { 
+    id: 'p_pink_lava', name: 'Pink Lava', categoryId: 'cat_minuman', basePrice: 15000, type: 'SINGLE',
+    recipe: '1. Masukkan syrup cocopandan 40ml dan susu 100ml\n2. Mixer adonan\n3. Isi dengan air 100ml\n4. Tambahkan es batu 150g',
+    ingredients: [{ rawMaterialId: 'rm_syrup_cocopandan', amount: 40 }, { rawMaterialId: 'rm_susu', amount: 100 }, { rawMaterialId: 'rm_air', amount: 100 }, { rawMaterialId: 'rm_es_batu', amount: 150 }]
+  },
+  { 
+    id: 'p_chocolate', name: 'Chocolate', categoryId: 'cat_minuman', basePrice: 11000, type: 'SINGLE',
+    recipe: '1. Tuang powder coklat 20g ke dalam gelas HI BALL 14 OZ\n2. Tuang susu UHT 100ml lalu stir dengan mixer\n3. Isi gelas dengan es batu 200g',
+    ingredients: [{ rawMaterialId: 'rm_powder_coklat', amount: 20 }, { rawMaterialId: 'rm_susu', amount: 100 }, { rawMaterialId: 'rm_es_batu', amount: 200 }]
+  },
+  { 
+    id: 'p_choco_almond', name: 'Choco Almond', categoryId: 'cat_minuman', basePrice: 14000, type: 'SINGLE',
+    recipe: '1. Tuang Coklat bubuk 20g dan syrup almond 20ml ke dalm gelas CUP 7 OZ\n2. Masukkan susu 100ml dan es batu secukupnya',
+    ingredients: [{ rawMaterialId: 'rm_powder_coklat', amount: 20 }, { rawMaterialId: 'rm_syrup_almond', amount: 20 }, { rawMaterialId: 'rm_susu', amount: 100 }]
+  },
+  { 
+    id: 'p_taro', name: 'Taro', categoryId: 'cat_minuman', basePrice: 14000, type: 'SINGLE',
+    recipe: '1. Tuang powder taro 20g\n2. Tuang susu 100ml dan air putih 100ml\n3. Isi gelas dengan es batu 150g',
+    ingredients: [{ rawMaterialId: 'rm_powder_taro', amount: 20 }, { rawMaterialId: 'rm_susu', amount: 100 }, { rawMaterialId: 'rm_air', amount: 100 }, { rawMaterialId: 'rm_es_batu', amount: 150 }]
+  },
+
+  // PAKET MURAH
+  { id: 'p_paket_biasa', name: 'Paket Biasa (Sosis Telor + Le Minerale)', categoryId: 'cat_paket_murah', basePrice: 13000, type: 'COMBO', comboItems: ['p_sosis_telor', 'p_le_minerale'] },
+  { id: 'p_paket_spesial', name: 'Paket Spesial (Risol + Ice Pink lava + Makroni)', categoryId: 'cat_paket_murah', basePrice: 16000, type: 'COMBO', comboItems: ['p_risol', 'p_pink_lava', 'p_makaroni'] },
+  { id: 'p_paket_istimewa', name: 'Paket Istimewa (2 Risol + Ice Americano + Ice Taro)', categoryId: 'cat_paket_murah', basePrice: 25000, type: 'COMBO', comboItems: ['p_risol', 'p_risol', 'p_americano', 'p_taro'] },
+  { id: 'p_paket_lengkap', name: 'Paket Lengkap (2 Snack Tray + Risol)', categoryId: 'cat_paket_murah', basePrice: 40000, type: 'COMBO', comboItems: ['p_snack_tray', 'p_snack_tray', 'p_risol'] },
 ];
 
 export const useInventoryStore = create<InventoryState>((set) => ({

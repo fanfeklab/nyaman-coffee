@@ -25,7 +25,9 @@ export default function SettingsPage() {
   const [storeAddress, setStoreAddress] = useState(settings.storeAddress);
   const [storePhone, setStorePhone] = useState(settings.storePhone);
   const [taxRate, setTaxRate] = useState(settings.taxRate.toString());
+  const [enableTax, setEnableTax] = useState(settings.enableTax);
   const [serviceChargeRate, setServiceChargeRate] = useState(settings.serviceChargeRate.toString());
+  const [enableServiceCharge, setEnableServiceCharge] = useState(settings.enableServiceCharge);
   const [receiptFooter, setReceiptFooter] = useState(settings.receiptFooter);
   const [printerAddress, setPrinterAddress] = useState(settings.printerAddress);
 
@@ -50,7 +52,9 @@ export default function SettingsPage() {
 
   const handleSavePOS = () => {
     settings.setTaxRate(parseFloat(taxRate) || 0);
+    settings.setEnableTax(enableTax);
     settings.setServiceChargeRate(parseFloat(serviceChargeRate) || 0);
+    settings.setEnableServiceCharge(enableServiceCharge);
     settings.setReceiptFooter(receiptFooter);
     toast.success('Konfigurasi POS disimpan');
   };
@@ -132,12 +136,12 @@ export default function SettingsPage() {
                <div className="flex flex-col gap-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="flex flex-col gap-2">
-                     <Label className="font-bold text-lg">Default Pajak (PPN) %</Label>
+                     <div className="flex items-center justify-between"><Label className="font-bold text-lg">Default Pajak (PPN) %</Label><button onClick={() => setEnableTax(!enableTax)} type="button" className={cn("px-3 py-1 font-space-grotesk font-black border-2 border-black rounded-lg text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all uppercase", enableTax ? "bg-[#00E5FF] text-black" : "bg-gray-300 text-gray-700")}>{enableTax ? 'Aktif' : 'Non-Aktif'}</button></div>
                      <Input value={taxRate} onChange={(e) => setTaxRate(e.target.value)} type="number" step="0.1" className="h-12 border-2 border-black" />
                      <small className="text-black/70 font-bold">Pajak akan otomatis dimasukkan pada setiap bil baru.</small>
                    </div>
                    <div className="flex flex-col gap-2">
-                     <Label className="font-bold text-lg">Default Service Charge %</Label>
+                     <div className="flex items-center justify-between"><Label className="font-bold text-lg">Default Service Charge %</Label><button onClick={() => setEnableServiceCharge(!enableServiceCharge)} type="button" className={cn("px-3 py-1 font-space-grotesk font-black border-2 border-black rounded-lg text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all uppercase", enableServiceCharge ? "bg-[#00E5FF] text-black" : "bg-gray-300 text-gray-700")}>{enableServiceCharge ? 'Aktif' : 'Non-Aktif'}</button></div>
                      <Input value={serviceChargeRate} onChange={(e) => setServiceChargeRate(e.target.value)} type="number" step="0.1" className="h-12 border-2 border-black" />
                      <small className="text-black/70 font-bold">Biaya pelayanan restoran/kafe.</small>
                    </div>
