@@ -11,8 +11,11 @@ import { LayoutGrid, Coffee, PieChart, PackageOpen, ArrowRight, User, Clock, Wal
 import Link from 'next/link';
 
 export default function ShiftPage() {
-  const { user } = useAuthStore();
-  const { currentShift, openShift, closeShift } = useShiftStore();
+  const { user, users } = useAuthStore();
+  const { currentShift, openShift, closeShift, forceCloseShift } = useShiftStore();
+  
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER';
+  const shiftCashier = currentShift ? users.find(u => u.id === currentShift.cashierId) : null;
   
   const [startingCash, setStartingCash] = useState('');
   const [actualCash, setActualCash] = useState('');
@@ -51,10 +54,10 @@ export default function ShiftPage() {
                <div>
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-white border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000]">
-                       <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.username}&backgroundColor=ffffff`} alt="Avatar" className="w-full h-full object-cover" />
+                       <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${shiftCashier?.username || 'user'}&backgroundColor=ffffff`} alt="Avatar" className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <p className="font-space-grotesk font-black uppercase text-2xl text-black leading-none">{user?.fullName}</p>
+                      <p className="font-space-grotesk font-black uppercase text-2xl text-black leading-none">{shiftCashier?.fullName || 'Sistem'}</p>
                       <p className="font-inter font-bold text-black/70 text-sm mt-1 uppercase">Kasir Aktif</p>
                     </div>
                   </div>
@@ -78,9 +81,20 @@ export default function ShiftPage() {
                </div>
 
                <div className="mt-8">
-                 <Button onClick={() => setConfirmClose(true)} variant="outline" className="w-full h-14 bg-white hover:bg-gray-100 text-red-500 hover:text-red-600 border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
-                    AKHIRI SHIFT KASIR
-                 </Button>
+                 {isAdmin ? (
+                   <Button onClick={() => {
+                      if(window.confirm('Anda yakin ingin menutup shift ini secara paksa? Laporan akan disesuaikan otomatis.')) {
+                        forceCloseShift(currentShift.id);
+                        window.location.reload();
+                      }
+                   }} variant="outline" className="w-full h-14 bg-red-500 hover:bg-red-600 text-white border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
+                      FORCE END SHIFT
+                   </Button>
+                 ) : (
+                   <Button onClick={() => setConfirmClose(true)} variant="outline" className="w-full h-14 bg-white hover:bg-gray-100 text-red-500 hover:text-red-600 border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
+                      AKHIRI SHIFT KASIR
+                   </Button>
+                 )}
                </div>
             </div>
 
@@ -191,6 +205,22 @@ export default function ShiftPage() {
   }
 
   // default: NO OPEN SHIFT
+  if (isAdmin) {
+    return (
+      <div className="p-6 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+         <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full flex flex-col items-center">
+            
+            <div className="w-20 h-20 bg-gray-100 border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000] mb-6 flex items-center justify-center">
+               <span className="font-space-grotesk font-black text-4xl text-gray-400">?</span>
+            </div>
+
+            <h1 className="font-space-grotesk font-black text-2xl md:text-3xl uppercase tracking-widest text-black mb-2 text-center">Tidak Ada Shift Aktif</h1>
+            <p className="font-inter font-bold text-gray-500 text-center mb-8">Saat ini tidak ada kasir yang sedang membuka shift. Anda tidak dapat melakukan transaksi.</p>
+         </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
        <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full flex flex-col items-center">

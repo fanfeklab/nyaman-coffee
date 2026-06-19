@@ -50,14 +50,16 @@ interface CartState {
   getTotal: () => number;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+export const useCartStore = create<CartState>((set, get) => {
+  const settings = useSettingsStore.getState();
+  return {
   items: [],
   discountType: null,
   discountValue: 0,
-  taxRate: 11, // Default PPN 11%
-  enableTax: true,
-  serviceChargeRate: 0,
-  enableServiceCharge: true,
+  taxRate: settings.taxRate,
+  enableTax: settings.enableTax,
+  serviceChargeRate: settings.serviceChargeRate,
+  enableServiceCharge: settings.enableServiceCharge,
   savedBills: [],
   
   addItem: (product) => {
@@ -186,4 +188,4 @@ export const useCartStore = create<CartState>((set, get) => ({
     return Math.max(0, getSubtotal() - getDiscountAmount()) + getServiceChargeAmount() + getTaxAmount();
   }
 
-}));
+};});

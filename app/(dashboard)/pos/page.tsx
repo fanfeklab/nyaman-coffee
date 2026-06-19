@@ -89,11 +89,17 @@ export default function POSPage() {
   
   // Protect POS access
   useEffect(() => {
+    const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER';
+    if (isAdmin) {
+      toast.error('AKSES DITOLAK', { description: 'Admin tidak dapat bertransaksi.' });
+      router.push('/shift');
+      return;
+    }
     if (!currentShift || currentShift.status !== 'OPEN') {
       toast.error('AKSES DITOLAK', { description: 'Anda harus membuka shift terlebih dahulu.' });
       router.push('/shift');
     }
-  }, [currentShift, router]);
+  }, [currentShift, user, router]);
 
   // Payment UI state
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);

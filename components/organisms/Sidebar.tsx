@@ -43,59 +43,62 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
         
         {/* GROUP: DASHBOARD / KASIR */}
         <div className="flex flex-col gap-2">
-          <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black opacity-60 ml-2">Dashboard & Transaksi</span>
+          <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black opacity-60 ml-2">Dashboard</span>
           
           <Link href="/shift" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/shift') || pathname === '/' ? "bg-black text-white" : "bg-[#FF90E8] text-black")}>
             <CheckSquare className={cn("w-5 h-5", isActive('/shift') || pathname === '/' ? "text-white" : "text-black")} strokeWidth={2.5}/>
-            <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/shift') || pathname === '/' ? "text-white" : "text-black")}>Shift & Dashboard</span>
+            <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/shift') || pathname === '/' ? "text-white" : "text-black")}>Shift & Status</span>
           </Link>
 
-          <Link href="/pos" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/pos') ? "bg-black text-white" : "bg-white text-black")}>
-            <div className="flex items-center gap-3">
-              <LayoutGrid className={cn("w-5 h-5", isActive('/pos') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/pos') ? "text-white" : "text-black")}>Terminal Kasir</span>
-            </div>
-            <ChevronRight className={cn("w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity", isActive('/pos') ? "text-white" : "text-black")} strokeWidth={3}/>
-          </Link>
+          {user?.role === 'CASHIER' && (
+            <Link href="/pos" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/pos') ? "bg-black text-white" : "bg-white text-black")}>
+              <div className="flex items-center gap-3">
+                <LayoutGrid className={cn("w-5 h-5", isActive('/pos') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/pos') ? "text-white" : "text-black")}>Terminal Kasir</span>
+              </div>
+              <ChevronRight className={cn("w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity", isActive('/pos') ? "text-white" : "text-black")} strokeWidth={3}/>
+            </Link>
+          )}
         </div>
 
         {/* GROUP: DATA MASTER */}
-        {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-          <div className="flex flex-col gap-2 mt-2">
-            <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black opacity-60 ml-2">Data Master</span>
-            
+        <div className="flex flex-col gap-2 mt-2">
+          <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black opacity-60 ml-2">Data Master</span>
+          
+          {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
             <Link href="/backoffice/products" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/products') ? "bg-black text-white" : "bg-white text-black")}>
               <Coffee className={cn("w-5 h-5", isActive('/backoffice/products') ? "text-white" : "text-black")} strokeWidth={2.5}/>
               <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/products') ? "text-white" : "text-black")}>Produk</span>
             </Link>
+          )}
 
-            <Link href="/backoffice/inventory" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/inventory') ? "bg-black text-white" : "bg-white text-black")}>
-              <PackageOpen className={cn("w-5 h-5", isActive('/backoffice/inventory') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/inventory') ? "text-white" : "text-black")}>Bahan Baku</span>
-            </Link>
+          <Link href="/backoffice/inventory" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/inventory') ? "bg-black text-white" : "bg-white text-black")}>
+            <PackageOpen className={cn("w-5 h-5", isActive('/backoffice/inventory') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+            <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/inventory') ? "text-white" : "text-black")}>Resep & Bahan</span>
+          </Link>
 
-            <Link href="/backoffice/users" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/users') ? "bg-black text-white" : "bg-white text-black")}>
-              <Users className={cn("w-5 h-5", isActive('/backoffice/users') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/users') ? "text-white" : "text-black")}>Karyawan</span>
-            </Link>
-
-            <Link href="/backoffice/customers" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/customers') ? "bg-black text-white" : "bg-white text-black")}>
-              <Users className={cn("w-5 h-5", isActive('/backoffice/customers') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/customers') ? "text-white" : "text-black")}>Pelanggan</span>
-            </Link>
-          </div>
-        )}
+          {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
+            <>
+              <Link href="/backoffice/users" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/users') ? "bg-black text-white" : "bg-white text-black")}>
+                <Users className={cn("w-5 h-5", isActive('/backoffice/users') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/users') ? "text-white" : "text-black")}>Karyawan</span>
+              </Link>
+              <Link href="/backoffice/customers" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/customers') ? "bg-black text-white" : "bg-white text-black")}>
+                <Users className={cn("w-5 h-5", isActive('/backoffice/customers') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/customers') ? "text-white" : "text-black")}>Pelanggan</span>
+              </Link>
+            </>
+          )}
+        </div>
 
         {/* GROUP: BISNIS & SETTINGS */}
         <div className="flex flex-col gap-2 mt-2">
           <span className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black opacity-60 ml-2">Laporan & Pengaturan</span>
           
-          {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-            <Link href="/backoffice/reports" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/reports') ? "bg-black text-white" : "bg-white text-black")}>
-              <PieChart className={cn("w-5 h-5", isActive('/backoffice/reports') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/reports') ? "text-white" : "text-black")}>Laporan Analisis</span>
-            </Link>
-          )}
+          <Link href="/backoffice/reports" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/reports') ? "bg-black text-white" : "bg-white text-black")}>
+            <PieChart className={cn("w-5 h-5", isActive('/backoffice/reports') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+            <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/reports') ? "text-white" : "text-black")}>Laporan Penjualan</span>
+          </Link>
 
           {user?.role === 'SUPER_ADMIN' && (
             <Link href="/backoffice/audit" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/audit') ? "bg-black text-white" : "bg-white text-black")}>
