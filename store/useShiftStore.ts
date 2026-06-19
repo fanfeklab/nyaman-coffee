@@ -20,6 +20,7 @@ interface ShiftState {
   forceCloseShift: (shiftId: string) => void;
   addSalesToShift: (amount: number) => void;
   subtractSalesFromShift: (amount: number) => void;
+  clearShiftHistory: () => void;
 }
 
 export const useShiftStore = create<ShiftState>()(
@@ -97,6 +98,10 @@ export const useShiftStore = create<ShiftState>()(
             }
           };
         });
+      },
+
+      clearShiftHistory: () => {
+        set({ currentShift: null, shiftHistory: [] });
       }
     }),
     {

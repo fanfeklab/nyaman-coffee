@@ -14,24 +14,23 @@ export default function Home() {
            <span className="font-space-grotesk font-black uppercase tracking-widest text-sm">Nyaman POS ver 1.0.0</span>
         </div>
 
+        <p className="font-space-grotesk text-xs font-black uppercase tracking-widest text-[#FFD100] px-2 py-1 w-max mt-4">
+           LIVE PRODUCTION ENVIRONMENT
+        </p>
+
         <h1 className="font-space-grotesk font-black text-6xl md:text-8xl uppercase tracking-tight text-black leading-[0.9]">
-          Sistem Kasir <br /> <span className="text-[#00E5FF] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">Kekinian.</span>
+           Nyaman <br /> <span className="text-[#FF6321] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">Coffee Shop.</span>
         </h1>
 
         <p className="font-inter font-bold text-gray-600 text-lg md:text-xl max-w-xl">
-          Aplikasi Point of Sale lengkap dengan manajemen stok, laporan penjualan real-time, dan Neobrutalist design.
+           Sistem Manajemen Outlet Nyaman POS Terintegrasi
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 mt-6">
            <Link href="/login">
-             <Button className="h-16 px-10 text-xl bg-[#FF6321] text-white hover:bg-[#ff7a40] font-space-grotesk font-black uppercase border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center w-full sm:w-auto">
+             <Button className="h-16 px-10 text-xl bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center w-full sm:w-auto">
                MASUK APLIKASI
                <ArrowRight className="ml-2 w-6 h-6" />
-             </Button>
-           </Link>
-           <Link href="/login">
-             <Button variant="outline" className="h-16 px-10 text-xl bg-white text-black font-space-grotesk font-black uppercase border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center w-full sm:w-auto">
-               Buka Sandbox
              </Button>
            </Link>
         </div>

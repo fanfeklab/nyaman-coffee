@@ -26,10 +26,10 @@ export function PinLoginTemplate() {
   useEffect(() => {
     const cachedUser = localStorage.getItem('pos_cached_username');
     if (cachedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUsername(cachedUser);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRememberMe(true);
+      setTimeout(() => {
+        setUsername(cachedUser);
+        setRememberMe(true);
+      }, 0);
     }
   }, []);
   

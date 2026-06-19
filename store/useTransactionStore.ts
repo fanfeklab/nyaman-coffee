@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { CartItem } from './useCartStore';
 
 export interface Transaction {
@@ -17,6 +18,7 @@ interface TransactionState {
   transactions: Transaction[];
   addTransaction: (tx: Transaction) => void;
   voidTransaction: (txId: string) => void;
+  clearTransactions: () => void;
 }
 
 // Initial mock data
@@ -49,10 +51,18 @@ const mockTransactions: Transaction[] = [
   }
 ];
 
-export const useTransactionStore = create<TransactionState>((set) => ({
-  transactions: mockTransactions,
-  addTransaction: (tx) => set((state) => ({ transactions: [tx, ...state.transactions] })),
-  voidTransaction: (txId) => set((state) => ({
-    transactions: state.transactions.map(t => t.id === txId ? { ...t, status: 'VOID' } : t)
-  }))
-}));
+export const useTransactionStore = create<TransactionState>()(
+  persist(
+    (set) => ({
+      transactions: mockTransactions,
+      addTransaction: (tx) => set((state) => ({ transactions: [tx, ...state.transactions] })),
+      voidTransaction: (txId) => set((state) => ({
+        transactions: state.transactions.map(t => t.id === txId ? { ...t, status: 'VOID' } : t)
+      })),
+      clearTransactions: () => set({ transactions: [] })
+    }),
+    {
+      name: 'pos-transaction-storage',
+    }
+  )
+);

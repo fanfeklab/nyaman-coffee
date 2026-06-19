@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Category {
   id: string;
@@ -52,6 +53,7 @@ interface InventoryState {
   
   processCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => { success: boolean; reason?: string };
   revertCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => void;
+  clearInventory: () => void;
 }
 
 const mockCategories: Category[] = [
@@ -148,109 +150,120 @@ const mockProducts: Product[] = [
   { id: 'p_paket_lengkap', name: 'Paket Lengkap (2 Snack Tray + Risol)', categoryId: 'cat_paket_murah', basePrice: 40000, type: 'COMBO', comboItems: ['p_snack_tray', 'p_snack_tray', 'p_risol'] },
 ];
 
-export const useInventoryStore = create<InventoryState>((set) => ({
-  categories: mockCategories,
-  products: mockProducts,
-  rawMaterials: mockRawMaterials,
-  inventoryMode: 'LOOSE',
-  
-  addCategory: (cat) => set(state => ({ categories: [...state.categories, cat] })),
-  updateCategory: (id, updates) => set(state => ({
-    categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c)
-  })),
-  deleteCategory: (id) => set(state => ({ categories: state.categories.filter(c => c.id !== id) })),
-  
-  addProduct: (product) => set(state => ({ products: [...state.products, product] })),
-  updateProduct: (id, product) => set(state => ({
-    products: state.products.map(p => p.id === id ? { ...p, ...product } : p)
-  })),
-  deleteProduct: (id) => set(state => ({ products: state.products.filter(p => p.id !== id) })),
-  
-  addRawMaterial: (material) => set(state => ({ rawMaterials: [...state.rawMaterials, material] })),
-  updateRawMaterial: (id, material) => set(state => ({
-    rawMaterials: state.rawMaterials.map(rm => rm.id === id ? { ...rm, ...material } : rm)
-  })),
-  deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
-  
-  setInventoryMode: (mode) => set({ inventoryMode: mode }),
-  
-  processCheckoutInventory: (cartItems) => {
-    let success = true;
-    let reason = '';
-    
-    set(state => {
-      if (state.inventoryMode === 'OFF') return state;
+export const useInventoryStore = create<InventoryState>()(
+  persist(
+    (set) => ({
+      categories: mockCategories,
+      products: mockProducts,
+      rawMaterials: mockRawMaterials,
+      inventoryMode: 'LOOSE',
       
-      const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+      addCategory: (cat) => set(state => ({ categories: [...state.categories, cat] })),
+      updateCategory: (id, updates) => set(state => ({
+        categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c)
+      })),
+      deleteCategory: (id) => set(state => ({ categories: state.categories.filter(c => c.id !== id) })),
       
-      for (const item of cartItems) {
-        const product = state.products.find(p => p.id === item.productId);
-        if (!product) continue;
+      addProduct: (product) => set(state => ({ products: [...state.products, product] })),
+      updateProduct: (id, product) => set(state => ({
+        products: state.products.map(p => p.id === id ? { ...p, ...product } : p)
+      })),
+      deleteProduct: (id) => set(state => ({ products: state.products.filter(p => p.id !== id) })),
+      
+      addRawMaterial: (material) => set(state => ({ rawMaterials: [...state.rawMaterials, material] })),
+      updateRawMaterial: (id, material) => set(state => ({
+        rawMaterials: state.rawMaterials.map(rm => rm.id === id ? { ...rm, ...material } : rm)
+      })),
+      deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
+      
+      setInventoryMode: (mode) => set({ inventoryMode: mode }),
+      
+      processCheckoutInventory: (cartItems) => {
+        let success = true;
+        let reason = '';
         
-        const processProduct = (prod: Product, multiplier: number) => {
-          if (prod.type === 'COMBO' && prod.comboItems) {
-            for (const subId of prod.comboItems) {
-              const subP = state.products.find(p => p.id === subId);
-              if (subP) processProduct(subP, multiplier);
-            }
-          } else if (prod.ingredients) {
-            for (const ing of prod.ingredients) {
-              const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
-              if (rmIdx >= 0) {
-                if (state.inventoryMode === 'STRICT' && nextMaterials[rmIdx].currentStock < ing.amount * multiplier) {
-                  success = false;
-                  reason = `Stok bahan baku ${nextMaterials[rmIdx].name} tidak mencukupi untuk menu ${prod.name}`;
+        set(state => {
+          if (state.inventoryMode === 'OFF') return state;
+          
+          const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+          
+          for (const item of cartItems) {
+            const product = state.products.find(p => p.id === item.productId);
+            if (!product) continue;
+            
+            const processProduct = (prod: Product, multiplier: number) => {
+              if (prod.type === 'COMBO' && prod.comboItems) {
+                for (const subId of prod.comboItems) {
+                  const subP = state.products.find(p => p.id === subId);
+                  if (subP) processProduct(subP, multiplier);
                 }
-                nextMaterials[rmIdx].currentStock -= ing.amount * multiplier;
+              } else if (prod.ingredients) {
+                for (const ing of prod.ingredients) {
+                  const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
+                  if (rmIdx >= 0) {
+                    if (state.inventoryMode === 'STRICT' && nextMaterials[rmIdx].currentStock < ing.amount * multiplier) {
+                      success = false;
+                      reason = `Stok bahan baku ${nextMaterials[rmIdx].name} tidak mencukupi untuk menu ${prod.name}`;
+                    }
+                    nextMaterials[rmIdx].currentStock -= ing.amount * multiplier;
+                  }
+                }
               }
-            }
+            };
+            
+            processProduct(product, item.qty);
+            if (!success) break;
           }
-        };
+          
+          if (!success && state.inventoryMode === 'STRICT') {
+            return state; // Revert state (do not apply changes)
+          }
+          
+          return { rawMaterials: nextMaterials };
+        });
         
-        processProduct(product, item.qty);
-        if (!success) break;
-      }
+        return { success, reason };
+      },
       
-      if (!success && state.inventoryMode === 'STRICT') {
-        return state; // Revert state (do not apply changes)
-      }
-      
-      return { rawMaterials: nextMaterials };
-    });
-    
-    return { success, reason };
-  },
-  
-  revertCheckoutInventory: (cartItems) => {
-    set(state => {
-      if (state.inventoryMode === 'OFF') return state;
-      
-      const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
-      
-      for (const item of cartItems) {
-        const product = state.products.find(p => p.id === item.productId);
-        if (!product) continue;
-        
-        const revertProduct = (prod: Product, multiplier: number) => {
-          if (prod.type === 'COMBO' && prod.comboItems) {
-            for (const subId of prod.comboItems) {
-              const subP = state.products.find(p => p.id === subId);
-              if (subP) revertProduct(subP, multiplier);
-            }
-          } else if (prod.ingredients) {
-            for (const ing of prod.ingredients) {
-              const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
-              if (rmIdx >= 0) {
-                nextMaterials[rmIdx].currentStock += ing.amount * multiplier;
+      revertCheckoutInventory: (cartItems) => {
+        set(state => {
+          if (state.inventoryMode === 'OFF') return state;
+          
+          const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+          
+          for (const item of cartItems) {
+            const product = state.products.find(p => p.id === item.productId);
+            if (!product) continue;
+            
+            const revertProduct = (prod: Product, multiplier: number) => {
+              if (prod.type === 'COMBO' && prod.comboItems) {
+                for (const subId of prod.comboItems) {
+                  const subP = state.products.find(p => p.id === subId);
+                  if (subP) revertProduct(subP, multiplier);
+                }
+              } else if (prod.ingredients) {
+                for (const ing of prod.ingredients) {
+                  const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
+                  if (rmIdx >= 0) {
+                    nextMaterials[rmIdx].currentStock += ing.amount * multiplier;
+                  }
+                }
               }
-            }
+            };
+            
+            revertProduct(product, item.qty);
           }
-        };
-        
-        revertProduct(product, item.qty);
+          
+          return { rawMaterials: nextMaterials };
+        });
+      },
+
+      clearInventory: () => {
+        set({ categories: [], products: [], rawMaterials: [] });
       }
-      
-      return { rawMaterials: nextMaterials };
-    });
-  }
-}));
+    }),
+    {
+      name: 'inventory-storage',
+    }
+  )
+);

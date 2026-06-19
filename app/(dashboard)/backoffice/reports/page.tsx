@@ -33,7 +33,7 @@ export default function ReportsPage() {
     }
   }, [user, router]);
 
-  const [activeTab, setActiveTab] = useState<'penjualan' | 'shift'>('penjualan');
+  const [activeTab, setActiveTab] = useState<'penjualan' | 'shift' | 'analitik'>('penjualan');
   const [search, setSearch] = useState('');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [adminPin, setAdminPin] = useState('');
@@ -72,6 +72,31 @@ export default function ReportsPage() {
     setAdminPin('');
   };
 
+  const { products } = useInventoryStore();
+
+  const productAnalytics = useMemo(() => {
+    const stats: Record<string, { name: string, soldQty: number, revenue: number }> = {};
+    products.forEach(p => {
+      stats[p.id] = { name: p.name, soldQty: 0, revenue: 0 };
+    });
+
+    transactions.filter(t => t.status === 'COMPLETED').forEach(tx => {
+      tx.items.forEach(item => {
+        if (stats[item.product.id]) {
+          stats[item.product.id].soldQty += item.qty;
+          stats[item.product.id].revenue += (item.qty * item.product.basePrice);
+        } else {
+          stats[item.product.id] = { name: item.product.name, soldQty: item.qty, revenue: item.qty * item.product.basePrice };
+        }
+      });
+    });
+
+    return Object.values(stats).sort((a, b) => b.soldQty - a.soldQty);
+  }, [transactions, products]);
+
+  const topSelling = productAnalytics.filter(p => p.soldQty > 0);
+  const unsellable = productAnalytics.filter(p => p.soldQty === 0);
+
   return (
     <div className="p-6 lg:p-10 flex flex-col gap-6">
       <div>
@@ -91,6 +116,12 @@ export default function ReportsPage() {
            className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'shift' ? 'bg-[#00E5FF] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
          >
            LAPORAN SHIFT
+         </button>
+         <button 
+           onClick={() => setActiveTab('analitik')}
+           className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'analitik' ? 'bg-[#FF90E8] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
+         >
+           ANALITIK MENU
          </button>
       </div>
 
@@ -272,6 +303,55 @@ export default function ReportsPage() {
                        )}
                      </TableBody>
                   </Table>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {activeTab === 'analitik' && (
+         <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">
+               <h2 className="font-space-grotesk font-black text-xl uppercase mb-4 px-2">Menu Paling Laku (Top Selling)</h2>
+               <div className="overflow-x-auto border-4 border-black rounded-xl">
+                  <Table>
+                     <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase text-xs">
+                       <TableRow>
+                         <TableHead className="text-black border-r-2 border-black">Nama Menu</TableHead>
+                         <TableHead className="text-black border-r-2 border-black text-center w-[150px]">Terjual (Qty)</TableHead>
+                         <TableHead className="text-black text-right w-[200px]">Total Pendapatan</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody className="font-inter font-bold">
+                       {topSelling.map((item, idx) => (
+                          <TableRow key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50">
+                            <TableCell className="border-r-2 border-gray-200">{item.name}</TableCell>
+                            <TableCell className="border-r-2 border-gray-200 text-center text-[#FF6321] text-lg">{item.soldQty}</TableCell>
+                            <TableCell className="text-right text-black">{formatRupiah(item.revenue)}</TableCell>
+                          </TableRow>
+                       ))}
+                       {topSelling.length === 0 && (
+                          <TableRow>
+                             <TableCell colSpan={3} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
+                               Belum ada data penjualan.
+                             </TableCell>
+                          </TableRow>
+                       )}
+                     </TableBody>
+                  </Table>
+               </div>
+            </div>
+
+            <div className="bg-[#FF90E8] border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">
+               <h2 className="font-space-grotesk font-black text-xl uppercase mb-4 px-2">Menu Tidak Pernah Laku</h2>
+               <div className="flex flex-wrap gap-2">
+                 {unsellable.map((item, idx) => (
+                   <span key={idx} className="px-4 py-2 border-2 border-black bg-white rounded-lg font-space-grotesk font-black uppercase text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                     {item.name}
+                   </span>
+                 ))}
+                 {unsellable.length === 0 && (
+                    <span className="font-inter font-bold text-black border-2 border-black p-4 rounded-xl bg-white w-full">Semua menu laku terjual sejauh ini! ✨</span>
+                 )}
                </div>
             </div>
          </div>

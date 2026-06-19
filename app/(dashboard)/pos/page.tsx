@@ -52,11 +52,13 @@ export default function POSPage() {
   const [viewOption, setViewOption] = useState<ViewOption>('Grid');
 
   useEffect(() => {
-    // Load preferences from local storage
-    const savedSort = localStorage.getItem('pos_sort_pref') as SortOption;
-    const savedView = localStorage.getItem('pos_view_pref') as ViewOption;
-    if (savedSort) setSortOption(savedSort);
-    if (savedView) setViewOption(savedView);
+    // Load preferences from local storage in next tick to avoid cascading render error
+    setTimeout(() => {
+      const savedSort = localStorage.getItem('pos_sort_pref') as SortOption;
+      const savedView = localStorage.getItem('pos_view_pref') as ViewOption;
+      if (savedSort) setSortOption(savedSort);
+      if (savedView) setViewOption(savedView);
+    }, 0);
   }, []);
 
   const handleSortChange = (opt: SortOption) => {

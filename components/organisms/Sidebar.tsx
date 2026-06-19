@@ -34,8 +34,8 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     <aside className={cn("w-64 md:w-72 bg-[#00A19D] border-r-8 border-black flex flex-col h-screen", className)}>
       {/* Brand */}
       <div className="p-6 border-b-8 border-black flex flex-col gap-1 bg-[#FFD100]">
-        <h1 className="font-space-grotesk text-3xl font-black uppercase text-black leading-none">NYAMAN<br/>POS</h1>
-        <p className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black bg-white px-2 py-1 border-2 border-black w-max mt-2">v1.0 (Sandbox)</p>
+        <h1 className="font-space-grotesk text-3xl font-black uppercase text-black leading-none">NYAMAN<br/>COFFEE</h1>
+        <p className="font-space-grotesk text-xs font-black uppercase tracking-widest text-black bg-white px-2 py-1 border-2 border-black w-max mt-2">v1.1 (LIVE)</p>
       </div>
 
       {/* Nav Menu */}

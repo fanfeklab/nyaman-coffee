@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Customer {
   id: string;
@@ -16,36 +17,43 @@ interface CustomerState {
   deductPoints: (id: string, amount: number) => void;
 }
 
-export const useCustomerStore = create<CustomerState>((set, get) => ({
-  customers: [],
+export const useCustomerStore = create<CustomerState>()(
+  persist(
+    (set, get) => ({
+      customers: [],
 
-  addCustomer: (customerData) => {
-    set((state) => ({
-      customers: [...state.customers, { ...customerData, id: 'cust_' + Date.now().toString(36), points: 0 }]
-    }));
-  },
+      addCustomer: (customerData) => {
+        set((state) => ({
+          customers: [...state.customers, { ...customerData, id: 'cust_' + Date.now().toString(36), points: 0 }]
+        }));
+      },
 
-  updateCustomer: (id, customerData) => {
-    set((state) => ({
-      customers: state.customers.map((c) => (c.id === id ? { ...c, ...customerData } : c))
-    }));
-  },
+      updateCustomer: (id, customerData) => {
+        set((state) => ({
+          customers: state.customers.map((c) => (c.id === id ? { ...c, ...customerData } : c))
+        }));
+      },
 
-  deleteCustomer: (id) => {
-    set((state) => ({
-      customers: state.customers.filter((c) => c.id !== id)
-    }));
-  },
+      deleteCustomer: (id) => {
+        set((state) => ({
+          customers: state.customers.filter((c) => c.id !== id)
+        }));
+      },
 
-  addPoints: (id, amount) => {
-    set((state) => ({
-      customers: state.customers.map((c) => (c.id === id ? { ...c, points: c.points + amount } : c))
-    }));
-  },
+      addPoints: (id, amount) => {
+        set((state) => ({
+          customers: state.customers.map((c) => (c.id === id ? { ...c, points: c.points + amount } : c))
+        }));
+      },
 
-  deductPoints: (id, amount) => {
-    set((state) => ({
-      customers: state.customers.map((c) => (c.id === id ? { ...c, points: Math.max(0, c.points - amount) } : c))
-    }));
-  }
-}));
+      deductPoints: (id, amount) => {
+        set((state) => ({
+          customers: state.customers.map((c) => (c.id === id ? { ...c, points: Math.max(0, c.points - amount) } : c))
+        }));
+      }
+    }),
+    {
+      name: 'pos-customer-storage',
+    }
+  )
+);

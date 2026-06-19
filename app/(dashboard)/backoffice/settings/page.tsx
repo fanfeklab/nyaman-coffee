@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useTransactionStore } from '@/store/useTransactionStore';
+import { useShiftStore } from '@/store/useShiftStore';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -15,10 +17,12 @@ import { Store, Receipt, Printer, PackageSearch, Save } from 'lucide-react';
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { inventoryMode, setInventoryMode } = useInventoryStore();
+  const { inventoryMode, setInventoryMode, clearInventory } = useInventoryStore();
   const settings = useSettingsStore();
+  const { clearTransactions } = useTransactionStore();
+  const { clearShiftHistory } = useShiftStore();
 
-  const [activeTab, setActiveTab] = useState<'GENERAL' | 'POS' | 'HARDWARE' | 'INVENTORY'>('GENERAL');
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'POS' | 'HARDWARE' | 'INVENTORY' | 'DANGER'>('GENERAL');
 
   // Form states
   const [storeName, setStoreName] = useState(settings.storeName);
@@ -98,6 +102,14 @@ export default function SettingsPage() {
            >
              <Printer className="w-5 h-5" /> Hardware
            </button>
+           {user?.role === 'SUPER_ADMIN' && (
+             <button 
+               onClick={() => setActiveTab('DANGER')}
+               className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'DANGER' ? "bg-red-600 text-white" : "bg-white text-red-600")}
+             >
+               <Printer className="w-5 h-5 hidden" /> Danger Zone
+             </button>
+           )}
          </div>
 
          {/* Tab Content */}
@@ -215,6 +227,54 @@ export default function SettingsPage() {
                    <Save className="w-5 h-5 mr-2" />
                    Simpan Hardware
                  </Button>
+               </div>
+             </div>
+           )}
+
+           {activeTab === 'DANGER' && user?.role === 'SUPER_ADMIN' && (
+             <div className="bg-red-500 border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
+               <h2 className="font-space-grotesk font-black text-2xl uppercase border-b-4 border-black text-white pb-2">DANGER ZONE</h2>
+               
+               <div className="flex flex-col gap-4 text-white">
+                 <p className="font-bold">Hati-hati! Tindakan di bawah ini tidak dapat dibatalkan dan akan menghapus seluruh data yang terkait dari sistem. Tindakan ini tidak akan tercatat dalam audit trail.</p>
+                 
+                 <div className="flex flex-col md:flex-row gap-4 mt-4">
+                   <Button onClick={() => {
+                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
+                     if (username !== user.username) return toast.error('Username salah');
+                     const pin = window.prompt('Masukkan PIN Anda:');
+                     if (pin !== user.pin) return toast.error('PIN salah');
+                     
+                     clearTransactions();
+                     toast.success('Semua transaksi berhasil dihapus');
+                   }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
+                     Hapus Semua Transaksi
+                   </Button>
+
+                   <Button onClick={() => {
+                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
+                     if (username !== user.username) return toast.error('Username salah');
+                     const pin = window.prompt('Masukkan PIN Anda:');
+                     if (pin !== user.pin) return toast.error('PIN salah');
+                     
+                     clearShiftHistory();
+                     toast.success('Semua Riwayat Shift berhasil dihapus');
+                   }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
+                     Hapus Semua Riwayat Shift
+                   </Button>
+
+                   <Button onClick={() => {
+                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
+                     if (username !== user.username) return toast.error('Username salah');
+                     const pin = window.prompt('Masukkan PIN Anda:');
+                     if (pin !== user.pin) return toast.error('PIN salah');
+                     
+                     clearInventory();
+                     toast.success('Semua Menu dan Bahan Baku berhasil dihapus');
+                   }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
+                     Hapus Seluruh Menu/Item
+                   </Button>
+                 </div>
                </div>
              </div>
            )}
