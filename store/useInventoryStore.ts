@@ -19,6 +19,40 @@ export interface ProductRecipeIngredient {
   amount: number;
 }
 
+export interface StockOpname {
+  id: string;
+  date: string;
+  items: {
+    rawMaterialId: string;
+    systemStock: number;
+    actualStock: number;
+    difference: number;
+    reason: string;
+  }[];
+  createdBy: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  address: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  date: string;
+  supplierId: string;
+  items: {
+    rawMaterialId: string;
+    qty: number;
+    price: number;
+  }[];
+  totalAmount: number;
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  createdBy: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -50,7 +84,23 @@ interface InventoryState {
   deleteRawMaterial: (id: string) => void;
   
   setInventoryMode: (mode: 'LOOSE' | 'STRICT' | 'OFF') => void;
+  clearInventory: () => void;
   
+  // Stock Opname
+  stockOpnames: StockOpname[];
+  addStockOpname: (opname: StockOpname) => void;
+  
+  // Suppliers
+  suppliers: Supplier[];
+  addSupplier: (supplier: Supplier) => void;
+  updateSupplier: (id: string, updates: Partial<Supplier>) => void;
+  deleteSupplier: (id: string) => void;
+  
+  // Purchase Orders
+  purchaseOrders: PurchaseOrder[];
+  addPurchaseOrder: (po: PurchaseOrder) => void;
+  updatePurchaseOrderStatus: (id: string, status: 'PENDING' | 'COMPLETED' | 'CANCELLED') => void;
+
   processCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => { success: boolean; reason?: string };
   revertCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => void;
 }
@@ -156,6 +206,9 @@ export const useInventoryStore = create<InventoryState>()(
       products: mockProducts,
       rawMaterials: mockRawMaterials,
       inventoryMode: 'LOOSE',
+      stockOpnames: [],
+      suppliers: [],
+      purchaseOrders: [],
       
       addCategory: (cat) => set(state => ({ categories: [...state.categories, cat] })),
       updateCategory: (id, updates) => set(state => ({
@@ -176,7 +229,60 @@ export const useInventoryStore = create<InventoryState>()(
       deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
       
       setInventoryMode: (mode) => set({ inventoryMode: mode }),
+      clearInventory: () => set({ products: [], categories: [], rawMaterials: [], stockOpnames: [], suppliers: [], purchaseOrders: [] }),
       
+      addStockOpname: (opname) => set(state => {
+        const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+        for (const item of opname.items) {
+          const rmIdx = nextMaterials.findIndex(rm => rm.id === item.rawMaterialId);
+          if (rmIdx >= 0) {
+            nextMaterials[rmIdx].currentStock = item.actualStock;
+          }
+        }
+        return {
+          stockOpnames: [opname, ...state.stockOpnames],
+          rawMaterials: nextMaterials
+        };
+      }),
+
+      addSupplier: (supplier) => set(state => ({ suppliers: [...state.suppliers, supplier] })),
+      updateSupplier: (id, updates) => set(state => ({
+        suppliers: state.suppliers.map(s => s.id === id ? { ...s, ...updates } : s)
+      })),
+      deleteSupplier: (id) => set(state => ({ suppliers: state.suppliers.filter(s => s.id !== id) })),
+
+      addPurchaseOrder: (po) => set(state => ({ purchaseOrders: [po, ...state.purchaseOrders] })),
+      updatePurchaseOrderStatus: (id, status) => set(state => {
+        const po = state.purchaseOrders.find(p => p.id === id);
+        if (!po || po.status === status) return state;
+
+        const nextMaterials = state.rawMaterials.map(rm => ({ ...rm }));
+        
+        // If changing to COMPLETED, add stock
+        if (status === 'COMPLETED' && po.status !== 'COMPLETED') {
+          for (const item of po.items) {
+            const rmIdx = nextMaterials.findIndex(rm => rm.id === item.rawMaterialId);
+            if (rmIdx >= 0) {
+              nextMaterials[rmIdx].currentStock += item.qty;
+            }
+          }
+        } 
+        // If changing from COMPLETED to something else, remove stock
+        else if (po.status === 'COMPLETED' && status !== 'COMPLETED') {
+          for (const item of po.items) {
+            const rmIdx = nextMaterials.findIndex(rm => rm.id === item.rawMaterialId);
+            if (rmIdx >= 0) {
+              nextMaterials[rmIdx].currentStock -= item.qty;
+            }
+          }
+        }
+
+        return {
+          rawMaterials: nextMaterials,
+          purchaseOrders: state.purchaseOrders.map(p => p.id === id ? { ...p, status } : p)
+        };
+      }),
+
       processCheckoutInventory: (cartItems) => {
         let success = true;
         let reason = '';

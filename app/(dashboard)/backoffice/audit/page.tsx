@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 export default function AuditPage() {
   const router = useRouter();
@@ -22,6 +23,37 @@ export default function AuditPage() {
   }, [currentUser, router]);
 
   const [search, setSearch] = useState('');
+
+  const handleExportCSV = () => {
+    if (logs.length === 0) {
+      toast.error('Tidak ada data untuk diekspor');
+      return;
+    }
+    
+    const headers = ['Waktu', 'Pengguna', 'Role', 'Aksi', 'Detail'];
+    const csvContent = 
+      headers.join(',') + '\\n' +
+      logs.map(log => {
+        return [
+          new Date(log.timestamp).toISOString(),
+          `"${log.userName}"`,
+          log.userRole,
+          `"${log.action}"`,
+          `"${log.details.replace(/"/g, '""')}"`
+        ].join(',');
+      }).join('\\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `audit_trails_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Berhasil mengekspor CSV');
+  };
 
   const filteredLogs = logs.filter(log => 
     log.action.toLowerCase().includes(search.toLowerCase()) || 
@@ -40,6 +72,9 @@ export default function AuditPage() {
             <h1 className="font-space-grotesk font-black text-3xl md:text-4xl uppercase text-black">Audit Trails</h1>
             <p className="font-inter font-bold text-gray-500 mt-2">Log aktivitas pengguna untuk keamanan dan pencegahan fraud.</p>
          </div>
+         <Button onClick={handleExportCSV} className="border-4 border-black font-bold uppercase hover:bg-black hover:text-white transition-colors" variant="outline">
+           Export CSV
+         </Button>
       </div>
 
       <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden mb-8">

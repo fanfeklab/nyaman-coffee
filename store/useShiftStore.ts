@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface PettyCashTransaction {
+  id: string;
+  shiftId: string;
+  cashierId: string;
+  amount: number;
+  type: 'IN' | 'OUT';
+  note: string;
+  timestamp: string;
+}
+
 export interface Shift {
   id: string;
   cashierId: string;
@@ -15,11 +25,13 @@ export interface Shift {
 interface ShiftState {
   currentShift: Shift | null;
   shiftHistory: Shift[];
+  pettyCashHistory: PettyCashTransaction[];
   openShift: (cashierId: string, startingCash: number) => void;
   closeShift: (actualEndingCash: number) => void;
   forceCloseShift: (shiftId: string) => void;
   addSalesToShift: (amount: number) => void;
   subtractSalesFromShift: (amount: number) => void;
+  addPettyCash: (cashierId: string, amount: number, type: 'IN' | 'OUT', note: string) => void;
   clearShiftHistory: () => void;
 }
 
@@ -28,6 +40,7 @@ export const useShiftStore = create<ShiftState>()(
     (set, get) => ({
       currentShift: null,
       shiftHistory: [],
+      pettyCashHistory: [],
 
       openShift: (cashierId: string, startingCash: number) => {
         const newShift: Shift = {
@@ -100,8 +113,34 @@ export const useShiftStore = create<ShiftState>()(
         });
       },
 
+      addPettyCash: (cashierId: string, amount: number, type: 'IN' | 'OUT', note: string) => {
+        set((state) => {
+          if (!state.currentShift || state.currentShift.status !== 'OPEN') return state;
+          
+          const newTx: PettyCashTransaction = {
+            id: 'pc_' + Date.now().toString(36),
+            shiftId: state.currentShift.id,
+            cashierId,
+            amount,
+            type,
+            note,
+            timestamp: new Date().toISOString()
+          };
+
+          return {
+            pettyCashHistory: [newTx, ...state.pettyCashHistory],
+            currentShift: {
+              ...state.currentShift,
+              expectedEndingCash: type === 'IN' 
+                ? state.currentShift.expectedEndingCash + amount 
+                : Math.max(0, state.currentShift.expectedEndingCash - amount)
+            }
+          };
+        });
+      },
+
       clearShiftHistory: () => {
-        set({ currentShift: null, shiftHistory: [] });
+        set({ currentShift: null, shiftHistory: [], pettyCashHistory: [] });
       }
     }),
     {

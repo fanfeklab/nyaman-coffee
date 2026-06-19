@@ -7,6 +7,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useShiftStore } from '@/store/useShiftStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTransactionStore } from '@/store/useTransactionStore';
+import { useCustomerStore } from '@/store/useCustomerStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ export default function POSPage() {
   const { user } = useAuthStore();
   const { addTransaction } = useTransactionStore();
   const { processCheckoutInventory } = useInventoryStore();
+  const { customers } = useCustomerStore();
   const { 
     items, addItem, removeItem, updateQty, clearCart, 
     getTotal, getSubtotal, getDiscountAmount, getTaxAmount, getServiceChargeAmount,
@@ -71,6 +73,9 @@ export default function POSPage() {
     localStorage.setItem('pos_view_pref', opt);
   };
   
+  // Current customer
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+
   // Custom item form state
   const [customItemOpen, setCustomItemOpen] = useState(false);
   const [customName, setCustomName] = useState('');
@@ -114,6 +119,9 @@ export default function POSPage() {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [recipeItem, setRecipeItem] = useState<Product | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  
+  // Recipe Book global state
+  const [isRecipeBookOpen, setIsRecipeBookOpen] = useState(false);
 
   const filteredProducts = useMemo(() => {
     let result = products;
@@ -180,6 +188,8 @@ export default function POSPage() {
       id: txId,
       shiftId: currentShift?.id || 'unknown',
       cashierId: user?.id || 'unknown',
+      customerId: selectedCustomerId || undefined,
+      customerName: selectedCustomerId ? customers.find(c => c.id === selectedCustomerId)?.name : undefined,
       items: [...items],
       total,
       paymentMethod,
@@ -188,11 +198,17 @@ export default function POSPage() {
       status: 'COMPLETED'
     });
 
+    // Customer Points Logic
+    if (selectedCustomerId) {
+      useCustomerStore.getState().addPoints(selectedCustomerId, Math.floor(total / 10000)); // 1 Point per 10k
+    }
+
     // Success
     addSalesToShift(total);
     setConfirmPaymentOpen(false);
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
+    setSelectedCustomerId(null);
     toast.success('TRANSAKSI BERHASIL', { description: 'Pembayaran telah diterima dan dicatat.', duration: 3000 });
   };
 
@@ -257,7 +273,7 @@ export default function POSPage() {
              </div>
              
              {/* Views & Filters */}
-             <div className="flex items-center gap-3">
+             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                  <Popover>
                    <PopoverTrigger className="h-12 w-12 border-4 border-black shadow-[4px_4px_0_0_#000] p-0 flex items-center justify-center rounded-xl bg-white hover:bg-gray-100 transition-colors" title="Urutkan" type="button">
                      <Filter className="w-5 h-5"/>
@@ -306,8 +322,17 @@ export default function POSPage() {
                    onClick={() => setCustomItemOpen(true)}
                    className="h-12 bg-black text-white hover:bg-gray-800 border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
                  >
-                   <Plus className="w-5 h-5 mr-0 md:mr-2" />
-                   <span className="hidden md:inline">Custom Item</span>
+                   <Plus className="w-5 h-5 mr-0 lg:mr-2" />
+                   <span className="hidden lg:inline">Custom</span>
+                 </Button>
+
+                 <Button 
+                   onClick={() => setIsRecipeBookOpen(true)}
+                   variant="secondary"
+                   className="h-12 bg-[#FF90E8] border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
+                 >
+                   <BookOpen className="w-5 h-5 mr-0 md:mr-2 text-black" />
+                   <span className="hidden md:inline">Resep</span>
                  </Button>
              </div>
           </div>
@@ -410,17 +435,17 @@ export default function POSPage() {
                  className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-40 bg-transparent flex justify-center pointer-events-none"
                >
                   <button 
-                    className="pointer-events-auto bg-[#00E5FF] border-4 border-black px-6 py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group"
+                    className="pointer-events-auto bg-[#00E5FF] border-4 border-black px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group gap-2"
                     onClick={() => setIsCartDrawerOpen(true)}
                   >
-                      <div className="flex items-center gap-4">
-                         <div className="bg-black text-[#00E5FF] w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform">{items.reduce((a,b) => a+b.qty, 0)}</div>
-                         <div className="flex flex-col items-start gap-0">
-                             <span className="font-space-grotesk font-black uppercase text-xl leading-none">Keranjang</span>
-                             <span className="font-inter font-bold text-black/70 text-xs">Klik untuk buka pesanan</span>
+                      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                         <div className="bg-black text-[#00E5FF] w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform shrink-0">{items.reduce((a,b) => a+b.qty, 0)}</div>
+                         <div className="flex flex-col items-start gap-0 text-left">
+                             <span className="font-space-grotesk font-black uppercase text-lg md:text-xl leading-none">Keranjang</span>
+                             <span className="font-inter font-bold text-black/70 text-[10px] md:text-xs">Klik untuk pesanan</span>
                          </div>
                       </div>
-                      <span className="font-space-grotesk font-black text-2xl bg-white px-4 py-1.5 rounded-lg border-2 border-black">{formatRupiah(getTotal())}</span>
+                      <span className="font-space-grotesk font-black text-sm md:text-2xl bg-white px-2 py-1.5 md:px-4 md:py-1.5 rounded-lg border-2 border-black shrink-0 truncate max-w-[130px] md:max-w-none">{formatRupiah(getTotal())}</span>
                   </button>
                </motion.div>
              )}
@@ -485,14 +510,14 @@ export default function POSPage() {
                   <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 min-h-[30vh] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
                      {items.map(item => (
                        <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                          <div className="flex-1 flex flex-col">
-                             <span className="font-space-grotesk font-black text-lg uppercase line-clamp-1">{item.product.name}</span>
+                          <div className="flex-1 flex flex-col min-w-0">
+                             <span className="font-space-grotesk font-black text-base md:text-lg uppercase truncate">{item.product.name}</span>
                              <span className="font-inter font-bold text-gray-500 text-sm">{formatRupiah(item.product.basePrice)}</span>
                           </div>
                           
-                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
-                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(item.product.basePrice * item.qty)}</span>
-                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1">
+                          <div className="flex items-center justify-between md:justify-end gap-2 md:gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
+                             <span className="font-space-grotesk font-black text-[#FF6321] text-base md:text-xl truncate max-w-[100px] md:max-w-none">{formatRupiah(item.product.basePrice * item.qty)}</span>
+                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
                                 <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
                                 <span className="font-black text-lg w-8 text-center">{item.qty}</span>
                                 <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
@@ -538,6 +563,20 @@ export default function POSPage() {
                        )}
                     </div>
                     
+                    <div className="flex flex-col gap-2 mt-2 mb-4 px-2">
+                       <Label className="text-sm font-bold uppercase">Pelanggan (Opsional)</Label>
+                       <select 
+                         className="flex h-10 w-full rounded-xl border-4 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black font-inter font-bold uppercase transition-all shadow-[2px_2px_0_0_#000]"
+                         value={selectedCustomerId || ''}
+                         onChange={(e) => setSelectedCustomerId(e.target.value || null)}
+                       >
+                         <option value="">-- Pilih Pelanggan --</option>
+                         {customers.map(c => (
+                           <option key={c.id} value={c.id}>{c.name} ({c.points} Poin)</option>
+                         ))}
+                       </select>
+                    </div>
+
                     <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">
                        <span>Total</span>
                        <span>{formatRupiah(getTotal())}</span>
@@ -654,13 +693,13 @@ export default function POSPage() {
 
        {/* ================= RECEIPT MODAL ================= */}
        <Dialog open={isReceiptOpen} onOpenChange={() => {}}>
-         <DialogContent className="border-8 border-black rounded-[2rem] max-w-md bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] print-area">
+         <DialogContent className="border-8 border-black rounded-[2rem] max-w-md bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div className="p-8 pb-4 flex flex-col items-center border-b-8 border-black bg-white">
                <div className="w-16 h-16 bg-[#00A19D] border-4 border-black rounded-full flex items-center justify-center mb-4 shadow-[4px_4px_0_0_#000]">
                  <CheckSquare className="w-8 h-8 text-black" strokeWidth={3} />
                </div>
                <h2 className="font-space-grotesk font-black text-3xl uppercase text-black text-center mb-1">Transaksi<br/>Selesai!</h2>
-               <p className="font-inter font-bold text-gray-500 text-sm">Kembalian: {paymentMethod === 'TUNAI' ? formatRupiah(parseInt(cashGiven.replace(/\D/g, '')) - total) : 'Rp 0'}</p>
+               <p className="font-inter font-bold text-gray-500 text-sm">Kembalian: {paymentMethod === 'TUNAI' ? formatRupiah(parseInt((cashGiven || '0').toString().replace(/\D/g, '')) - total) : 'Rp 0'}</p>
             </div>
             
             <div className="p-6 flex flex-col gap-4 bg-gray-100">
@@ -682,26 +721,42 @@ export default function POSPage() {
                   </div>
                )}
 
-               <div className="hidden print:block mb-4 border-t-2 border-black border-dashed pt-4 w-full">
-                 <h3 className="font-space-grotesk font-black uppercase text-center text-lg mb-2">NYAMAN COFFEE</h3>
-                 <div className="flex flex-col gap-1 w-full text-xs font-mono">
-                    {items.map(i => (
-                       <div key={i.id} className="flex justify-between w-full">
-                         <span>{i.qty}x {i.product.name}</span>
-                         <span>{formatRupiah(i.qty * i.product.basePrice)}</span>
-                       </div>
-                    ))}
-                    <div className="border-t-2 border-black border-dashed mt-2 pt-2 flex justify-between">
-                       <span>TOTAL</span>
-                       <span>{formatRupiah(total)}</span>
-                    </div>
-                    {paymentMethod === 'TUNAI' && (
-                      <div className="flex justify-between mt-1">
-                         <span>TUNAI</span>
-                         <span>{formatRupiah(parseInt(cashGiven.replace(/\D/g, '')))}</span>
-                      </div>
-                    )}
-                 </div>
+               {/* ================= RECEIPT PREVIEW SCROLLABLE AREA ================= */}
+               <div className="border-2 border-black rounded-xl max-h-64 overflow-y-auto bg-gray-50 mb-2 relative print-area">
+                  <div className="p-4 bg-white min-h-[150px] font-mono text-sm shadow-sm" id="print-receipt-section">
+                     <h3 className="font-space-grotesk font-black uppercase text-center text-lg mb-4 border-b-2 border-dashed border-gray-400 pb-2">NYAMAN COFFEE</h3>
+                     <div className="flex flex-col gap-1 w-full text-xs">
+                        <div className="flex justify-between w-full mb-2">
+                           <span className="text-gray-500">2026-06-19</span>
+                           <span className="text-gray-500 uppercase">{paymentMethod}</span>
+                        </div>
+                        {items.map(i => (
+                           <div key={i.id} className="flex justify-between w-full">
+                             <span>{i.qty}x {i.product.name}</span>
+                             <span>{formatRupiah(i.qty * i.product.basePrice)}</span>
+                           </div>
+                        ))}
+                        <div className="border-t-2 border-black border-dashed mt-2 pt-2 flex justify-between font-bold">
+                           <span>TOTAL</span>
+                           <span>{formatRupiah(total)}</span>
+                        </div>
+                        {paymentMethod === 'TUNAI' && (
+                          <>
+                            <div className="flex justify-between mt-1 text-gray-500">
+                               <span>TUNAI</span>
+                               <span>{formatRupiah(parseInt((cashGiven || '0').toString().replace(/\D/g, '')))}</span>
+                            </div>
+                            <div className="flex justify-between mt-1 font-bold">
+                               <span>KEMBALI</span>
+                               <span>{formatRupiah(parseInt((cashGiven || '0').toString().replace(/\D/g, '')) - total)}</span>
+                            </div>
+                          </>
+                        )}
+                        <div className="border-t-2 border-black border-dashed mt-4 pt-2 text-center text-xs text-gray-500">
+                           Terima kasih & Semoga nyaman
+                        </div>
+                     </div>
+                  </div>
                </div>
 
                <Button className="w-full text-lg bg-[#FFD100] text-black hover:bg-yellow-400" variant="secondary" onClick={() => {toast.success('Mencetak struk order untuk dapur...'); setTimeout(()=> {window.print()}, 300);}}>CETAK STRUK DAPUR</Button>
@@ -720,7 +775,41 @@ export default function POSPage() {
             <div className="bg-white border-4 border-black p-4 rounded-xl mt-4 font-inter font-bold whitespace-pre-wrap">
                {recipeItem?.recipe || "Tidak ada resep"}
             </div>
-            <Button className="mt-4" onClick={() => setRecipeItem(null)}>MENGERTI</Button>
+            <Button className="mt-4 border-white" onClick={() => setRecipeItem(null)}>MENGERTI</Button>
+         </DialogContent>
+       </Dialog>
+
+       {/* ================= BUKU RESEP UTAMA ================= */}
+       <Dialog open={isRecipeBookOpen} onOpenChange={setIsRecipeBookOpen}>
+         <DialogContent className="border-8 border-black rounded-[2rem] bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[85vh] max-w-4xl flex flex-col">
+            <div className="p-5 md:p-6 bg-[#FF90E8] border-b-8 border-black shrink-0">
+               <DialogTitle className="font-space-grotesk font-black text-2xl md:text-3xl uppercase text-black text-center flex items-center justify-center gap-3">
+                  <BookOpen className="w-8 h-8" /> Buku Resep Barista
+               </DialogTitle>
+            </div>
+            <div className="overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 bg-gray-50 hide-scrollbar">
+              {products.filter(p => !!p.recipe).length === 0 ? (
+                <div className="col-span-1 md:col-span-2 text-center text-gray-500 font-bold py-10">Belum ada resep yang dicatat pada menu.</div>
+              ) : (
+                products.filter(p => !!p.recipe).map(product => {
+                  const cat = categories.find(c => c.id === product.categoryId);
+                  return (
+                    <div key={product.id} className="bg-white border-4 border-black rounded-2xl p-4 shadow-[4px_4px_0_0_#000]">
+                      <div className="flex items-center gap-2 mb-2">
+                         <span className="font-space-grotesk font-black uppercase text-xl">{product.name}</span>
+                         {cat && <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 border-2 border-black rounded-md" style={{ backgroundColor: cat.color }}>{cat.name}</span>}
+                      </div>
+                      <div className="bg-gray-100 border-2 border-dashed border-gray-300 p-3 rounded-lg font-inter font-bold text-sm whitespace-pre-wrap">
+                        {product.recipe}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="p-4 border-t-8 border-black bg-white flex justify-end shrink-0">
+               <Button onClick={() => setIsRecipeBookOpen(false)} className="px-8 text-lg w-full md:w-auto">TUTUP BUKU RESEP</Button>
+            </div>
          </DialogContent>
        </Dialog>
 

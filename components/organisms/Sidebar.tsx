@@ -27,6 +27,9 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     if (path === '/backoffice/inventory') return pathname.startsWith('/backoffice/inventory');
     if (path === '/backoffice/reports') return pathname.startsWith('/backoffice/reports');
     if (path === '/backoffice/settings') return pathname.startsWith('/backoffice/settings');
+    if (path === '/backoffice/manual-sales') return pathname.startsWith('/backoffice/manual-sales');
+    if (path === '/backoffice/employees') return pathname.startsWith('/backoffice/employees');
+    if (path === '/backoffice/customers') return pathname.startsWith('/backoffice/customers');
     return pathname === path;
   };
 
@@ -79,9 +82,17 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
 
           {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
             <>
-              <Link href="/backoffice/users" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/users') ? "bg-black text-white" : "bg-white text-black")}>
-                <Users className={cn("w-5 h-5", isActive('/backoffice/users') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/users') ? "text-white" : "text-black")}>Karyawan</span>
+              <Link href="/backoffice/stock-opname" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/stock-opname') ? "bg-black text-white" : "bg-white text-black")}>
+                <CheckSquare className={cn("w-5 h-5", isActive('/backoffice/stock-opname') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/stock-opname') ? "text-white" : "text-black")}>Stock Opname</span>
+              </Link>
+              <Link href="/backoffice/purchase-orders" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/purchase-orders') ? "bg-black text-white" : "bg-white text-black")}>
+                <PackageOpen className={cn("w-5 h-5", isActive('/backoffice/purchase-orders') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/purchase-orders') ? "text-white" : "text-black")}>Purchase Orders</span>
+              </Link>
+              <Link href="/backoffice/employees" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/employees') ? "bg-black text-white" : "bg-white text-black")}>
+                <Users className={cn("w-5 h-5", isActive('/backoffice/employees') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/employees') ? "text-white" : "text-black")}>Karyawan</span>
               </Link>
               <Link href="/backoffice/customers" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/customers') ? "bg-black text-white" : "bg-white text-black")}>
                 <Users className={cn("w-5 h-5", isActive('/backoffice/customers') ? "text-white" : "text-black")} strokeWidth={2.5}/>
@@ -100,6 +111,11 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
             <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/reports') ? "text-white" : "text-black")}>Laporan Penjualan</span>
           </Link>
 
+          <Link href="/backoffice/petty-cash" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/petty-cash') ? "bg-black text-white" : "bg-white text-black")}>
+            <CheckSquare className={cn("w-5 h-5", isActive('/backoffice/petty-cash') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+            <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/petty-cash') ? "text-white" : "text-black")}>Kas Laci Darurat</span>
+          </Link>
+
           {user?.role === 'SUPER_ADMIN' && (
             <Link href="/backoffice/audit" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/audit') ? "bg-black text-white" : "bg-white text-black")}>
               <Search className={cn("w-5 h-5", isActive('/backoffice/audit') ? "text-white" : "text-black")} strokeWidth={2.5}/>
@@ -108,10 +124,16 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           )}
 
           {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-            <Link href="/backoffice/settings" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/settings') ? "bg-black text-white" : "bg-white text-black")}>
-              <Settings className={cn("w-5 h-5", isActive('/backoffice/settings') ? "text-white" : "text-black")} strokeWidth={2.5}/>
-              <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/settings') ? "text-white" : "text-black")}>Pengaturan Sistem</span>
-            </Link>
+            <>
+              <Link href="/backoffice/manual-sales" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/manual-sales') ? "bg-black text-white" : "bg-white text-black")}>
+                <CheckSquare className={cn("w-5 h-5", isActive('/backoffice/manual-sales') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/manual-sales') ? "text-white" : "text-black")}>Input Penjualan Manual</span>
+              </Link>
+              <Link href="/backoffice/settings" onClick={onNavigate} className={cn("border-4 border-black p-3 rounded-xl flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all group", isActive('/backoffice/settings') ? "bg-black text-white" : "bg-white text-black")}>
+                <Settings className={cn("w-5 h-5", isActive('/backoffice/settings') ? "text-white" : "text-black")} strokeWidth={2.5}/>
+                <span className={cn("font-inter font-bold uppercase tracking-wider", isActive('/backoffice/settings') ? "text-white" : "text-black")}>Pengaturan Sistem</span>
+              </Link>
+            </>
           )}
         </div>
 

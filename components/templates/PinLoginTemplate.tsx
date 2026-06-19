@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Input } from '../ui/input';
@@ -54,7 +54,7 @@ export function PinLoginTemplate() {
     return () => clearInterval(interval);
   }, [cooldownTime]);
 
-  const handleLogin = (e?: React.FormEvent) => {
+  const handleLogin = (e?: FormEvent) => {
     if (e) e.preventDefault();
     if (cooldownTime) return;
     

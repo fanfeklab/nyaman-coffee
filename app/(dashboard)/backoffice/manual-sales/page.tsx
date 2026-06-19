@@ -125,7 +125,7 @@ export default function ManualSalesPage() {
              >
                <option value="" disabled>-- Pilih Kasir --</option>
                {users.map(u => (
-                 <option key={u.id} value={u.username}>{u.name} ({u.username})</option>
+                 <option key={u.id} value={u.username}>{u.fullName} ({u.username})</option>
                ))}
                <option value="kasir_lainnya">Lainnya...</option>
              </select>

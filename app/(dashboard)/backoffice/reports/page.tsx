@@ -26,24 +26,50 @@ export default function ReportsPage() {
   const { user } = useAuthStore();
   const { currentShift, subtractSalesFromShift, shiftHistory } = useShiftStore();
 
-  useEffect(() => {
-    if (user && user.role !== 'SUPER_ADMIN' && user.role !== 'MANAGER') {
-       router.replace('/pos');
-       toast.error('Akses ditolak: Anda tidak memiliki izin ke halaman ini');
-    }
-  }, [user, router]);
-
   const [activeTab, setActiveTab] = useState<'penjualan' | 'shift' | 'analitik'>('penjualan');
   const [search, setSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [adminPin, setAdminPin] = useState('');
 
-  const filteredData = transactions.filter(tx => 
+  const visibleTransactions = useMemo(() => {
+    let txs = transactions;
+    if (user?.role === 'CASHIER') {
+      txs = txs.filter(t => t.cashierId === user.id);
+    }
+    
+    // Apply Date Filter
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const startOf7Days = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+
+    if (dateFilter !== 'all') {
+       txs = txs.filter(t => {
+          const tDate = new Date(t.timestamp);
+          if (dateFilter === 'today') return tDate >= startOfToday;
+          if (dateFilter === 'yesterday') return tDate >= startOfYesterday && tDate < startOfToday;
+          if (dateFilter === '7days') return tDate >= startOf7Days;
+          return true;
+       });
+    }
+
+    return txs;
+  }, [transactions, user, dateFilter]);
+
+  const filteredData = visibleTransactions.filter(tx => 
     tx.id.toLowerCase().includes(search.toLowerCase()) || 
-    tx.cashierId.toLowerCase().includes(search.toLowerCase())
+    tx.cashierId.toLowerCase().includes(search.toLowerCase()) ||
+    (tx.customerName || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalRevenue = transactions.filter(t => t.status === 'COMPLETED').reduce((sum, t) => sum + t.total, 0);
+  const completedTxs = visibleTransactions.filter(t => t.status === 'COMPLETED');
+  const voidedTxs = visibleTransactions.filter(t => t.status === 'VOID');
+
+  const totalRevenue = completedTxs.reduce((sum, t) => sum + t.total, 0);
+  const cashRevenue = completedTxs.filter(t => t.paymentMethod === 'TUNAI').reduce((sum, t) => sum + t.total, 0);
+  const qrisRevenue = completedTxs.filter(t => t.paymentMethod === 'QRIS').reduce((sum, t) => sum + t.total, 0);
+  const voidRevenue = voidedTxs.reduce((sum, t) => sum + t.total, 0);
 
   const handleVoid = () => {
     // Basic mock validation for PIN admin
@@ -53,7 +79,7 @@ export default function ReportsPage() {
     }
 
     if (!voidConfirmId) return;
-    const tx = transactions.find(t => t.id === voidConfirmId);
+    const tx = visibleTransactions.find(t => t.id === voidConfirmId);
     if (!tx) return;
     
     // revert inventory
@@ -80,7 +106,7 @@ export default function ReportsPage() {
       stats[p.id] = { name: p.name, soldQty: 0, revenue: 0 };
     });
 
-    transactions.filter(t => t.status === 'COMPLETED').forEach(tx => {
+    visibleTransactions.filter(t => t.status === 'COMPLETED').forEach(tx => {
       tx.items.forEach(item => {
         if (stats[item.product.id]) {
           stats[item.product.id].soldQty += item.qty;
@@ -92,16 +118,54 @@ export default function ReportsPage() {
     });
 
     return Object.values(stats).sort((a, b) => b.soldQty - a.soldQty);
-  }, [transactions, products]);
+  }, [visibleTransactions, products]);
 
   const topSelling = productAnalytics.filter(p => p.soldQty > 0);
   const unsellable = productAnalytics.filter(p => p.soldQty === 0);
 
+  const handleExportCSV = () => {
+    if (visibleTransactions.length === 0) {
+      toast.error('Tidak ada transaksi untuk diekspor!');
+      return;
+    }
+
+    const headers = ['ID Transaksi', 'Waktu', 'Kasir', 'Pelanggan', 'Metode Bayar', 'Total', 'Status'];
+    const csvContent = 
+      headers.join(',') + '\\n' +
+      visibleTransactions.map(tx => {
+        return [
+          tx.id,
+          new Date(tx.timestamp).toISOString(),
+          tx.cashierId,
+          `"${tx.customerName || ''}"`,
+          tx.paymentMethod,
+          tx.total,
+          tx.status
+        ].join(',');
+      }).join('\\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `laporan_penjualan_${dateFilter}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success('Berhasil mengekspor Laporan Penjualan CSV');
+  };
+
   return (
     <div className="p-6 lg:p-10 flex flex-col gap-6">
-      <div>
-         <h1 className="font-space-grotesk font-black text-4xl uppercase tracking-widest text-black">Laporan Backoffice</h1>
-         <p className="font-inter font-bold text-gray-500">Lihat histori seluruh transaksi, pendapatan, dan laporan shift kasir.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+           <h1 className="font-space-grotesk font-black text-4xl uppercase tracking-widest text-black">Laporan Backoffice</h1>
+           <p className="font-inter font-bold text-gray-500">Lihat histori seluruh transaksi, pendapatan, dan laporan shift kasir.</p>
+        </div>
+        <Button onClick={handleExportCSV} className="border-4 border-black font-bold uppercase hover:bg-black hover:text-white transition-colors" variant="outline">
+          Export CSV (Penjualan)
+        </Button>
       </div>
 
       <div className="flex gap-4 border-b-4 border-black pb-2 overflow-x-auto hide-scrollbar">
@@ -117,30 +181,56 @@ export default function ReportsPage() {
          >
            LAPORAN SHIFT
          </button>
-         <button 
-           onClick={() => setActiveTab('analitik')}
-           className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'analitik' ? 'bg-[#FF90E8] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
-         >
-           ANALITIK MENU
-         </button>
+         {user?.role !== 'CASHIER' && (
+           <button 
+             onClick={() => setActiveTab('analitik')}
+             className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'analitik' ? 'bg-[#FF90E8] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
+           >
+             ANALITIK MENU
+           </button>
+         )}
       </div>
 
       {activeTab === 'penjualan' && (
          <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <span className="font-space-grotesk font-black uppercase text-gray-500 text-sm">Total Gross Revenue</span>
-            <div className="text-3xl font-black text-black">{formatRupiah(totalRevenue)}</div>
-         </div>
-         <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <span className="font-space-grotesk font-black uppercase text-gray-500 text-sm">Total Transaksi</span>
-            <div className="text-3xl font-black text-black">{transactions.filter(t => t.status === 'COMPLETED').length} <span className="text-sm">sukses</span></div>
-         </div>
-         <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <span className="font-space-grotesk font-black uppercase text-gray-500 text-sm">Void / Batal</span>
-            <div className="text-3xl font-black text-red-500">{transactions.filter(t => t.status === 'VOID').length} <span className="text-sm">dibatalkan</span></div>
-         </div>
-      </div>
+            {/* Filter Section */}
+            <div className="flex border-4 border-black rounded-xl w-max overflow-hidden font-space-grotesk font-black uppercase text-sm shadow-[4px_4px_0_0_#000]">
+               <button onClick={() => setDateFilter('today')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'today' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Hari Ini</button>
+               <button onClick={() => setDateFilter('yesterday')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'yesterday' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Kemarin</button>
+               <button onClick={() => setDateFilter('7days')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === '7days' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>7 Hari</button>
+               <button onClick={() => setDateFilter('all')} className={`px-4 py-2 ${dateFilter === 'all' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Semua</button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+               <div className="col-span-2 bg-[#FF90E8] border-4 border-black p-4 md:p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col min-w-0">
+                  <span className="font-space-grotesk font-black uppercase text-black text-xs md:text-sm px-3 py-1 bg-white border-2 border-black rounded-full w-max">Gross Revenue</span>
+                  <div className="text-3xl md:text-4xl lg:text-5xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(totalRevenue)}</div>
+                  <div className="mt-4 flex flex-col sm:flex-row gap-4 pt-4 border-t-4 border-black border-dashed">
+                     <div className="flex-1 min-w-0">
+                        <span className="text-[10px] uppercase font-black tracking-widest text-[#5c3053]">Tunai Kasir</span>
+                        <div className="font-inter font-black text-sm md:text-lg truncate">{formatRupiah(cashRevenue)}</div>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                        <span className="text-[10px] uppercase font-black tracking-widest text-[#5c3053]">Non-Tunai / QRIS</span>
+                        <div className="font-inter font-black text-sm md:text-lg truncate">{formatRupiah(qrisRevenue)}</div>
+                     </div>
+                  </div>
+               </div>
+               <div className="bg-[#00E5FF] border-4 border-black p-4 md:p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+                  <span className="font-space-grotesk font-black uppercase text-black text-xs md:text-sm px-3 py-1 bg-white border-2 border-black rounded-full w-max">Total Transaksi</span>
+                  <div className="mt-4">
+                     <div className="text-3xl md:text-4xl lg:text-5xl font-black text-black leading-none">{completedTxs.length}</div>
+                     <div className="text-xs uppercase font-space-grotesk font-black tracking-widest mt-1">Nota Sukses</div>
+                  </div>
+               </div>
+               <div className="bg-white border-4 border-black p-4 md:p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+                  <span className="font-space-grotesk font-black uppercase text-red-600 text-xs md:text-sm px-3 py-1 bg-red-100 border-2 border-red-600 rounded-full w-max">Void / Batal</span>
+                  <div className="mt-4">
+                     <div className="text-3xl md:text-4xl lg:text-5xl font-black text-red-600 leading-none">{voidedTxs.length}</div>
+                     <div className="text-xs font-bold font-inter text-gray-500 mt-1">Potensi rugi: <span className="font-black text-black">{formatRupiah(voidRevenue)}</span></div>
+                  </div>
+               </div>
+            </div>
 
       <div className="bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
          <h2 className="font-space-grotesk font-black text-xl uppercase mb-4">Grafik Transaksi</h2>
@@ -148,7 +238,7 @@ export default function ReportsPage() {
             <ResponsiveContainer width="100%" height="100%">
                <BarChart data={
                  // Group by hour for simple chart
-                 Object.values(transactions.filter(t => t.status === 'COMPLETED').reduce((acc, tx) => {
+                 Object.values(visibleTransactions.filter(t => t.status === 'COMPLETED').reduce((acc, tx) => {
                    const d = new Date(tx.timestamp);
                    const key = `${d.getHours()}:00`;
                    if (!acc[key]) acc[key] = { label: key, Total: 0 };
@@ -185,6 +275,7 @@ export default function ReportsPage() {
                    <TableHead className="text-black border-r-2 border-black w-[150px]">Waktu</TableHead>
                    <TableHead className="text-black border-r-2 border-black w-[150px]">ID Transaksi</TableHead>
                    <TableHead className="text-black border-r-2 border-black">Kasir</TableHead>
+                   <TableHead className="text-black border-r-2 border-black">Pelanggan</TableHead>
                    <TableHead className="text-black border-r-2 border-black">Metode</TableHead>
                    <TableHead className="text-black border-r-2 border-black text-right">Total</TableHead>
                    <TableHead className="text-black border-r-2 border-black text-center">Status</TableHead>
@@ -204,6 +295,7 @@ export default function ReportsPage() {
                          </div>
                       </TableCell>
                       <TableCell className="border-r-2 border-gray-200 uppercase text-xs">{tx.cashierId}</TableCell>
+                      <TableCell className="border-r-2 border-gray-200 uppercase text-xs">{tx.customerName || '-'}</TableCell>
                       <TableCell className="border-r-2 border-gray-200 uppercase">{tx.paymentMethod}</TableCell>
                       <TableCell className="text-right border-r-2 border-gray-200 text-[#FF6321]">{formatRupiah(tx.total)}</TableCell>
                       <TableCell className="text-center border-r-2 border-gray-200">

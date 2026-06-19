@@ -6,10 +6,12 @@ export interface Transaction {
   id: string;
   shiftId: string;
   cashierId: string;
+  customerId?: string;
+  customerName?: string;
   items: CartItem[];
   total: number;
   paymentMethod: 'TUNAI' | 'QRIS' | null;
-  cashGiven?: number; // the amount of cash given, if 'TUNAI'
+  cashGiven?: number;
   timestamp: Date;
   status: 'COMPLETED' | 'VOID';
 }
@@ -18,6 +20,7 @@ interface TransactionState {
   transactions: Transaction[];
   addTransaction: (tx: Transaction) => void;
   voidTransaction: (txId: string) => void;
+  clearTransactions: () => void;
 }
 
 export const useTransactionStore = create<TransactionState>()(
@@ -27,7 +30,8 @@ export const useTransactionStore = create<TransactionState>()(
       addTransaction: (tx) => set((state) => ({ transactions: [tx, ...state.transactions] })),
       voidTransaction: (txId) => set((state) => ({
         transactions: state.transactions.map(t => t.id === txId ? { ...t, status: 'VOID' } : t)
-      }))
+      })),
+      clearTransactions: () => set({ transactions: [] })
     }),
     {
       name: 'pos-transaction-storage'

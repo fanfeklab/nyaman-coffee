@@ -100,31 +100,34 @@ export default function ShiftPage() {
             </div>
 
             {/* 2. SHORTCUTS & ACTIONS (Bento Right) */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-               <h2 className="font-space-grotesk font-black uppercase text-2xl tracking-widest text-black">Akses Cepat</h2>
+            <div className="lg:col-span-2 flex flex-col gap-4">
+               <h2 className="font-space-grotesk font-black uppercase text-xl md:text-2xl tracking-widest text-black">Akses Cepat</h2>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {/* Action Card: POS */}
-                  <Link href="/pos" className="bg-[#00E5FF] border-4 border-black p-6 md:p-8 rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col justify-between aspect-[4/3] group">
-                     <div className="bg-white border-4 border-black p-4 rounded-2xl w-max shadow-[4px_4px_0_0_#000]">
-                       <LayoutGrid className="w-8 h-8 md:w-10 md:h-10 text-black" strokeWidth={2.5}/>
+                  <Link href="/pos" className="bg-[#00E5FF] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col items-center justify-center gap-2 group aspect-square">
+                     <div className="bg-white border-4 border-black p-3 rounded-xl w-max shadow-[2px_2px_0_0_#000] group-hover:scale-110 transition-transform">
+                       <LayoutGrid className="w-8 h-8 text-black" strokeWidth={2.5}/>
                      </div>
-                     <div className="flex justify-between items-end mt-4">
-                       <span className="font-space-grotesk font-black text-2xl md:text-3xl uppercase leading-tight">Buka<br/>Terminal</span>
-                       <ArrowRight className="w-8 h-8 transform group-hover:translate-x-2 transition-transform"/>
-                     </div>
+                     <span className="font-space-grotesk font-black text-sm md:text-base uppercase text-center mt-2 leading-tight">POS<br/>Kasir</span>
                   </Link>
                   
-                  {/* Action Card: Orders/Receipts (Dummy for now, links to pos) */}
-                  <Link href="/pos" className="bg-white border-4 border-black p-6 md:p-8 rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col justify-between aspect-[4/3] group">
-                     <div className="bg-[#FF90E8] border-4 border-black p-4 rounded-2xl w-max shadow-[4px_4px_0_0_#000]">
-                       <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-black" strokeWidth={2.5}/>
+                  {/* Action Card: Laporan */}
+                  <Link href="/backoffice/reports" className="bg-[#FF90E8] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col items-center justify-center gap-2 group aspect-square">
+                     <div className="bg-white border-4 border-black p-3 rounded-xl w-max shadow-[2px_2px_0_0_#000] group-hover:scale-110 transition-transform">
+                       <CheckCircle2 className="w-8 h-8 text-black" strokeWidth={2.5}/>
                      </div>
-                     <div className="flex justify-between items-end mt-4">
-                       <span className="font-space-grotesk font-black text-2xl md:text-3xl uppercase leading-tight text-gray-400">Riwayat<br/>Tagihan</span>
-                       <ArrowRight className="w-8 h-8 transform group-hover:translate-x-2 transition-transform text-gray-400"/>
-                     </div>
+                     <span className="font-space-grotesk font-black text-sm md:text-base uppercase text-center mt-2 leading-tight">Riwayat<br/>Transaksi</span>
                   </Link>
+
+                  {isAdmin && (
+                    <Link href="/backoffice" className="bg-[#FFD100] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex flex-col items-center justify-center gap-2 group aspect-square">
+                       <div className="bg-white border-4 border-black p-3 rounded-xl w-max shadow-[2px_2px_0_0_#000] group-hover:scale-110 transition-transform">
+                         <PieChart className="w-8 h-8 text-black" strokeWidth={2.5}/>
+                       </div>
+                       <span className="font-space-grotesk font-black text-sm md:text-base uppercase text-center mt-2 leading-tight">Back<br/>Office</span>
+                    </Link>
+                  )}
                </div>
             </div>
          </div>

@@ -98,10 +98,10 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 ## FASE 9: Industrial Grade - Manajemen Inventori Lanjutan & Laci Kas
 *Fokus: Keakuratan stok dan pergerakan uang tunai.*
 
-- [ ] **Task 9.1:** Modul Stock Opname (Penyesuaian stok dengan pencatatan selisih dan alasan).
-- [ ] **Task 9.2:** Modul Purchase Order (PO) & Manajemen Supplier.
-- [ ] **Task 9.3:** Modul Peringatan Stok Menipis (Low Stock Warning).
-- [ ] **Task 9.4:** Modul Petty Cash In/Out (Kas Laci darurat).
+- [x] **Task 9.1:** Modul Stock Opname (Penyesuaian stok dengan pencatatan selisih dan alasan).
+- [x] **Task 9.2:** Modul Purchase Order (PO) & Manajemen Supplier.
+- [x] **Task 9.3:** Modul Peringatan Stok Menipis (Low Stock Warning).
+- [x] **Task 9.4:** Modul Petty Cash In/Out (Kas Laci darurat).
 
 ---
 
@@ -112,12 +112,12 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 - [ ] **Task 10.2:** Config & Init Firebase SDK (`firebase-applet-config.json`).
 - [ ] **Task 10.3:** Migrasi `useAuthStore` ke Firebase Auth dengan claims Role. & Deploy Firestore Security Rules.
 - [ ] **Task 10.4:** Konversi semua data lokal untuk tersinkronisasi dengan Firestore.
-- [ ] **Task 10.5:** Modul Export Lanjutan (Export to CSV/Excel dari Cloud Data untuk Accounting).
+- [x] **Task 10.5:** Modul Export Lanjutan (Export to CSV/Excel dari Cloud Data untuk Accounting).
 
 ---
 
 ## FASE 11: Polish & Deploy
-- [ ] **Task 11.1:** Final E2E Audit.
-- [ ] **Task 11.2:** Testing responsivitas Tablet/Smartphone.
-- [ ] **Task 11.3:** Build Check (`npm run build`).
+- [x] **Task 11.1:** Final E2E Audit.
+- [x] **Task 11.2:** Testing responsivitas Tablet/Smartphone.
+- [x] **Task 11.3:** Build Check (`npm run build`).
 - [ ] **Task 11.4:** Siap export/deploy ke Vercel.
