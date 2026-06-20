@@ -194,6 +194,79 @@ export default function ShiftPage() {
     );
   }
 
+  if (currentShift?.status === 'CLOSED') {
+     const pendapatanTunaiSistem = currentShift.expectedEndingCash - currentShift.startingCash;
+     const selisih = currentShift.actualEndingCash - currentShift.expectedEndingCash;
+     
+     // OPSI A: Drop Tunai + Laci Kembali ke Modal
+     // Kasir harus ngedrop sejumlah pendapatan + selisih lebih, atau menutupi selisih minus.
+     // Uang yg di setorkan SPV: Laci Fisik - Modal Awal (Biar laci kembali utuh = Modal Awal)
+     const setoranSpv = currentShift.actualEndingCash - currentShift.startingCash;
+     
+     return (
+       <div className="p-4 md:p-12 flex flex-col min-h-full bg-[#FFFDF7] items-center py-10 md:py-20 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+          <div className="bg-white border-8 border-black p-6 md:p-10 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full">
+             <div className="flex justify-center mb-6">
+                <div className="bg-[#FFD100] border-4 border-black p-4 rounded-full shadow-[4px_4px_0_0_#000]">
+                   <CheckCircle2 className="w-12 h-12 text-black" strokeWidth={3} />
+                </div>
+             </div>
+             <h1 className="font-space-grotesk font-black text-3xl uppercase tracking-widest text-black text-center mb-2">Shift Selesai</h1>
+             <p className="font-inter font-bold text-gray-500 text-center mb-8">Ini adalah ringkasan akhir shift Anda (Opsi Setor Pendapatan).</p>
+             
+             <div className="flex flex-col gap-3 font-inter font-bold bg-gray-50 p-6 rounded-2xl border-4 border-black">
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 pb-3">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Modal Awal Laci</span> 
+                 <span className="text-lg">{formatRupiah(currentShift.startingCash)}</span>
+               </div>
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Pendapatan Tunai (Sistem)</span> 
+                 <span className="text-lg text-green-600">+{formatRupiah(Math.max(0, pendapatanTunaiSistem))}</span>
+               </div>
+               <div className="flex justify-between items-center border-b-2 border-black py-3">
+                 <span className="text-black font-black uppercase text-xs tracking-widest">Estimasi Total di Laci</span> 
+                 <span className="text-xl font-black">{formatRupiah(currentShift.expectedEndingCash)}</span>
+               </div>
+               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3 mt-2">
+                 <span className="text-gray-500 uppercase text-xs tracking-widest">Fisik Laci Aktual (Dihitung)</span> 
+                 <span className="text-lg font-black">{formatRupiah(currentShift.actualEndingCash)}</span>
+               </div>
+               <div className={`flex justify-between items-center p-4 rounded-xl border-4 border-black mt-3 font-black uppercase text-xl ${selisih < 0 ? 'bg-red-500 text-white shadow-[4px_4px_0_0_#000]' : 'bg-[#00E5FF] text-black shadow-[4px_4px_0_0_#000]'}`}>
+                 <span>Selisih</span> 
+                 <span>
+                    {selisih > 0 ? "+" : ""}{formatRupiah(selisih)}
+                 </span>
+               </div>
+             </div>
+
+             <div className="mt-8 bg-black w-full p-6 border-4 border-black border-dashed flex flex-col gap-3 text-white rounded-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 bg-[#FFD100] text-black font-black uppercase text-[10px] tracking-widest px-3 py-1 rounded-bl-xl border-b-4 border-l-4 border-black">
+                   Instruksi Wajib
+                 </div>
+                 <h2 className="font-space-grotesk font-black text-xl uppercase tracking-widest text-[#FFD100]">Tindakan Serah Terima</h2>
+                 <p className="font-inter text-sm mb-2 text-gray-300">Untuk memulai shift berikutnya dengan nominal yang sama, ambil <strong className="text-white">Semua Pendapatan dan Selisih (+/‑)</strong> dari laci dan sisakan hanya Modal Awal.</p>
+                 
+                 <div className="bg-white/10 p-4 rounded-xl border-l-4 border-[#00E5FF]">
+                   <ul className="list-disc pl-5 font-bold space-y-2">
+                      <li>Ambil Tunai (Disetor ke SPV/Brankas) : <strong className="text-[#00E5FF]">{formatRupiah(setoranSpv)}</strong></li>
+                      <li>Sisakan di Laci (Modal Shift Berikutnya) : <strong className="text-[#FFD100]">{formatRupiah(currentShift.startingCash)}</strong></li>
+                   </ul>
+                 </div>
+                 {selisih < 0 && (
+                     <p className="font-mono text-red-400 mt-2 text-xs font-bold bg-red-900/40 p-2 rounded-lg border border-red-500/50">⚠️ Catatan: Terdapat selisih MINUS {formatRupiah(selisih * -1)} yang harus dipertanggungjawabkan kasir.</p>
+                 )}
+             </div>
+
+             <Button className="w-full mt-8 h-16 text-xl font-space-grotesk font-black tracking-widest uppercase border-4 border-black bg-[#FF6321] hover:bg-[#ff7a40] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all text-white" onClick={() => {
+                useShiftStore.getState().acknowledgeClosedShift(); 
+             }}>
+               SAYA MENGERTI & KEMBALI KE LAYAR AWAL
+             </Button>
+          </div>
+       </div>
+     );
+  }
+
   // default: NO OPEN SHIFT
   if (isAdmin) {
     return (

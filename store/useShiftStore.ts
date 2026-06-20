@@ -30,6 +30,7 @@ interface ShiftState {
   pettyCashHistory: PettyCashTransaction[];
   openShift: (cashierId: string, startingCash: number) => void;
   closeShift: (actualEndingCash: number) => void;
+  acknowledgeClosedShift: () => void;
   forceCloseShift: (shiftId: string) => void;
   addSalesToShift: (amount: number) => void;
   subtractSalesFromShift: (amount: number) => void;
@@ -70,10 +71,14 @@ export const useShiftStore = create<ShiftState>()(
           };
           upsertFirebaseShift(closedShift);
           return {
-            currentShift: null,
+            currentShift: closedShift,
             shiftHistory: [closedShift, ...state.shiftHistory]
           };
         });
+      },
+
+      acknowledgeClosedShift: () => {
+         set({ currentShift: null });
       },
 
       forceCloseShift: (shiftId: string) => {

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
@@ -7,7 +6,9 @@ export default function NotFound() {
       <h2 className="text-4xl font-space-grotesk font-black uppercase text-black">Halaman Tidak Ditemukan</h2>
       <p className="text-gray-600 font-inter font-bold">Kode 404. Maaf, halaman yang Anda tuju tidak tersedia.</p>
       <Link href="/">
-        <Button>KEMBALI KE BERANDA</Button>
+        <button className="px-6 py-3 border-4 border-black bg-[#FFD100] font-black uppercase text-black hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#000] transition-all">
+          KEMBALI KE BERANDA
+        </button>
       </Link>
     </div>
   );

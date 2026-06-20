@@ -375,12 +375,14 @@ export default function ReportsPage() {
                      <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase text-xs">
                        <TableRow>
                          <TableHead className="text-black border-r-2 border-black w-[50px]">Status</TableHead>
-                         <TableHead className="text-black border-r-2 border-black min-w-[120px]">Kasir</TableHead>
+                         <TableHead className="text-black border-r-2 border-black min-w-[200px]">Kasir</TableHead>
                          <TableHead className="text-black border-r-2 border-black min-w-[200px]">Waktu</TableHead>
                          <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Modal Awal</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Sistem (Estimasi)</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Fisik Laci</TableHead>
-                         <TableHead className="text-black text-right min-w-[150px]">Selisih</TableHead>
+                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Pendapatan Tunai</TableHead>
+                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Sistem (Laci)</TableHead>
+                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Fisik Aktual</TableHead>
+                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Selisih</TableHead>
+                         <TableHead className="text-black text-right min-w-[150px]">Wajib Setor</TableHead>
                        </TableRow>
                      </TableHeader>
                      <TableBody className="font-inter font-bold">
@@ -394,13 +396,17 @@ export default function ReportsPage() {
                                {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(currentShift.startTime))} - <span className="opacity-50">Sekarang</span>
                             </TableCell>
                             <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(currentShift.startingCash)}</TableCell>
+                            <TableCell className="text-right border-r-2 border-gray-200 text-green-600">{formatRupiah(currentShift.expectedEndingCash - currentShift.startingCash)}</TableCell>
                             <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(currentShift.expectedEndingCash)}</TableCell>
+                            <TableCell className="text-right border-r-2 border-gray-200">-</TableCell>
                             <TableCell className="text-right border-r-2 border-gray-200">-</TableCell>
                             <TableCell className="text-right">-</TableCell>
                           </TableRow>
                        )}
                        {shiftHistory.map((shift, idx) => {
                           const selisih = shift.actualEndingCash - shift.expectedEndingCash;
+                          const setor = shift.actualEndingCash - shift.startingCash;
+                          const pendapatan = shift.expectedEndingCash - shift.startingCash;
                           return (
                             <TableRow key={shift.id || idx} className="border-b-2 border-gray-200 hover:bg-gray-50">
                               <TableCell className="border-r-2 border-gray-200">
@@ -413,19 +419,23 @@ export default function ReportsPage() {
                                  {shift.endTime ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(shift.endTime)) : 'N/A'}
                               </TableCell>
                               <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.startingCash)}</TableCell>
+                              <TableCell className="text-right border-r-2 border-gray-200 text-green-600">{formatRupiah(Math.max(0, pendapatan))}</TableCell>
                               <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.expectedEndingCash)}</TableCell>
                               <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.actualEndingCash)}</TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right border-r-2 border-gray-200">
                                  <span className={cn("px-2 py-1 rounded-md border-2 border-black uppercase text-xs", selisih < 0 ? "bg-red-400 text-white" : selisih > 0 ? "bg-green-400 text-black" : "bg-white")}>
                                    {selisih > 0 ? '+' : ''}{formatRupiah(selisih)}
                                  </span>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 <span className="font-black text-[#00E5FF] px-2 py-1 rounded-md border-2 border-black">{formatRupiah(setor)}</span>
                               </TableCell>
                             </TableRow>
                           );
                        })}
                        {shiftHistory.length === 0 && !currentShift && (
                           <TableRow>
-                             <TableCell colSpan={7} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
+                             <TableCell colSpan={9} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
                                Tidak ada histori shift.
                              </TableCell>
                           </TableRow>
