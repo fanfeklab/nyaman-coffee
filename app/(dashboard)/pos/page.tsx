@@ -33,7 +33,7 @@ type ViewOption = 'Grid' | 'Compact';
 
 export default function POSPage() {
   const router = useRouter();
-  const { categories, products } = useInventoryStore();
+  const { categories, products, variants, recipes } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
   const { user } = useAuthStore();
   const { addTransaction } = useTransactionStore();
@@ -122,6 +122,63 @@ export default function POSPage() {
   
   // Recipe Book global state
   const [isRecipeBookOpen, setIsRecipeBookOpen] = useState(false);
+
+  // Customize Item Modal
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [productToCustomize, setProductToCustomize] = useState<Product | null>(null);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, any>>({});
+  
+  const handleProductClick = (p: Product) => {
+    if (p.variantIds && p.variantIds.length > 0) {
+      setProductToCustomize(p);
+      setSelectedVariants({});
+      setIsCustomizeOpen(true);
+    } else {
+      addItem(p);
+    }
+  };
+
+  const handleAddCustomizedToCart = () => {
+    if (!productToCustomize) return;
+    
+    const optionsToAdd: any[] = [];
+    
+    // Validation
+    if (productToCustomize.variantIds) {
+      for (const vid of productToCustomize.variantIds) {
+        const v = variants.find(vr => vr.id === vid);
+        if (v && v.isRequired) {
+          if (!selectedVariants[vid] || (Array.isArray(selectedVariants[vid]) && selectedVariants[vid].length === 0)) {
+            toast.error(`PILIHAN WAJIB!`, { description: `Silahkan pilih ${v.name}` });
+            return;
+          }
+        }
+      }
+      
+      // Building options
+      Object.entries(selectedVariants).forEach(([vid, value]) => {
+         const v = variants.find(vr => vr.id === vid);
+         if (!v) return;
+         if (Array.isArray(value)) {
+            value.forEach(optName => {
+               const opt = v.options.find(o => o.name === optName);
+               if (opt) {
+                 optionsToAdd.push({ variantId: v.id, variantName: v.name, optionName: opt.name, priceAdjustment: opt.priceAdjustment || 0 });
+               }
+            });
+         } else {
+            const opt = v.options.find(o => o.name === value);
+            if (opt) {
+              optionsToAdd.push({ variantId: v.id, variantName: v.name, optionName: opt.name, priceAdjustment: opt.priceAdjustment || 0 });
+            }
+         }
+      });
+    }
+
+    addItem(productToCustomize, optionsToAdd);
+    setIsCustomizeOpen(false);
+    setProductToCustomize(null);
+  };
 
   const filteredProducts = useMemo(() => {
     let result = products;
@@ -373,7 +430,7 @@ export default function POSPage() {
                     return (
                       <div 
                         key={p.id}
-                        onClick={() => addItem(p)}
+                        onClick={() => handleProductClick(p)}
                         className="bg-white border-4 border-black rounded-2xl p-4 flex justify-between items-center cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 active:translate-x-2 transition-all select-none group"
                       >
                          <div className="flex flex-col">
@@ -398,7 +455,7 @@ export default function POSPage() {
                   return (
                     <div 
                       key={p.id}
-                      onClick={() => addItem(p)}
+                      onClick={() => handleProductClick(p)}
                       className="bg-white border-4 border-black rounded-2xl p-4 flex flex-col cursor-pointer shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 active:translate-x-2 transition-all select-none group"
                     >
                        <div className="w-full aspect-square bg-gray-100 border-4 border-black rounded-xl mb-4 flex items-center justify-center overflow-hidden">
@@ -508,23 +565,38 @@ export default function POSPage() {
                   
                   {/* Cart Items List */}
                   <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 min-h-[30vh] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
-                     {items.map(item => (
-                       <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      {items.map(item => {
+                       const itemOptsPrice = (item.selectedOptions || []).reduce((a:any,b:any)=>a+b.priceAdjustment, 0);
+                       const itemTotalPrice = (item.product.basePrice + itemOptsPrice) * item.qty;
+                       return (
+                       <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-start gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                           <div className="flex-1 flex flex-col">
                              <span className="font-space-grotesk font-black text-lg uppercase line-clamp-1">{item.product.name}</span>
-                             <span className="font-inter font-bold text-gray-500 text-sm">{formatRupiah(item.product.basePrice)}</span>
+                             {item.selectedOptions && item.selectedOptions.length > 0 && (
+                               <div className="flex flex-wrap gap-1 my-1">
+                                 {item.selectedOptions.map((o: any, oidx: number) => (
+                                   <span key={oidx} className="text-[10px] font-bold uppercase bg-gray-100 border-2 border-black px-1.5 py-0.5 rounded-md">
+                                     {o.optionName} {o.priceAdjustment > 0 ? `(+${o.priceAdjustment})` : ''}
+                                   </span>
+                                 ))}
+                               </div>
+                             )}
+                             <span className="font-inter font-bold text-gray-500 text-sm">
+                               {formatRupiah(item.product.basePrice)}
+                               {itemOptsPrice > 0 && ` + ${formatRupiah(itemOptsPrice)} varian`}
+                             </span>
                           </div>
                           
-                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
-                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(item.product.basePrice * item.qty)}</span>
-                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1">
+                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200 mt-2 md:mt-0">
+                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(itemTotalPrice)}</span>
+                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
                                 <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
                                 <span className="font-black text-lg w-8 text-center">{item.qty}</span>
                                 <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
                              </div>
                           </div>
                        </div>
-                     ))}
+                     )})}
                   </div>
 
                   {/* Cart Footer / Checkout Sticky Panel */}
@@ -597,6 +669,70 @@ export default function POSPage() {
            </>
          )}
        </AnimatePresence>
+
+       {/* ================= CUSTOMIZE MODAL ================= */}
+       <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+         <DialogContent className="border-8 border-black rounded-[2rem] max-w-xl bg-white p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[90vh] flex flex-col">
+            <div className="p-5 bg-black text-white shrink-0">
+               <h2 className="font-space-grotesk font-black text-2xl uppercase tracking-widest">{productToCustomize?.name}</h2>
+               <p className="font-inter font-bold text-gray-300">Pilih varian atau kustomisasi pesanan</p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 hide-scrollbar">
+               {productToCustomize?.variantIds?.map(vid => {
+                  const v = variants.find(vr => vr.id === vid);
+                  if (!v) return null;
+                  
+                  return (
+                    <div key={v.id} className="flex flex-col gap-3">
+                       <div className="flex items-center justify-between">
+                         <Label className="font-space-grotesk font-black text-lg uppercase">{v.name}</Label>
+                         {v.isRequired ? <span className="bg-[#FFD100] text-black text-[10px] font-black uppercase px-2 py-1 rounded border-2 border-black">Wajib</span> : <span className="text-gray-400 text-xs font-bold uppercase">Opsional</span>}
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-3">
+                          {v.options.map(opt => {
+                             const isSelected = v.type === 'SINGLE_CHOICE' 
+                               ? selectedVariants[v.id] === opt.name 
+                               : (selectedVariants[v.id] || []).includes(opt.name);
+
+                             return (
+                               <button
+                                 key={opt.name}
+                                 onClick={() => {
+                                   if (v.type === 'SINGLE_CHOICE') {
+                                     setSelectedVariants({...selectedVariants, [v.id]: opt.name});
+                                   } else {
+                                     const curr = selectedVariants[v.id] || [];
+                                     if (curr.includes(opt.name)) {
+                                        setSelectedVariants({...selectedVariants, [v.id]: curr.filter((x:any) => x !== opt.name)});
+                                     } else {
+                                        setSelectedVariants({...selectedVariants, [v.id]: [...curr, opt.name]});
+                                     }
+                                   }
+                                 }}
+                                 className={cn(
+                                   "p-3 text-left border-4 border-black rounded-xl font-bold transition-all flex flex-col justify-between h-20 active:translate-y-1 active:shadow-none",
+                                   isSelected ? "bg-[#00E5FF] shadow-[2px_2px_0_0_#000] translate-y-0" : "bg-white shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_0_#000]"
+                                 )}
+                               >
+                                  <span className="truncate">{opt.name}</span>
+                                  {opt.priceAdjustment > 0 && <span className="text-xs">+{formatRupiah(opt.priceAdjustment)}</span>}
+                               </button>
+                             )
+                          })}
+                       </div>
+                    </div>
+                  )
+               })}
+            </div>
+
+            <div className="p-6 bg-gray-50 border-t-4 border-black shrink-0 flex gap-4">
+              <Button variant="outline" className="flex-1 h-14 font-black border-4 border-black shadow-[4px_4px_0_0_#000]" onClick={() => setIsCustomizeOpen(false)}>BATAL</Button>
+              <Button onClick={handleAddCustomizedToCart} className="flex-1 h-14 bg-[#FF90E8] text-black font-black border-4 border-black shadow-[4px_4px_0_0_#000] hover:bg-pink-400">TAMBAH</Button>
+            </div>
+         </DialogContent>
+       </Dialog>
 
        {/* ================= PAYMENT MODAL ================= */}
        <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
@@ -704,19 +840,24 @@ export default function POSPage() {
             
             <div className="p-6 flex flex-col gap-4 bg-gray-100">
                {/* Recipe button wrapper for specific items */}
-               {items.some(i => i.product.recipe) && (
-                  <div className="flex flex-col gap-2 mb-2 p-4 bg-[#FF90E8] border-4 border-black rounded-xl">
-                      <span className="font-space-grotesk font-black uppercase text-sm flex items-center gap-2"><BookOpen className="w-4 h-4" /> Bantuan Barista</span>
+               {items.some(i => recipes.find(r => r.productId === i.product.id)) && (
+                  <div className="flex flex-col gap-2 mb-2 p-4 bg-[#FFD100] border-4 border-black rounded-xl">
+                      <span className="font-space-grotesk font-black uppercase text-sm flex items-center gap-2"><BookOpen className="w-4 h-4" /> Resep Terkait Order Ini</span>
                       <div className="flex flex-wrap gap-2">
-                        {items.filter(i => i.product.recipe).map(i => (
-                           <button 
-                             key={i.id}
-                             className="bg-white border-2 border-black rounded-lg px-3 py-1 font-inter font-black text-xs hover:bg-black hover:text-white transition-colors"
-                             onClick={() => setRecipeItem(i.product)}
-                           >
-                              Resep: {i.product.name}
-                           </button>
-                        ))}
+                        {items.filter(i => recipes.find(r => r.productId === i.product.id)).map(i => {
+                           const r = recipes.find(r => r.productId === i.product.id);
+                           return (
+                             <button 
+                               key={i.id}
+                               className="px-3 py-1.5 bg-white border-2 border-black rounded-md text-xs font-bold font-inter shadow-[2px_2px_0_0_#000] hover:translate-y-0.5 hover:shadow-none active:translate-y-1 transition-all"
+                               onClick={() => {
+                                 setRecipeItem({...i.product, recipe: r?.instructions});
+                               }}
+                             >
+                               Resep: {i.product.name}
+                             </button>
+                           )
+                        })}
                       </div>
                   </div>
                )}
@@ -730,12 +871,22 @@ export default function POSPage() {
                            <span className="text-gray-500">2026-06-19</span>
                            <span className="text-gray-500 uppercase">{paymentMethod}</span>
                         </div>
-                        {items.map(i => (
-                           <div key={i.id} className="flex justify-between w-full">
-                             <span>{i.qty}x {i.product.name}</span>
-                             <span>{formatRupiah(i.qty * i.product.basePrice)}</span>
+                        {items.map(i => {
+                           const itemOptsPrice = (i.selectedOptions || []).reduce((a:any,b:any)=>a+b.priceAdjustment, 0);
+                           return (
+                           <div key={i.id} className="flex flex-col w-full mb-1">
+                             <div className="flex justify-between w-full">
+                               <span>{i.qty}x {i.product.name}</span>
+                               <span>{formatRupiah(i.qty * (i.product.basePrice + itemOptsPrice))}</span>
+                             </div>
+                             {i.selectedOptions && i.selectedOptions.length > 0 && (
+                               <div className="ml-4 text-[10px] text-gray-500 w-3/4">
+                                 {i.selectedOptions.map((o:any) => o.optionName).join(', ')}
+                               </div>
+                             )}
                            </div>
-                        ))}
+                           )
+                        })}
                         <div className="border-t-2 border-black border-dashed mt-2 pt-2 flex justify-between font-bold">
                            <span>TOTAL</span>
                            <span>{formatRupiah(total)}</span>
@@ -788,19 +939,21 @@ export default function POSPage() {
                </DialogTitle>
             </div>
             <div className="overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 bg-gray-50 hide-scrollbar">
-              {products.filter(p => !!p.recipe).length === 0 ? (
+              {recipes.length === 0 ? (
                 <div className="col-span-1 md:col-span-2 text-center text-gray-500 font-bold py-10">Belum ada resep yang dicatat pada menu.</div>
               ) : (
-                products.filter(p => !!p.recipe).map(product => {
+                recipes.map(recipe => {
+                  const product = products.find(p => p.id === recipe.productId);
+                  if (!product) return null;
                   const cat = categories.find(c => c.id === product.categoryId);
                   return (
-                    <div key={product.id} className="bg-white border-4 border-black rounded-2xl p-4 shadow-[4px_4px_0_0_#000]">
+                    <div key={recipe.id} className="bg-white border-4 border-black rounded-2xl p-4 shadow-[4px_4px_0_0_#000]">
                       <div className="flex items-center gap-2 mb-2">
                          <span className="font-space-grotesk font-black uppercase text-xl">{product.name}</span>
                          {cat && <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 border-2 border-black rounded-md" style={{ backgroundColor: cat.color }}>{cat.name}</span>}
                       </div>
                       <div className="bg-gray-100 border-2 border-dashed border-gray-300 p-3 rounded-lg font-inter font-bold text-sm whitespace-pre-wrap">
-                        {product.recipe}
+                        {recipe.instructions || 'Tidak ada instruksi khusus.'}
                       </div>
                     </div>
                   );

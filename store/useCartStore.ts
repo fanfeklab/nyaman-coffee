@@ -2,10 +2,19 @@ import { create } from 'zustand';
 import { Product } from './useInventoryStore';
 import { useSettingsStore } from './useSettingsStore';
 
+export interface SelectedOption {
+  variantId: string;
+  variantName: string;
+  optionName: string;
+  priceAdjustment: number;
+}
+
 export interface CartItem {
   id: string; // unique for each line item (in case of specific notes later)
   product: Product;
   qty: number;
+  selectedOptions?: SelectedOption[];
+  notes?: string;
 }
 
 export interface SavedBill {
@@ -27,7 +36,7 @@ interface CartState {
   enableServiceCharge: boolean;
   savedBills: SavedBill[];
 
-  addItem: (product: Product) => void;
+  addItem: (product: Product, selectedOptions?: SelectedOption[]) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
   clearCart: () => void;
@@ -62,9 +71,19 @@ export const useCartStore = create<CartState>((set, get) => {
   enableServiceCharge: settings.enableServiceCharge,
   savedBills: [],
   
-  addItem: (product) => {
+  addItem: (product, selectedOptions = []) => {
     set((state) => {
-      const existing = state.items.find(i => i.product.id === product.id);
+      // Find existing item with exact same options
+      const existing = state.items.find(i => {
+         if (i.product.id !== product.id) return false;
+         // Compare options length
+         if ((i.selectedOptions?.length || 0) !== selectedOptions.length) return false;
+         // Compare options content deeply
+         const opts1 = i.selectedOptions?.map(o => o.optionName).sort().join(',') || '';
+         const opts2 = selectedOptions.map(o => o.optionName).sort().join(',') || '';
+         return opts1 === opts2;
+      });
+
       if (existing) {
         return {
           items: state.items.map(i => 
@@ -73,7 +92,7 @@ export const useCartStore = create<CartState>((set, get) => {
         };
       }
       return {
-        items: [...state.items, { id: 'cart_' + Date.now().toString(36), product, qty: 1 }]
+        items: [...state.items, { id: 'cart_' + Date.now().toString(36), product, qty: 1, selectedOptions }]
       };
     });
   },
@@ -158,7 +177,10 @@ export const useCartStore = create<CartState>((set, get) => {
 
   getSubtotal: () => {
     const { items } = get();
-    return items.reduce((sum, item) => sum + (item.product.basePrice * item.qty), 0);
+    return items.reduce((sum, item) => {
+       const optsPrice = (item.selectedOptions || []).reduce((acc, opt) => acc + opt.priceAdjustment, 0);
+       return sum + ((item.product.basePrice + optsPrice) * item.qty);
+    }, 0);
   },
 
   getDiscountAmount: () => {
