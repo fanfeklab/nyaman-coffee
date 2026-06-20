@@ -134,9 +134,9 @@ export default function ManualSalesPage() {
                </SelectTrigger>
                <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
                  {users.map(u => (
-                   <SelectItem key={u.id} value={u.username}>{u.fullName} ({u.username})</SelectItem>
+                   <SelectItem key={u.id} value={u.username} label={`${u.fullName} (${u.username})`}>{u.fullName} ({u.username})</SelectItem>
                  ))}
-                 <SelectItem value="kasir_lainnya">Lainnya...</SelectItem>
+                 <SelectItem value="kasir_lainnya" label="Lainnya...">Lainnya...</SelectItem>
                </SelectContent>
              </Select>
            </div>
@@ -152,8 +152,8 @@ export default function ManualSalesPage() {
                  <SelectValue placeholder="Pilih Metode Pembayaran" />
                </SelectTrigger>
                <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                 <SelectItem value="TUNAI">TUNAI</SelectItem>
-                 <SelectItem value="QRIS">QRIS</SelectItem>
+                 <SelectItem value="TUNAI" label="TUNAI">TUNAI</SelectItem>
+                 <SelectItem value="QRIS" label="QRIS">QRIS</SelectItem>
                </SelectContent>
              </Select>
          </div>
@@ -174,42 +174,42 @@ export default function ManualSalesPage() {
            ) : (
              <div className="flex flex-col gap-4">
                {items.map((item, idx) => (
-                 <div key={idx} className="flex flex-col md:flex-row gap-4 items-center bg-gray-50 p-4 border-2 border-black rounded-xl">
+                 <div key={idx} className="flex flex-col sm:flex-row gap-2 items-center bg-gray-50 p-2 border-2 border-black rounded-lg">
                    <div className="flex-1 w-full">
                      <Label className="font-bold mb-1 block">Produk Menu</Label>
                      <Select 
                        value={item.productId} 
                        onValueChange={(val) => handleUpdateItem(idx, 'productId', val || '')}
                      >
-                       <SelectTrigger className="flex h-12 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
-                         <SelectValue placeholder="-- Pilih Menu --" />
+                       <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-1 text-sm focus:outline-none focus:ring-0 truncate font-bold text-left overflow-hidden">
+                         <SelectValue placeholder="Pilih Menu" />
                        </SelectTrigger>
                        <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
                          {products.map(p => (
-                           <SelectItem key={p.id} value={p.id}>{p.name} - Rp {p.basePrice.toLocaleString()}</SelectItem>
+                           <SelectItem key={p.id} value={p.id} label={`${p.name} - Rp ${p.basePrice.toLocaleString()}`}>{p.name} - Rp {p.basePrice.toLocaleString()}</SelectItem>
                          ))}
                        </SelectContent>
                      </Select>
                    </div>
                    
-                   <div className="w-full md:w-32 shrink-0">
+                   <div className="w-full sm:w-24 shrink-0">
                      <Label className="font-bold mb-1 block">Qty</Label>
                      <Input 
                        type="number" 
                        value={item.qty} 
                        min={1}
                        onChange={(e) => handleUpdateItem(idx, 'qty', parseInt(e.target.value) || 1)} 
-                       className="h-12 border-2 border-black" 
+                       className="h-10 border-2 border-black text-center" 
                      />
                    </div>
 
-                   <div className="w-auto pt-6 flex items-center justify-center">
+                   <div className="w-auto pt-6 flex items-center justify-center shrink-0">
                      <Button 
                        variant="destructive" 
                        onClick={() => handleRemoveItem(idx)}
-                       className="h-12 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-y-1 hover:shadow-none transition-all"
+                       className="h-10 w-10 p-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center bg-red-500 hover:bg-red-600 text-white"
                      >
-                       <Trash className="w-5 h-5 mx-auto" />
+                       <Trash className="w-4 h-4 mx-auto" />
                      </Button>
                    </div>
                  </div>

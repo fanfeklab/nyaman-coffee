@@ -46,6 +46,7 @@ export default function ProductsPage() {
     recipe: ''
   });
   const [moneyText, setMoneyText] = useState('');
+  const [comboSearch, setComboSearch] = useState('');
 
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
@@ -395,7 +396,7 @@ export default function ProductsPage() {
                         <SelectValue placeholder="Pilih Kategori" />
                       </SelectTrigger>
                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        {categories.map(c => <SelectItem key={c.id} value={c.id} label={c.name}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                  </div>
@@ -409,8 +410,8 @@ export default function ProductsPage() {
                         <SelectValue placeholder="Pilih Tipe" />
                       </SelectTrigger>
                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                        <SelectItem value="SINGLE">Single (Menu Satuan)</SelectItem>
-                        <SelectItem value="COMBO">Combo (Paket)</SelectItem>
+                        <SelectItem value="SINGLE" label="Single (Menu Satuan)">Single (Menu Satuan)</SelectItem>
+                        <SelectItem value="COMBO" label="Combo (Paket)">Combo (Paket)</SelectItem>
                       </SelectContent>
                     </Select>
                  </div>
@@ -459,14 +460,22 @@ export default function ProductsPage() {
                   <Label className="text-lg font-space-grotesk font-black uppercase">Isi Menu Combo</Label>
                   <p className="text-xs font-inter font-bold text-gray-500 mb-2">Pilih menu single yang menjadi bagian dari paket ini.</p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-64">
+                  <div className="grid grid-cols-2 gap-2 md:gap-4 h-64 md:h-80">
                     {/* Left Column: Available Single Products */}
                     <div className="flex flex-col border-2 border-black bg-white rounded-xl overflow-hidden shadow-[4px_4px_0_0_#000]">
-                      <div className="bg-gray-100 border-b-2 border-black p-2 font-space-grotesk font-black text-center text-sm uppercase">Menu Tersedia</div>
+                      <div className="bg-gray-100 border-b-2 border-black p-2 font-space-grotesk font-black text-center text-xs md:text-sm uppercase">Menu Tersedia</div>
+                      <div className="p-2 border-b-2 border-black">
+                        <Input 
+                          value={comboSearch}
+                          onChange={(e) => setComboSearch(e.target.value)}
+                          placeholder="Cari Menu..."
+                          className="h-8 border-2 border-black rounded-md text-xs font-bold"
+                        />
+                      </div>
                       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
-                        {products.filter(p => p.type === 'SINGLE').map(p => (
-                           <div key={p.id} className="flex justify-between items-center border-2 border-black p-2 rounded-lg hover:bg-gray-50">
-                             <div className="text-sm font-bold">{p.name}</div>
+                        {products.filter(p => p.type === 'SINGLE' && p.name.toLowerCase().includes(comboSearch.toLowerCase())).map(p => (
+                           <div key={p.id} className="flex justify-between items-center border-2 border-black p-2 rounded-lg hover:bg-gray-50 gap-2">
+                             <div className="text-xs md:text-sm font-bold truncate" title={p.name}>{p.name}</div>
                              <button 
                                onClick={() => {
                                  setProductForm({
@@ -474,7 +483,7 @@ export default function ProductsPage() {
                                    comboItems: [...(productForm.comboItems || []), p.id]
                                  });
                                }}
-                               className="p-1 bg-[#FFD100] border-2 border-black rounded-md hover:bg-yellow-400"
+                               className="p-1 shrink-0 bg-[#FFD100] border-2 border-black rounded-md hover:bg-yellow-400"
                              >
                                <Plus className="w-4 h-4"/>
                              </button>
@@ -485,20 +494,20 @@ export default function ProductsPage() {
 
                     {/* Right Column: Selected Items */}
                     <div className="flex flex-col border-2 border-black bg-white rounded-xl overflow-hidden shadow-[4px_4px_0_0_#000]">
-                      <div className="bg-gray-100 border-b-2 border-black p-2 font-space-grotesk font-black text-center text-sm uppercase">Isi Paket ({productForm.comboItems?.length || 0})</div>
+                      <div className="bg-gray-100 border-b-2 border-black p-2 font-space-grotesk font-black text-center text-xs md:text-sm uppercase">Isi Paket ({productForm.comboItems?.length || 0})</div>
                       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
                         {(productForm.comboItems || []).map((itemId, idx) => {
                            const p = products.find(prod => prod.id === itemId);
                            return (
-                             <div key={idx} className="flex justify-between items-center border-2 border-black p-2 rounded-lg bg-[#FF90E8]/10">
-                               <div className="text-sm font-bold">{p?.name || 'Unknown'}</div>
+                             <div key={idx} className="flex justify-between items-center border-2 border-black p-2 rounded-lg bg-[#FF90E8]/10 gap-2">
+                               <div className="text-xs md:text-sm font-bold truncate" title={p?.name || 'Unknown'}>{p?.name || 'Unknown'}</div>
                                <button 
                                  onClick={() => {
                                    const newCombo = [...(productForm.comboItems || [])];
                                    newCombo.splice(idx, 1);
                                    setProductForm({...productForm, comboItems: newCombo});
                                  }}
-                                 className="p-1 bg-red-100 text-red-600 border-2 border-black rounded-md hover:bg-red-200"
+                                 className="p-1 shrink-0 bg-red-100 text-red-600 border-2 border-black rounded-md hover:bg-red-200"
                                >
                                  <Trash2 className="w-4 h-4"/>
                                </button>
@@ -506,8 +515,8 @@ export default function ProductsPage() {
                            )
                         })}
                         {(!productForm.comboItems || productForm.comboItems.length === 0) && (
-                          <div className="flex items-center justify-center h-full text-xs text-gray-400 font-bold italic text-center p-4">
-                            Pilih menu dari kolom kiri untuk memasukkan ke paket.
+                          <div className="flex items-center justify-center h-full text-[10px] md:text-xs text-gray-400 font-bold italic text-center p-2">
+                            Pilih menu dari kiri untuk mengisi paket
                           </div>
                         )}
                       </div>
@@ -574,8 +583,8 @@ export default function ProductsPage() {
                         <SelectValue placeholder="Sifat Pilihan" />
                       </SelectTrigger>
                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                        <SelectItem value="SINGLE_CHOICE">Pilih Satu Saja (Radio)</SelectItem>
-                        <SelectItem value="MULTIPLE_CHOICE">Pilih Banyak (Checkbox)</SelectItem>
+                        <SelectItem value="SINGLE_CHOICE" label="Pilih Satu Saja (Radio)">Pilih Satu Saja (Radio)</SelectItem>
+                        <SelectItem value="MULTIPLE_CHOICE" label="Pilih Banyak (Checkbox)">Pilih Banyak (Checkbox)</SelectItem>
                       </SelectContent>
                     </Select>
                  </div>
@@ -589,8 +598,8 @@ export default function ProductsPage() {
                         <SelectValue placeholder="Kondisi Wajib" />
                       </SelectTrigger>
                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                        <SelectItem value="false">Tidak Wajib (Opsional)</SelectItem>
-                        <SelectItem value="true">Wajib Diisi (Mandatory)</SelectItem>
+                        <SelectItem value="false" label="Tidak Wajib (Opsional)">Tidak Wajib (Opsional)</SelectItem>
+                        <SelectItem value="true" label="Wajib Diisi (Mandatory)">Wajib Diisi (Mandatory)</SelectItem>
                       </SelectContent>
                     </Select>
                  </div>
