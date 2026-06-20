@@ -199,6 +199,8 @@ const mockProducts: Product[] = [
   { id: 'p_paket_lengkap', name: 'Paket Lengkap (2 Snack Tray + Risol)', categoryId: 'cat_paket_murah', basePrice: 40000, type: 'COMBO', comboItems: ['p_snack_tray', 'p_snack_tray', 'p_risol'] },
 ];
 
+import { upsertFirebaseCategory, deleteFirebaseCategory, upsertFirebaseProduct, deleteFirebaseProduct, upsertFirebaseRawMaterial, deleteFirebaseRawMaterial } from '@/lib/firebase/services';
+
 export const useInventoryStore = create<InventoryState>()(
   persist(
     (set) => ({
@@ -210,23 +212,56 @@ export const useInventoryStore = create<InventoryState>()(
       suppliers: [],
       purchaseOrders: [],
       
-      addCategory: (cat) => set(state => ({ categories: [...state.categories, cat] })),
-      updateCategory: (id, updates) => set(state => ({
-        categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c)
-      })),
-      deleteCategory: (id) => set(state => ({ categories: state.categories.filter(c => c.id !== id) })),
+      addCategory: (cat) => {
+        upsertFirebaseCategory(cat);
+        set(state => ({ categories: [...state.categories, cat] }));
+      },
+      updateCategory: (id, updates) => {
+        set(state => {
+          const newCats = state.categories.map(c => c.id === id ? { ...c, ...updates } : c);
+          const updated = newCats.find(c => c.id === id);
+          if (updated) upsertFirebaseCategory(updated);
+          return { categories: newCats };
+        });
+      },
+      deleteCategory: (id) => {
+        deleteFirebaseCategory(id);
+        set(state => ({ categories: state.categories.filter(c => c.id !== id) }));
+      },
       
-      addProduct: (product) => set(state => ({ products: [...state.products, product] })),
-      updateProduct: (id, product) => set(state => ({
-        products: state.products.map(p => p.id === id ? { ...p, ...product } : p)
-      })),
-      deleteProduct: (id) => set(state => ({ products: state.products.filter(p => p.id !== id) })),
+      addProduct: (product) => {
+        upsertFirebaseProduct(product);
+        set(state => ({ products: [...state.products, product] }));
+      },
+      updateProduct: (id, product) => {
+        set(state => {
+          const newProds = state.products.map(p => p.id === id ? { ...p, ...product } : p);
+          const updated = newProds.find(p => p.id === id);
+          if (updated) upsertFirebaseProduct(updated);
+          return { products: newProds };
+        });
+      },
+      deleteProduct: (id) => {
+        deleteFirebaseProduct(id);
+        set(state => ({ products: state.products.filter(p => p.id !== id) }));
+      },
       
-      addRawMaterial: (material) => set(state => ({ rawMaterials: [...state.rawMaterials, material] })),
-      updateRawMaterial: (id, material) => set(state => ({
-        rawMaterials: state.rawMaterials.map(rm => rm.id === id ? { ...rm, ...material } : rm)
-      })),
-      deleteRawMaterial: (id) => set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) })),
+      addRawMaterial: (material) => {
+        upsertFirebaseRawMaterial(material);
+        set(state => ({ rawMaterials: [...state.rawMaterials, material] }));
+      },
+      updateRawMaterial: (id, material) => {
+        set(state => {
+          const newRm = state.rawMaterials.map(rm => rm.id === id ? { ...rm, ...material } : rm);
+          const updated = newRm.find(rm => rm.id === id);
+          if (updated) upsertFirebaseRawMaterial(updated);
+          return { rawMaterials: newRm };
+        });
+      },
+      deleteRawMaterial: (id) => {
+        deleteFirebaseRawMaterial(id);
+        set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) }));
+      },
       
       setInventoryMode: (mode) => set({ inventoryMode: mode }),
       clearInventory: () => set({ products: [], categories: [], rawMaterials: [], stockOpnames: [], suppliers: [], purchaseOrders: [] }),
@@ -324,6 +359,9 @@ export const useInventoryStore = create<InventoryState>()(
             return state; // Revert state (do not apply changes)
           }
           
+          // Sync new raw materials to Firebase
+          nextMaterials.forEach(rm => upsertFirebaseRawMaterial(rm));
+
           return { rawMaterials: nextMaterials };
         });
         
@@ -359,6 +397,9 @@ export const useInventoryStore = create<InventoryState>()(
             revertProduct(product, item.qty);
           }
           
+          // Sync reverted raw materials to Firebase
+          nextMaterials.forEach(rm => upsertFirebaseRawMaterial(rm));
+
           return { rawMaterials: nextMaterials };
         });
       }

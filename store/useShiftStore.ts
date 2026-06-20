@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { upsertFirebaseShift, upsertFirebasePettyCash } from '@/lib/firebase/services';
+
 export interface PettyCashTransaction {
   id: string;
   shiftId: string;
@@ -53,6 +55,7 @@ export const useShiftStore = create<ShiftState>()(
           actualEndingCash: 0,
           status: 'OPEN'
         };
+        upsertFirebaseShift(newShift);
         set({ currentShift: newShift });
       },
 
@@ -65,6 +68,7 @@ export const useShiftStore = create<ShiftState>()(
             actualEndingCash,
             status: 'CLOSED'
           };
+          upsertFirebaseShift(closedShift);
           return {
             currentShift: null,
             shiftHistory: [closedShift, ...state.shiftHistory]
@@ -80,6 +84,7 @@ export const useShiftStore = create<ShiftState>()(
               endTime: new Date().toISOString(),
               status: 'FORCED_CLOSED'
             };
+            upsertFirebaseShift(closedShift);
             return {
               currentShift: null,
               shiftHistory: [closedShift, ...state.shiftHistory]
@@ -92,11 +97,13 @@ export const useShiftStore = create<ShiftState>()(
       addSalesToShift: (amount: number) => {
         set((state) => {
           if (!state.currentShift || state.currentShift.status !== 'OPEN') return state;
+          const updatedShift = {
+            ...state.currentShift,
+            expectedEndingCash: state.currentShift.expectedEndingCash + amount
+          };
+          upsertFirebaseShift(updatedShift);
           return {
-            currentShift: {
-              ...state.currentShift,
-              expectedEndingCash: state.currentShift.expectedEndingCash + amount
-            }
+            currentShift: updatedShift
           };
         });
       },
@@ -104,11 +111,13 @@ export const useShiftStore = create<ShiftState>()(
       subtractSalesFromShift: (amount: number) => {
         set((state) => {
           if (!state.currentShift || state.currentShift.status !== 'OPEN') return state;
+          const updatedShift = {
+            ...state.currentShift,
+            expectedEndingCash: Math.max(0, state.currentShift.expectedEndingCash - amount)
+          };
+          upsertFirebaseShift(updatedShift);
           return {
-            currentShift: {
-              ...state.currentShift,
-              expectedEndingCash: Math.max(0, state.currentShift.expectedEndingCash - amount)
-            }
+            currentShift: updatedShift
           };
         });
       },
@@ -127,14 +136,20 @@ export const useShiftStore = create<ShiftState>()(
             timestamp: new Date().toISOString()
           };
 
+          upsertFirebasePettyCash(newTx);
+
+          const updatedShift = {
+            ...state.currentShift,
+            expectedEndingCash: type === 'IN' 
+              ? state.currentShift.expectedEndingCash + amount 
+              : Math.max(0, state.currentShift.expectedEndingCash - amount)
+          };
+
+          upsertFirebaseShift(updatedShift);
+
           return {
             pettyCashHistory: [newTx, ...state.pettyCashHistory],
-            currentShift: {
-              ...state.currentShift,
-              expectedEndingCash: type === 'IN' 
-                ? state.currentShift.expectedEndingCash + amount 
-                : Math.max(0, state.currentShift.expectedEndingCash - amount)
-            }
+            currentShift: updatedShift
           };
         });
       },

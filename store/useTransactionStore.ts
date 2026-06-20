@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CartItem } from './useCartStore';
+import { upsertFirebaseTransaction } from '@/lib/firebase/services';
 
 export interface Transaction {
   id: string;
@@ -27,10 +28,16 @@ export const useTransactionStore = create<TransactionState>()(
   persist(
     (set) => ({
       transactions: [],
-      addTransaction: (tx) => set((state) => ({ transactions: [tx, ...state.transactions] })),
-      voidTransaction: (txId) => set((state) => ({
-        transactions: state.transactions.map(t => t.id === txId ? { ...t, status: 'VOID' } : t)
-      })),
+      addTransaction: (tx) => {
+        upsertFirebaseTransaction(tx);
+        set((state) => ({ transactions: [tx, ...state.transactions] }));
+      },
+      voidTransaction: (txId) => set((state) => {
+        const nextTx = state.transactions.map(t => t.id === txId ? { ...t, status: 'VOID' } as Transaction : t);
+        const updated = nextTx.find(t => t.id === txId);
+        if (updated) upsertFirebaseTransaction(updated);
+        return { transactions: nextTx };
+      }),
       clearTransactions: () => set({ transactions: [] })
     }),
     {

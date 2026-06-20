@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Store, Receipt, Printer, PackageSearch, Save } from 'lucide-react';
+import { Store, Receipt, Printer, PackageSearch, Save, Database } from 'lucide-react';
+import { seedMockDataToFirebase } from '@/lib/firebase/services';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -22,7 +23,8 @@ export default function SettingsPage() {
   const { clearTransactions } = useTransactionStore();
   const { clearShiftHistory } = useShiftStore();
 
-  const [activeTab, setActiveTab] = useState<'GENERAL' | 'POS' | 'HARDWARE' | 'INVENTORY' | 'DANGER'>('GENERAL');
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'POS' | 'HARDWARE' | 'INVENTORY' | 'FIREBASE' | 'DANGER'>('GENERAL');
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Form states
   const [storeName, setStoreName] = useState(settings.storeName);
@@ -102,6 +104,14 @@ export default function SettingsPage() {
            >
              <Printer className="w-5 h-5" /> Hardware
            </button>
+           {user?.role === 'SUPER_ADMIN' && (
+             <button 
+               onClick={() => setActiveTab('FIREBASE')}
+               className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'FIREBASE' ? "bg-black text-white" : "bg-white text-black")}
+             >
+               <Database className="w-5 h-5" /> Integrasi Cloud
+             </button>
+           )}
            {user?.role === 'SUPER_ADMIN' && (
              <button 
                onClick={() => setActiveTab('DANGER')}
@@ -227,6 +237,36 @@ export default function SettingsPage() {
                    <Save className="w-5 h-5 mr-2" />
                    Simpan Hardware
                  </Button>
+               </div>
+             </div>
+           )}
+
+           {activeTab === 'FIREBASE' && user?.role === 'SUPER_ADMIN' && (
+             <div className="bg-[#E6F4F1] border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
+               <h2 className="font-space-grotesk font-black text-2xl uppercase border-b-4 border-black pb-2 text-black">Integrasi Firebase (Cloud Database)</h2>
+               
+               <div className="flex flex-col gap-4">
+                 <p className="font-inter font-bold text-gray-700">Gunakan fitur ini untuk mensinkronisasi data POS lokal yang sedang Anda kerjakan ke Cloud Firestore secara live mengikuti setup environment yang telah ditentukan.</p>
+                 
+                 <div className="flex flex-col md:flex-row gap-4 mt-4">
+                   <Button 
+                     disabled={isSeeding}
+                     onClick={async () => {
+                       setIsSeeding(true);
+                       toast.loading('Sedang mengunggah data ke Firestore...', { id: 'seed' });
+                       const success = await seedMockDataToFirebase();
+                       if (success) {
+                         toast.success('Berhasil seed data ke Firebase', { id: 'seed' });
+                       } else {
+                         toast.error('Gagal seed data. Pastikan konfigurasi Firebase valid.', { id: 'seed' });
+                       }
+                       setIsSeeding(false);
+                     }} 
+                     className="flex-1 h-14 text-sm bg-black text-[#00E5FF] hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,229,255,1)] hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50"
+                   >
+                     {isSeeding ? 'Proses...' : 'Seed Data Master ke Firebase'}
+                   </Button>
+                 </div>
                </div>
              </div>
            )}
