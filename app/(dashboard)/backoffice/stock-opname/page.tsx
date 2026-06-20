@@ -15,6 +15,14 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { FileDiff } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function StockOpnamePage() {
   const { rawMaterials, addStockOpname, stockOpnames } = useInventoryStore();
@@ -109,33 +117,33 @@ export default function StockOpnamePage() {
                        <p className="font-inter font-bold text-gray-500 text-sm">Oleh: {so.createdBy}</p>
                      </div>
                    </div>
-                   <table className="w-full text-left font-inter">
-                     <thead>
-                       <tr className="border-b-2 border-black">
-                         <th className="py-2.5 font-black uppercase">Bahan Baku</th>
-                         <th className="py-2.5 font-black uppercase text-center">Stok Sistem</th>
-                         <th className="py-2.5 font-black uppercase text-center">Stok Aktual</th>
-                         <th className="py-2.5 font-black uppercase text-center">Selisih</th>
-                         <th className="py-2.5 font-black uppercase">Alasan</th>
-                       </tr>
-                     </thead>
-                     <tbody>
+                   <Table className="w-full text-left font-inter">
+                     <TableHeader>
+                       <TableRow className="border-b-2 border-black">
+                         <TableHead className="py-2.5 font-black uppercase text-black">Bahan Baku</TableHead>
+                         <TableHead className="py-2.5 font-black uppercase text-center text-black">Stok Sistem</TableHead>
+                         <TableHead className="py-2.5 font-black uppercase text-center text-black">Stok Aktual</TableHead>
+                         <TableHead className="py-2.5 font-black uppercase text-center text-black">Selisih</TableHead>
+                         <TableHead className="py-2.5 font-black uppercase text-black">Alasan</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
                        {so.items.map(item => {
                          const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
                          return (
-                           <tr key={item.rawMaterialId} className="border-b border-gray-200 last:border-0 hover:bg-gray-50">
-                             <td className="py-2.5 font-bold">{rm?.name || 'Unknown'}</td>
-                             <td className="py-2.5 text-center">{item.systemStock}</td>
-                             <td className="py-2.5 text-center">{item.actualStock}</td>
-                             <td className={`py-2.5 text-center font-black ${item.difference < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                           <TableRow key={item.rawMaterialId} className="border-b border-gray-200 last:border-0 hover:bg-gray-50">
+                             <TableCell className="py-2.5 font-bold">{rm?.name || 'Unknown'}</TableCell>
+                             <TableCell className="py-2.5 text-center">{item.systemStock}</TableCell>
+                             <TableCell className="py-2.5 text-center">{item.actualStock}</TableCell>
+                             <TableCell className={`py-2.5 text-center font-black ${item.difference < 0 ? 'text-red-500' : 'text-green-500'}`}>
                                {item.difference > 0 ? '+' : ''}{item.difference}
-                             </td>
-                             <td className="py-2.5 text-sm">{item.reason}</td>
-                           </tr>
+                             </TableCell>
+                             <TableCell className="py-2.5 text-sm">{item.reason}</TableCell>
+                           </TableRow>
                          );
                        })}
-                     </tbody>
-                   </table>
+                     </TableBody>
+                   </Table>
                  </div>
                ))}
              </div>
@@ -157,16 +165,16 @@ export default function StockOpnamePage() {
             />
           </div>
           <div className="overflow-y-auto flex-grow px-1">
-            <table className="w-full text-left font-inter">
-                <thead>
-                  <tr className="border-b-2 border-black sticky top-0 bg-white z-10">
-                    <th className="py-2.5 font-black uppercase">Bahan Baku</th>
-                    <th className="py-2.5 font-black uppercase text-center">Sistem</th>
-                    <th className="py-2.5 font-black uppercase w-32">Aktual</th>
-                    <th className="py-2.5 font-black uppercase">Alasan Selisih</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Table className="w-full text-left font-inter">
+                <TableHeader>
+                  <TableRow className="border-b-2 border-black sticky top-0 bg-white z-10">
+                    <TableHead className="py-2.5 font-black uppercase text-black">Bahan Baku</TableHead>
+                    <TableHead className="py-2.5 font-black uppercase text-center text-black">Sistem</TableHead>
+                    <TableHead className="py-2.5 font-black uppercase w-32 text-black">Aktual</TableHead>
+                    <TableHead className="py-2.5 font-black uppercase text-black">Alasan Selisih</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {opnameItems.filter(item => {
                     const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
                     return rm?.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -174,12 +182,12 @@ export default function StockOpnamePage() {
                     const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
                     const diff = item.actualStock - item.systemStock;
                     return (
-                      <tr key={item.rawMaterialId} className="border-b border-gray-200">
-                        <td className="py-2.5 font-bold">
+                      <TableRow key={item.rawMaterialId} className="border-b border-gray-200 hover:bg-transparent">
+                        <TableCell className="py-2.5 font-bold">
                           {rm?.name} <span className="text-gray-400 text-xs text-normal block">{rm?.unit}</span>
-                        </td>
-                        <td className="py-2.5 text-center">{item.systemStock}</td>
-                        <td className="py-2.5">
+                        </TableCell>
+                        <TableCell className="py-2.5 text-center">{item.systemStock}</TableCell>
+                        <TableCell className="py-2.5 p-1 align-top">
                           <Input 
                             type="number" 
                             min="0"
@@ -187,8 +195,8 @@ export default function StockOpnamePage() {
                             onChange={(e) => handleItemChange(item.rawMaterialId, Number(e.target.value), item.reason)}
                             className="bg-white border-2 border-black font-mono h-9"
                           />
-                        </td>
-                        <td className="py-2.5">
+                        </TableCell>
+                        <TableCell className="py-2.5 p-1 align-top">
                           <Input 
                             placeholder={diff !== 0 ? "Wajib diisi..." : "-"}
                             value={item.reason}
@@ -196,12 +204,12 @@ export default function StockOpnamePage() {
                             disabled={diff === 0}
                             className={`bg-white h-9 ${diff !== 0 && !item.reason ? 'border-red-500 border-2' : ''}`}
                           />
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
           </div>
           <DialogFooter className="mt-4 pt-4 border-t-4 border-dashed border-gray-200">
             <Button variant="outline" onClick={() => setIsOpnameModalOpen(false)}>BATAL</Button>

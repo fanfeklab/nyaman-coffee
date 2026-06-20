@@ -266,7 +266,9 @@ export default function POSPage() {
       }
 
       // Success
-      addSalesToShift(total);
+      if (paymentMethod === 'TUNAI') {
+        addSalesToShift(total);
+      }
       setConfirmPaymentOpen(false);
       setIsPaymentOpen(false);
       setIsReceiptOpen(true);

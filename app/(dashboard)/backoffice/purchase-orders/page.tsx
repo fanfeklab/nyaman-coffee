@@ -16,6 +16,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Warehouse, Plus, Trash2 } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function PurchaseOrdersPage() {
   const { rawMaterials, purchaseOrders, addPurchaseOrder, updatePurchaseOrderStatus, suppliers, addSupplier } = useInventoryStore();
@@ -150,29 +158,29 @@ export default function PurchaseOrdersPage() {
                          <p className="font-mono font-black text-lg mt-1">Rp {po.totalAmount.toLocaleString('id-ID')}</p>
                        </div>
                      </div>
-                     <table className="w-full text-left font-inter text-sm mb-4">
-                       <thead>
-                         <tr className="border-b border-gray-200">
-                           <th className="py-2 text-gray-500">Item</th>
-                           <th className="py-2 text-gray-500 text-right">Qty</th>
-                           <th className="py-2 text-gray-500 text-right">Harga Unit</th>
-                           <th className="py-2 text-gray-500 text-right">Total</th>
-                         </tr>
-                       </thead>
-                       <tbody>
+                     <Table className="w-full text-left font-inter text-sm mb-4">
+                       <TableHeader>
+                         <TableRow className="border-b border-gray-200">
+                           <TableHead className="py-2 text-gray-500">Item</TableHead>
+                           <TableHead className="py-2 text-gray-500 text-right">Qty</TableHead>
+                           <TableHead className="py-2 text-gray-500 text-right">Harga Unit</TableHead>
+                           <TableHead className="py-2 text-gray-500 text-right">Total</TableHead>
+                         </TableRow>
+                       </TableHeader>
+                       <TableBody>
                          {po.items.map((item, idx) => {
                            const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
                            return (
-                             <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                               <td className="py-2 font-bold">{rm?.name || 'Unknown'}</td>
-                               <td className="py-2 text-right">{item.qty} {rm?.unit}</td>
-                               <td className="py-2 text-right">Rp {item.price.toLocaleString()}</td>
-                               <td className="py-2 text-right font-black">Rp {(item.qty * item.price).toLocaleString()}</td>
-                             </tr>
+                             <TableRow key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                               <TableCell className="py-2 font-bold">{rm?.name || 'Unknown'}</TableCell>
+                               <TableCell className="py-2 text-right">{item.qty} {rm?.unit}</TableCell>
+                               <TableCell className="py-2 text-right">Rp {item.price.toLocaleString()}</TableCell>
+                               <TableCell className="py-2 text-right font-black">Rp {(item.qty * item.price).toLocaleString()}</TableCell>
+                             </TableRow>
                            );
                          })}
-                       </tbody>
-                     </table>
+                       </TableBody>
+                     </Table>
                      
                      {po.status === 'PENDING' && (
                        <div className="flex justify-end gap-2 border-t-2 border-dashed border-gray-200 pt-4">

@@ -120,4 +120,5 @@ Dokumen ini adalah *Single Source of Truth* (SSoT) untuk progres pengembangan. S
 - [x] **Task 11.1:** Final E2E Audit.
 - [x] **Task 11.2:** Testing responsivitas Tablet/Smartphone.
 - [x] **Task 11.3:** Build Check (`npm run build`).
-- [ ] **Task 11.4:** Siap export/deploy ke Vercel.
+- [x] **Task 11.4:** Polish UI Modern Web Components, Dilarang Keras native inputs/buttons. Semua pakai Shadcn UI/Radix, Framer Motion, Lucide (Neobrutalism Design System).
+- [ ] **Task 11.5:** Siap export/deploy ke Vercel.

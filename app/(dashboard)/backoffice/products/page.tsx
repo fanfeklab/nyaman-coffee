@@ -293,24 +293,27 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2 bg-white border-4 border-black p-1 rounded-xl">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setActiveTab("PRODUCTS")}
-            className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === "PRODUCTS" ? "bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]" : "text-gray-500 hover:text-black border-2 border-transparent"}`}
+            className={`font-space-grotesk font-black uppercase rounded-[7px] transition-all border-none shadow-none h-auto px-4 py-2 ${activeTab === "PRODUCTS" ? "bg-[#FFD100] text-black hover:bg-[#FFD100]" : "text-gray-500 hover:text-black bg-transparent hover:bg-transparent"}`}
           >
             Menu Produk
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setActiveTab("CATEGORIES")}
-            className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === "CATEGORIES" ? "bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]" : "text-gray-500 hover:text-black border-2 border-transparent"}`}
+            className={`font-space-grotesk font-black uppercase rounded-[7px] transition-all border-none shadow-none h-auto px-4 py-2 ${activeTab === "CATEGORIES" ? "bg-[#FFD100] text-black hover:bg-[#FFD100]" : "text-gray-500 hover:text-black bg-transparent hover:bg-transparent"}`}
           >
             Kategori
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setActiveTab("VARIANTS")}
-            className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === "VARIANTS" ? "bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]" : "text-gray-500 hover:text-black border-2 border-transparent"}`}
+            className={`font-space-grotesk font-black uppercase rounded-[7px] transition-all border-none shadow-none h-auto px-4 py-2 ${activeTab === "VARIANTS" ? "bg-[#FFD100] text-black hover:bg-[#FFD100]" : "text-gray-500 hover:text-black bg-transparent hover:bg-transparent"}`}
           >
             Varian Menu
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -443,18 +446,20 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <button
+                          <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => handleOpenEditProduct(p)}
-                            className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
                             onClick={() => setDeleteProductConfirm(p.id)}
-                            className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -477,18 +482,20 @@ export default function ProductsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <button
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleOpenEditCategory(c)}
-                          className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors"
                         >
                           <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
                           onClick={() => setDeleteCategoryConfirm(c.id)}
-                          className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -522,18 +529,20 @@ export default function ProductsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <button
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleOpenEditVariant(v)}
-                          className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors"
                         >
                           <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
                           onClick={() => setDeleteVariantConfirm(v.id)}
-                          className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -641,7 +650,8 @@ export default function ProductsPage() {
                   variants.map((v) => {
                     const isSelected = productForm.variantIds?.includes(v.id);
                     return (
-                      <button
+                      <Button
+                        variant="outline"
                         key={v.id}
                         onClick={() => {
                           const curr = productForm.variantIds || [];
@@ -657,10 +667,10 @@ export default function ProductsPage() {
                             });
                           }
                         }}
-                        className={`px-3 py-1 border-2 border-black rounded-lg text-sm font-bold uppercase transition-transform active:scale-95 ${isSelected ? "bg-[#00E5FF] shadow-[2px_2px_0_0_#000]" : "bg-white text-gray-500"}`}
+                        className={`px-3 py-1 border-2 border-black rounded-lg text-sm font-bold uppercase transition-transform active:scale-95 h-auto ${isSelected ? "bg-[#00E5FF] shadow-[2px_2px_0_0_#000] hover:bg-[#00E5FF] hover:translate-y-px hover:shadow-[0_0_0_0_rgba(0,0,0,1)]" : "bg-white text-gray-500 shadow-[2px_2px_0_0_#000] hover:translate-y-px hover:shadow-[0_0_0_0_rgba(0,0,0,1)] hover:bg-gray-50"}`}
                       >
                         {v.name}
-                      </button>
+                      </Button>
                     );
                   })
                 ) : (
@@ -714,7 +724,9 @@ export default function ProductsPage() {
                             >
                               {p.name}
                             </div>
-                            <button
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => {
                                 setProductForm({
                                   ...productForm,
@@ -724,10 +736,10 @@ export default function ProductsPage() {
                                   ],
                                 });
                               }}
-                              className="p-1 shrink-0 bg-[#FFD100] border-2 border-black rounded-md hover:bg-yellow-400"
+                              className="w-7 h-7 shrink-0 bg-[#FFD100] border-2 border-black rounded-md hover:bg-yellow-400 p-0"
                             >
                               <Plus className="w-4 h-4" />
-                            </button>
+                            </Button>
                           </div>
                         ))}
                     </div>
@@ -752,7 +764,9 @@ export default function ProductsPage() {
                             >
                               {p?.name || "Unknown"}
                             </div>
-                            <button
+                            <Button
+                              variant="destructive"
+                              size="icon"
                               onClick={() => {
                                 const newCombo = [
                                   ...(productForm.comboItems || []),
@@ -763,10 +777,10 @@ export default function ProductsPage() {
                                   comboItems: newCombo,
                                 });
                               }}
-                              className="p-1 shrink-0 bg-red-100 text-red-600 border-2 border-black rounded-md hover:bg-red-200"
+                              className="w-7 h-7 shrink-0 rounded-md p-0"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </Button>
                           </div>
                         );
                       })}
@@ -971,16 +985,17 @@ export default function ProductsPage() {
                       }}
                       className="w-32 text-right"
                     />
-                    <button
+                    <Button
+                      variant="destructive"
+                      size="icon"
                       onClick={() => {
                         const newOps = [...variantForm.options];
                         newOps.splice(idx, 1);
                         setVariantForm({ ...variantForm, options: newOps });
                       }}
-                      className="text-red-500 hover:text-red-700 p-2"
                     >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 ))}
                 {(!variantForm.options || variantForm.options.length === 0) && (

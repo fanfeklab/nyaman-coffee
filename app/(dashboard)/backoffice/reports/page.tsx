@@ -23,7 +23,7 @@ export default function ReportsPage() {
   const router = useRouter();
   const { transactions, voidTransaction } = useTransactionStore();
   const { revertCheckoutInventory } = useInventoryStore();
-  const { user } = useAuthStore();
+  const { user, users } = useAuthStore();
   const { currentShift, subtractSalesFromShift, shiftHistory } = useShiftStore();
 
   const [activeTab, setActiveTab] = useState<'penjualan' | 'shift' | 'analitik'>('penjualan');
@@ -31,6 +31,26 @@ export default function ReportsPage() {
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
   const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
   const [adminPin, setAdminPin] = useState('');
+
+  const totalModal = useMemo(() => {
+     let allShifts = [...shiftHistory];
+     if (currentShift) allShifts.push(currentShift);
+
+     const now = new Date();
+     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+     const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+     const startOf7Days = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+     
+     if (dateFilter === 'all') return allShifts.reduce((sum, s) => sum + s.startingCash, 0);
+     
+     return allShifts.filter(s => {
+        const d = new Date(s.startTime);
+        if (dateFilter === 'today') return d >= startOfToday;
+        if (dateFilter === 'yesterday') return d >= startOfYesterday && d < startOfToday;
+        if (dateFilter === '7days') return d >= startOf7Days;
+        return true;
+     }).reduce((sum, s) => sum + s.startingCash, 0);
+  }, [shiftHistory, currentShift, dateFilter]);
 
   const visibleTransactions = useMemo(() => {
     let txs = transactions;
@@ -72,12 +92,6 @@ export default function ReportsPage() {
   const voidRevenue = voidedTxs.reduce((sum, t) => sum + t.total, 0);
 
   const handleVoid = () => {
-    // Basic mock validation for PIN admin
-    if (adminPin !== '1235' && adminPin !== '1111' && adminPin !== '5555') {
-       toast.error('PIN Admin salah / tidak dikenali!');
-       return;
-    }
-
     if (!voidConfirmId) return;
     const tx = visibleTransactions.find(t => t.id === voidConfirmId);
     if (!tx) return;
@@ -88,8 +102,8 @@ export default function ReportsPage() {
     // void
     voidTransaction(voidConfirmId);
     
-    // subtract from current shift if applicable
-    if (currentShift?.id === tx.shiftId) {
+    // subtract from current shift if applicable (only if cash)
+    if (currentShift?.id === tx.shiftId && tx.paymentMethod === 'TUNAI') {
        subtractSalesFromShift(tx.total);
     }
 
@@ -201,21 +215,32 @@ export default function ReportsPage() {
                <button onClick={() => setDateFilter('all')} className={`px-4 py-2 ${dateFilter === 'all' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Semua</button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-               <div className="col-span-2 bg-[#FF90E8] border-4 border-black p-4 md:p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col min-w-0">
-                  <span className="font-space-grotesk font-black uppercase text-black text-xs md:text-sm px-3 py-1 bg-white border-2 border-black rounded-full w-max">Gross Revenue</span>
-                  <div className="text-3xl md:text-4xl lg:text-5xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(totalRevenue)}</div>
-                  <div className="mt-4 flex flex-col sm:flex-row gap-4 pt-4 border-t-4 border-black border-dashed">
-                     <div className="flex-1 min-w-0">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-[#5c3053]">Tunai Kasir</span>
-                        <div className="font-inter font-black text-sm md:text-lg truncate">{formatRupiah(cashRevenue)}</div>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-[#5c3053]">Non-Tunai / QRIS</span>
-                        <div className="font-inter font-black text-sm md:text-lg truncate">{formatRupiah(qrisRevenue)}</div>
-                     </div>
-                  </div>
-               </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                <div className="bg-[#FF90E8] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0_0_#000] flex flex-col justify-between">
+                   <span className="font-space-grotesk font-black uppercase text-[10px] md:text-xs px-2 py-1 bg-white border-2 border-black rounded-full w-max">Modal Kasir</span>
+                   <div className="text-xl md:text-2xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(totalModal)}</div>
+                </div>
+                <div className="bg-white border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0_0_#000] flex flex-col justify-between">
+                   <span className="font-space-grotesk font-black uppercase text-[10px] md:text-xs px-2 py-1 bg-gray-100 border-2 border-black rounded-full w-max">Tunai Laci</span>
+                   <div className="text-xl md:text-2xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(cashRevenue)}</div>
+                </div>
+                <div className="bg-[#FFFF00] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0_0_#000] flex flex-col justify-between">
+                   <span className="font-space-grotesk font-black uppercase text-[10px] md:text-xs px-2 py-1 bg-white border-2 border-black rounded-full w-max">Total Fisik (Est)</span>
+                   <div className="text-xl md:text-2xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(totalModal + cashRevenue)}</div>
+                   <div className="text-[10px] font-bold mt-1 uppercase text-black/70">Modal + Tunai</div>
+                </div>
+                <div className="bg-[#00E5FF] border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0_0_#000] flex flex-col justify-between">
+                   <span className="font-space-grotesk font-black uppercase text-[10px] md:text-xs px-2 py-1 bg-white border-2 border-black rounded-full w-max">QRIS Cloud</span>
+                   <div className="text-xl md:text-2xl font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(qrisRevenue)}</div>
+                </div>
+                <div className="bg-gray-100 border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0_0_#000] flex flex-col justify-between">
+                   <span className="font-space-grotesk font-black uppercase text-[10px] md:text-xs px-2 py-1 bg-white border-2 border-black rounded-full w-max opacity-80">Gross Rev</span>
+                   <div className="text-xl md:text-[22px] font-black text-black mt-2 leading-none truncate w-full">{formatRupiah(totalRevenue)}</div>
+                   <div className="text-[10px] font-bold mt-1 uppercase text-gray-500">Tunai + QRIS</div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:gap-6">
                <div className="bg-[#00E5FF] border-4 border-black p-4 md:p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
                   <span className="font-space-grotesk font-black uppercase text-black text-xs md:text-sm px-3 py-1 bg-white border-2 border-black rounded-full w-max">Total Transaksi</span>
                   <div className="mt-4">
@@ -294,7 +319,9 @@ export default function ReportsPage() {
                            {tx.id}
                          </div>
                       </TableCell>
-                      <TableCell className="border-r-2 border-gray-200 uppercase text-xs">{tx.cashierId}</TableCell>
+                      <TableCell className="border-r-2 border-gray-200 uppercase text-xs">
+                         {users.find(u => u.id === tx.cashierId)?.fullName || tx.cashierId}
+                      </TableCell>
                       <TableCell className="border-r-2 border-gray-200 uppercase text-xs">{tx.customerName || '-'}</TableCell>
                       <TableCell className="border-r-2 border-gray-200 uppercase">{tx.paymentMethod}</TableCell>
                       <TableCell className="text-right border-r-2 border-gray-200 text-[#FF6321]">{formatRupiah(tx.total)}</TableCell>
@@ -304,7 +331,7 @@ export default function ReportsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && tx.status === 'COMPLETED' && (
+                        {tx.status === 'COMPLETED' && (
                           <div className="flex justify-end gap-2">
                             <button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi">
                               <Ban className="w-4 h-4"/>
@@ -352,7 +379,7 @@ export default function ReportsPage() {
                             <TableCell className="border-r-2 border-gray-200">
                                <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-[#00E5FF] font-black">OPEN</span>
                             </TableCell>
-                            <TableCell className="border-r-2 border-gray-200 uppercase">{currentShift.cashierId}</TableCell>
+                            <TableCell className="border-r-2 border-gray-200 uppercase">{users?.find(u => u.id === currentShift.cashierId)?.fullName || currentShift.cashierId}</TableCell>
                             <TableCell className="border-r-2 border-gray-200">
                                {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(currentShift.startTime))} - <span className="opacity-50">Sekarang</span>
                             </TableCell>
@@ -369,7 +396,7 @@ export default function ReportsPage() {
                               <TableCell className="border-r-2 border-gray-200">
                                  <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-gray-200">{shift.status}</span>
                               </TableCell>
-                              <TableCell className="border-r-2 border-gray-200 uppercase">{shift.cashierId}</TableCell>
+                              <TableCell className="border-r-2 border-gray-200 uppercase">{users?.find(u => u.id === shift.cashierId)?.fullName || shift.cashierId}</TableCell>
                               <TableCell className="border-r-2 border-gray-200 text-xs text-gray-600">
                                  {new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(shift.startTime))}
                                  {' - '}
@@ -450,30 +477,55 @@ export default function ReportsPage() {
       )}
       
       <Dialog open={!!voidConfirmId} onOpenChange={(open) => !open && setVoidConfirmId(null)}>
-        <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm">
-           <DialogHeader>
-             <DialogTitle className="font-space-grotesk font-black text-2xl uppercase text-red-600">Otorisasi Void</DialogTitle>
+        <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-[360px] p-8 text-center flex flex-col items-center">
+           <DialogHeader className="w-full relative">
+             <DialogTitle className="font-space-grotesk font-black text-xl uppercase text-red-600 tracking-wider text-center w-full">OTORISASI VOID</DialogTitle>
            </DialogHeader>
-           <div className="flex flex-col gap-4 py-4">
-              <p className="font-inter font-bold text-sm text-gray-500">
+           
+           <div className="flex flex-col items-center py-4 text-center">
+              <p className="font-inter font-bold text-sm text-gray-500 mb-6 leading-relaxed">
                  Transaksi akan dibatalkan, nominal dikurangi dari total, dan stok bahan baku akan dikembalikan.
-                 <strong>Masukkan PIN Manager/Admin untuk menyetujui pembatalan.</strong>
+                 <br />
+                 Masukkan PIN Manager/Admin untuk menyetujui pembatalan.
               </p>
-              <div className="flex flex-col gap-2">
-                 <Input 
-                   type="password"
-                   maxLength={4} 
-                   value={adminPin} 
-                   onChange={e => setAdminPin(e.target.value.replace(/\D/g, ''))} 
-                   placeholder="PIN 4 Digit" 
-                   className="text-center text-2xl tracking-widest h-14 font-black"
-                 />
-              </div>
+              
+              <Input 
+                 type="password"
+                 maxLength={4}
+                 value={adminPin}
+                 onChange={(e) => setAdminPin(e.target.value)}
+                 className="w-[200px] border-4 border-black font-black text-4xl text-center tracking-[1em] h-14"
+                 placeholder="••••"
+                 autoFocus
+              />
            </div>
-           <DialogFooter>
-             <Button variant="outline" onClick={() => { setVoidConfirmId(null); setAdminPin(''); }}>Batal</Button>
-             <Button onClick={handleVoid} className="bg-red-600 text-white hover:bg-red-700">VOID TRANSAKSI</Button>
-           </DialogFooter>
+           
+           <div className="w-full flex-col flex gap-3 mt-4 pt-6 border-t-8 border-dashed border-black">
+             <Button 
+                onClick={() => {
+                   const { users } = useAuthStore.getState();
+                   const validAdmin = users.find(u => (u.role === 'SUPER_ADMIN' || u.role === 'MANAGER') && u.pin === adminPin);
+                   if (!validAdmin) {
+                      toast.error('PIN tidak valid atau Anda bukan Manager/Admin.');
+                      return;
+                   }
+                   handleVoid();
+                }} 
+                className="w-full font-space-grotesk font-black uppercase text-lg h-12 bg-red-600 hover:bg-red-700 text-white border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] active:translate-y-1 active:shadow-none transition-all"
+             >
+                VOID TRANSAKSI
+             </Button>
+             <Button 
+                variant="outline" 
+                onClick={() => {
+                   setVoidConfirmId(null);
+                   setAdminPin('');
+                }}
+                className="w-full font-space-grotesk font-black uppercase text-lg h-12 bg-white text-black border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] hover:bg-gray-100 active:translate-y-1 active:shadow-none transition-all"
+             >
+                BATAL
+             </Button>
+           </div>
         </DialogContent>
       </Dialog>
     </div>

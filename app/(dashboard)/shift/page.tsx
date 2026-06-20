@@ -154,7 +154,7 @@ export default function ShiftPage() {
              await new Promise(resolve => setTimeout(resolve, 800));
              forceCloseShift(currentShift.id);
              toast.success("Shift ditutup secara paksa!", { id: loadToast });
-             window.location.reload();
+             setForceCloseConfirmOpen(false);
            }}
            title="Force End Shift?"
            confirmLabel="Tutup Paksa"
@@ -229,7 +229,7 @@ export default function ShiftPage() {
                </div>
              </div>
 
-             <Button className="w-full mt-8 h-16 text-xl font-space-grotesk font-black tracking-widest uppercase border-4 border-black bg-[#FF6321] hover:bg-[#ff7a40] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all text-white" onClick={() => window.location.reload()}>
+             <Button className="w-full mt-8 h-16 text-xl font-space-grotesk font-black tracking-widest uppercase border-4 border-black bg-[#FF6321] hover:bg-[#ff7a40] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all text-white" onClick={() => useAuthStore.getState().logout()}>
                KEMBALI KE LOGIN
              </Button>
           </div>

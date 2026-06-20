@@ -52,7 +52,6 @@ export default function SettingsPage() {
   // Danger zone auth states
   const [dangerAction, setDangerAction] = useState<string | null>(null);
   const [isDangerAuthOpen, setIsDangerAuthOpen] = useState(false);
-  const [dangerUsername, setDangerUsername] = useState('');
   const [dangerPin, setDangerPin] = useState('');
 
   useEffect(() => {
@@ -428,21 +427,12 @@ export default function SettingsPage() {
          
          <div className="flex flex-col gap-4 py-4 w-full">
            <div className="flex flex-col gap-2">
-             <Label className="font-bold text-black">Username</Label>
-             <Input 
-               value={dangerUsername}
-               onChange={(e) => setDangerUsername(e.target.value)}
-               className="w-full border-4 border-black font-bold h-12 text-black"
-               placeholder="Username"
-             />
-           </div>
-           <div className="flex flex-col gap-2">
-             <Label className="font-bold text-black">PIN</Label>
+             <Label className="font-bold text-black">PIN Otorisasi Super Admin</Label>
              <Input 
                type="password"
                value={dangerPin}
                onChange={(e) => setDangerPin(e.target.value)}
-               className="w-full border-4 border-black font-bold h-12 text-black"
+               className="w-full border-4 border-black font-bold h-12 text-black text-center text-4xl tracking-widest"
                placeholder="****"
              />
            </div>
@@ -451,7 +441,6 @@ export default function SettingsPage() {
            <Button 
              className="w-full h-12 font-space-grotesk font-black text-lg bg-red-600 hover:bg-red-700 text-white border-4 border-black shadow-[4px_4px_0_0_#000] uppercase transition-all active:translate-y-1 active:shadow-none" 
              onClick={() => {
-               if (dangerUsername !== user?.username) return toast.error('Username salah');
                if (dangerPin !== user?.pin) return toast.error('PIN salah');
                
                if (dangerAction === 'clearTransactions') {
