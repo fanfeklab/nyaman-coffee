@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Coffee, LayoutGrid, PackageOpen, PieChart, CheckSquare, Settings, LogOut, ChevronRight, Users, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -145,9 +146,9 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
            <span className="font-space-grotesk text-xs font-black uppercase text-gray-500">{user?.role || 'KASIR'} AKTIF</span>
            <span className="font-inter font-black text-black leading-tight line-clamp-1">{user?.fullName || 'Guest'}</span>
          </Link>
-         <button onClick={handleLogout} className="p-3 bg-[#FF6321] border-4 border-black rounded-xl text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex-shrink-0">
+         <Button onClick={handleLogout} className="p-3 h-auto bg-[#FF6321] hover:bg-[#e0561b] text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-shrink-0 border-4 border-black hover:translate-y-1 hover:shadow-none transition-all active:translate-y-2 active:shadow-none">
            <LogOut className="w-5 h-5" strokeWidth={2.5} />
-         </button>
+         </Button>
       </div>
     </aside>
   );

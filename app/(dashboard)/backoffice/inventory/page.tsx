@@ -138,18 +138,18 @@ export default function InventoryPage() {
          </div>
 
          <div className="flex bg-white border-4 border-black p-1 rounded-xl">
-            <button 
+            <Button 
               onClick={() => setActiveTab('MATERIALS')}
               className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === 'MATERIALS' ? 'bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]' : 'text-gray-500 hover:text-black border-2 border-transparent'}`}
             >
               Data Bahan Baku
-            </button>
-            <button 
+            </Button>
+            <Button 
               onClick={() => setActiveTab('RECIPES')}
               className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === 'RECIPES' ? 'bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]' : 'text-gray-500 hover:text-black border-2 border-transparent'}`}
             >
               Resep Menu
-            </button>
+            </Button>
          </div>
       </div>
 
@@ -209,12 +209,12 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => handleOpenEdit(rm)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
+                          <Button onClick={() => handleOpenEdit(rm)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                             <Edit2 className="w-4 h-4"/>
-                          </button>
-                          <button onClick={() => setDeleteConfirmId(rm.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
+                          </Button>
+                          <Button onClick={() => setDeleteConfirmId(rm.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                             <Trash2 className="w-4 h-4"/>
-                          </button>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -230,12 +230,12 @@ export default function InventoryPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <button onClick={() => handleOpenEditRecipe(r)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
+                            <Button onClick={() => handleOpenEditRecipe(r)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                               <Edit2 className="w-4 h-4"/>
-                            </button>
-                            <button onClick={() => setDeleteRecipeConfirm(r.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
+                            </Button>
+                            <Button onClick={() => setDeleteRecipeConfirm(r.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                               <Trash2 className="w-4 h-4"/>
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -336,7 +336,7 @@ export default function InventoryPage() {
                                }}
                                className="w-24 text-right"
                              />
-                             <button 
+                             <Button 
                                onClick={() => {
                                  const newIngs = [...recipeForm.ingredients];
                                  newIngs.splice(idx, 1);
@@ -345,7 +345,7 @@ export default function InventoryPage() {
                                className="text-red-500 hover:text-red-700 p-2"
                              >
                                <Trash2 className="w-5 h-5"/>
-                             </button>
+                             </Button>
                           </div>
                         )
                      })}
