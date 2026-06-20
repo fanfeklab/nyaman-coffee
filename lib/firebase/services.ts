@@ -1,8 +1,8 @@
 import { collection, doc, writeBatch, onSnapshot, query, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from './config';
 import { useInventoryStore, Category, Product, RawMaterial } from '@/store/useInventoryStore';
-import { Transaction } from '@/store/useTransactionStore';
-import { Shift, PettyCashTransaction } from '@/store/useShiftStore';
+import { Transaction, useTransactionStore } from '@/store/useTransactionStore';
+import { Shift, PettyCashTransaction, useShiftStore } from '@/store/useShiftStore';
 
 export async function upsertFirebaseCategory(cat: Category) {
   if (!db) return;
