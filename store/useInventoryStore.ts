@@ -141,6 +141,7 @@ interface InventoryState {
 
   processCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => { success: boolean; reason?: string };
   revertCheckoutInventory: (cartItems: { productId: string; qty: number; note?: string }[]) => void;
+  fetchInventoryData: () => Promise<void>;
 }
 
 const mockCategories: Category[] = [
@@ -239,15 +240,28 @@ const mockProducts: Product[] = [
 
 import { upsertFirebaseCategory, deleteFirebaseCategory, upsertFirebaseProduct, deleteFirebaseProduct, upsertFirebaseRawMaterial, deleteFirebaseRawMaterial, upsertFirebaseVariant, deleteFirebaseVariant, upsertFirebaseRecipe, deleteFirebaseRecipe } from '@/lib/firebase/services';
 
+import { getInventoryData } from '@/lib/actions/inventory.actions';
+
 export const useInventoryStore = create<InventoryState>()(
   persist(
     (set) => ({
-      categories: mockCategories,
-      products: mockProducts,
-      rawMaterials: mockRawMaterials,
+      categories: [],
+      products: [],
+      rawMaterials: [],
       variants: [],
       recipes: [],
       inventoryMode: 'LOOSE',
+      
+      fetchInventoryData: async () => {
+        const res = await getInventoryData();
+        if (res.success) {
+          set({
+            categories: (res.categories || []).map((c: any) => ({...c, id: c.id.toString(), color: c.color || '#000'})),
+            products: (res.products || []).map((p: any) => ({...p, id: p.id.toString(), categoryId: p.categoryId?.toString() || ''})),
+            rawMaterials: (res.rawMaterials || []).map((rm: any) => ({...rm, id: rm.id.toString()}))
+          });
+        }
+      },
       stockOpnames: [],
       suppliers: [],
       purchaseOrders: [],

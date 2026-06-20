@@ -37,7 +37,7 @@ const formatRupiah = (val: number) =>
 
 export default function POSPage() {
   const router = useRouter();
-  const { categories, products, variants, recipes } = useInventoryStore();
+  const { categories, products, variants, recipes, fetchInventoryData } = useInventoryStore();
   const { currentShift, addSalesToShift } = useShiftStore();
   const { user } = useAuthStore();
   const { addTransaction } = useTransactionStore();
@@ -65,7 +65,10 @@ export default function POSPage() {
       if (savedSort) setSortOption(savedSort);
       if (savedView) setViewOption(savedView);
     }, 0);
-  }, []);
+    
+    // Fetch real data from Supabase
+    fetchInventoryData();
+  }, [fetchInventoryData]);
 
   const handleSortChange = (opt: SortOption) => {
     setSortOption(opt);
