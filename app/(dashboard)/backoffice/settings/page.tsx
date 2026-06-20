@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Store, Receipt, Printer, PackageSearch, Save, Database, AlertCircle } from 'lucide-react';
+import { Store, Receipt, Printer, PackageSearch, Save, Database, AlertCircle, Download, Upload, Loader2 } from 'lucide-react';
 import { seedMockDataToFirebase } from '@/lib/firebase/services';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -94,49 +95,25 @@ export default function SettingsPage() {
          <p className="font-inter font-bold text-gray-500">Konfigurasi operasional dan preferensi sistem.</p>
        </div>
 
-       <div className="flex flex-col md:flex-row gap-8">
-         {/* Tabs Navigation */}
-         <div className="w-full md:w-64 flex flex-col gap-2 shrink-0">
-           <button 
-             onClick={() => setActiveTab('GENERAL')}
-             className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'GENERAL' ? "bg-black text-white" : "bg-white text-black")}
+       <div className="flex flex-col gap-8">
+         {/* Dropdown Navigation */}
+         <div className="w-full">
+           <Select 
+             value={activeTab} 
+             onValueChange={(val: any) => setActiveTab(val)}
            >
-             <Store className="w-5 h-5" /> Toko
-           </button>
-           <button 
-             onClick={() => setActiveTab('POS')}
-             className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'POS' ? "bg-black text-white" : "bg-white text-black")}
-           >
-             <Receipt className="w-5 h-5" /> Kasir & Struk
-           </button>
-           <button 
-             onClick={() => setActiveTab('INVENTORY')}
-             className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'INVENTORY' ? "bg-black text-white" : "bg-white text-black")}
-           >
-             <PackageSearch className="w-5 h-5" /> Inventory Mode
-           </button>
-           <button 
-             onClick={() => setActiveTab('HARDWARE')}
-             className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'HARDWARE' ? "bg-black text-white" : "bg-white text-black")}
-           >
-             <Printer className="w-5 h-5" /> Hardware
-           </button>
-           {user?.role === 'SUPER_ADMIN' && (
-             <button 
-               onClick={() => setActiveTab('FIREBASE')}
-               className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'FIREBASE' ? "bg-black text-white" : "bg-white text-black")}
-             >
-               <Database className="w-5 h-5" /> Integrasi Cloud
-             </button>
-           )}
-           {user?.role === 'SUPER_ADMIN' && (
-             <button 
-               onClick={() => setActiveTab('DANGER')}
-               className={cn("p-4 border-4 border-black rounded-xl flex items-center gap-3 font-space-grotesk font-black uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none", activeTab === 'DANGER' ? "bg-red-600 text-white" : "bg-white text-red-600")}
-             >
-               <Printer className="w-5 h-5 hidden" /> Danger Zone
-             </button>
-           )}
+             <SelectTrigger className="w-full h-16 border-4 border-black rounded-xl font-space-grotesk font-black uppercase text-lg bg-white focus:ring-0 focus:ring-offset-0 shadow-[4px_4px_0_0_#000] focus-visible:ring-0 focus-visible:outline-none">
+               <SelectValue placeholder="Pilih Kategori Pengaturan" />
+             </SelectTrigger>
+             <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-space-grotesk font-black uppercase text-base bg-white">
+               <SelectItem value="GENERAL"><div className="flex items-center gap-2"><Store className="w-5 h-5"/> Toko</div></SelectItem>
+               <SelectItem value="POS"><div className="flex items-center gap-2"><Receipt className="w-5 h-5"/> Kasir & Struk</div></SelectItem>
+               <SelectItem value="INVENTORY"><div className="flex items-center gap-2"><PackageSearch className="w-5 h-5"/> Inventory Mode</div></SelectItem>
+               <SelectItem value="HARDWARE"><div className="flex items-center gap-2"><Printer className="w-5 h-5"/> Hardware</div></SelectItem>
+               {user?.role === 'SUPER_ADMIN' && <SelectItem value="FIREBASE"><div className="flex items-center gap-2"><Database className="w-5 h-5"/> Integrasi Cloud</div></SelectItem>}
+               {user?.role === 'SUPER_ADMIN' && <SelectItem value="DANGER"><div className="flex items-center gap-2 text-red-600"><AlertCircle className="w-5 h-5"/> Danger Zone</div></SelectItem>}
+             </SelectContent>
+           </Select>
          </div>
 
          {/* Tab Content */}
@@ -241,25 +218,34 @@ export default function SettingsPage() {
                <div className="flex flex-col gap-4 bg-white p-4 rounded-xl border-4 border-black">
                  <p className="font-inter font-bold text-sm text-gray-700 mb-2">Anda dapat mengekspor data master (kategori, menu, varian, bahan baku, dan resep) ke format JSON untuk dicadangkan, lalu mengunggahnya kembali jika diperlukan.</p>
                  <div className="flex flex-col sm:flex-row gap-4">
-                   <Button onClick={() => {
-                     const state = useInventoryStore.getState();
-                     const exportData = {
-                       categories: state.categories,
-                       products: state.products,
-                       rawMaterials: state.rawMaterials,
-                       variants: state.variants,
-                       recipes: state.recipes
-                     };
-                     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-                     const downloadAnchorNode = document.createElement('a');
-                     downloadAnchorNode.setAttribute("href", dataStr);
-                     downloadAnchorNode.setAttribute("download", "nyaman_pos_data_" + new Date().getTime() + ".json");
-                     document.body.appendChild(downloadAnchorNode);
-                     downloadAnchorNode.click();
-                     downloadAnchorNode.remove();
-                     toast.success("Berhasil mengunduh data JSON");
-                   }} className="flex-1 bg-black text-white hover:bg-gray-800 font-bold border-2 border-black">
-                     📥 EKSPOR KE JSON
+                   <Button onClick={async () => {
+                     const loadingToast = toast.loading("Mengekspor data ke JSON...");
+                     try {
+                        const state = useInventoryStore.getState();
+                        const exportData = {
+                          categories: state.categories,
+                          products: state.products,
+                          rawMaterials: state.rawMaterials,
+                          variants: state.variants,
+                          recipes: state.recipes
+                        };
+                        
+                        // Adding small artificial delay for better UX awareness
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                        const downloadAnchorNode = document.createElement('a');
+                        downloadAnchorNode.setAttribute("href", dataStr);
+                        downloadAnchorNode.setAttribute("download", "nyaman_pos_data_" + new Date().getTime() + ".json");
+                        document.body.appendChild(downloadAnchorNode);
+                        downloadAnchorNode.click();
+                        downloadAnchorNode.remove();
+                        toast.success("Berhasil mengunduh data JSON", { id: loadingToast });
+                     } catch(err) {
+                        toast.error("Gagal mengekspor data JSON", { id: loadingToast });
+                     }
+                   }} className="flex-1 bg-black text-white hover:bg-gray-800 font-bold border-2 border-black flex items-center gap-2">
+                     <Download className="w-4 h-4" /> EKSPOR KE JSON
                    </Button>
 
                    <div className="flex-1 relative">
@@ -267,9 +253,15 @@ export default function SettingsPage() {
                        ref={fileInputRef}
                        type="file" 
                        accept=".json" 
-                       onChange={(e) => {
+                       onChange={async (e) => {
                          const file = e.target.files?.[0];
                          if (!file) return;
+                         
+                         const loadingToast = toast.loading("Membaca file JSON...");
+                         
+                         // Adding small artificial delay
+                         await new Promise(resolve => setTimeout(resolve, 500));
+                         
                          const reader = new FileReader();
                          reader.onload = (event) => {
                            try {
@@ -277,11 +269,12 @@ export default function SettingsPage() {
                              if (data.products && data.rawMaterials) {
                                setImportDataContent(data);
                                setIsImportConfirmOpen(true);
+                               toast.dismiss(loadingToast);
                              } else {
-                               toast.error("Format JSON tidak valid!");
+                               toast.error("Format JSON tidak valid!", { id: loadingToast });
                              }
                            } catch (err) {
-                             toast.error("Gagal membaca file JSON!");
+                             toast.error("Gagal membaca file JSON! Pastikan format sesuai.", { id: loadingToast });
                            }
                            if (fileInputRef.current) fileInputRef.current.value = ''; // reset
                          };
@@ -289,8 +282,8 @@ export default function SettingsPage() {
                        }}
                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10" 
                      />
-                     <Button className="w-full bg-white text-black hover:bg-gray-100 font-bold border-2 border-black" onClick={() => fileInputRef.current?.click()}>
-                       📤 IMPOR DARI JSON
+                     <Button className="w-full bg-white text-black hover:bg-gray-100 font-bold border-2 border-black flex items-center justify-center gap-2" onClick={() => fileInputRef.current?.click()}>
+                       <Upload className="w-4 h-4" /> IMPOR DARI JSON
                      </Button>
                    </div>
                  </div>
@@ -396,9 +389,13 @@ export default function SettingsPage() {
        onOpenChange={setIsImportConfirmOpen}
        title="TINDAKAN BERISIKO"
        description="Mengimpor data JSON ini akan MENIMPA dan MENGGANTI seluruh data Master saat ini. Anda setuju untuk melanjutkan?"
-       onConfirm={() => {
+       onConfirm={async () => {
          if (!importDataContent) return;
          const data = importDataContent;
+         const loadingToast = toast.loading("Memproses Data Import...");
+         
+         // Simulasi loading
+         await new Promise(resolve => setTimeout(resolve, 800));
          
          // Batch update
          useInventoryStore.setState({
@@ -412,7 +409,7 @@ export default function SettingsPage() {
          // Seed to firebase in background to sync changes
          seedMockDataToFirebase();
          
-         toast.success("Data berhasil di-import dan ditimpa!");
+         toast.success("Data berhasil di-import dan ditimpa!", { id: loadingToast });
          setImportDataContent(null);
        }}
      />

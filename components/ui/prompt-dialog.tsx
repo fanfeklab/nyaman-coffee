@@ -36,6 +36,7 @@ export function PromptDialog({
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line
       setValue('');
     }
   }, [open]);

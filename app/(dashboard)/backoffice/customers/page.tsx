@@ -63,27 +63,40 @@ export default function CustomersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.phone) {
       toast.error('Gagal: Semua kolom wajib diisi');
       return;
     }
 
-    if (editingId) {
-      updateCustomer(editingId, formData);
-      toast.success('Pelanggan berhasil diperbarui');
-    } else {
-      addCustomer(formData);
-      toast.success('Pelanggan berhasil ditambahkan');
+    const loadToast = toast.loading("Menyimpan data pelanggan...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (editingId) {
+        updateCustomer(editingId, formData);
+        toast.success('Pelanggan berhasil diperbarui', { id: loadToast });
+      } else {
+        addCustomer(formData);
+        toast.success('Pelanggan berhasil ditambahkan', { id: loadToast });
+      }
+      setFormOpen(false);
+    } catch(err) {
+      toast.error("Gagal menyimpan data pelanggan", { id: loadToast });
     }
-    setFormOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-       deleteCustomer(deleteId);
-       toast.success('Pelanggan berhasil dihapus');
-       setDeleteId(null);
+       const loadToast = toast.loading("Menghapus data pelanggan...");
+       try {
+         await new Promise(resolve => setTimeout(resolve, 600));
+         deleteCustomer(deleteId);
+         toast.success('Pelanggan berhasil dihapus', { id: loadToast });
+       } catch(err) {
+         toast.error("Gagal menghapus data pelanggan", { id: loadToast });
+       } finally {
+         setDeleteId(null);
+       }
     }
   };
 

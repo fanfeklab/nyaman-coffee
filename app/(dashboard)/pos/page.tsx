@@ -229,45 +229,53 @@ export default function POSPage() {
     setConfirmPaymentOpen(true);
   };
 
-  const handleProcessPayment = () => {
-    // Process Inventory
-    const invRes = processCheckoutInventory(items.map(i => ({ productId: i.product.id, qty: i.qty })));
-    if (!invRes.success) {
-      toast.error('GAGAL POTONG STOK!', { description: invRes.reason });
+  const handleProcessPayment = async () => {
+    const loadToast = toast.loading("Memproses pembayaran & stok...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulasi pemrosesan (API/jaringan/database)
+
+      // Process Inventory
+      const invRes = processCheckoutInventory(items.map(i => ({ productId: i.product.id, qty: i.qty })));
+      if (!invRes.success) {
+        toast.error('GAGAL POTONG STOK!', { description: invRes.reason, id: loadToast });
+        setConfirmPaymentOpen(false);
+        return;
+      }
+
+      // Add transaction to history
+      // eslint-disable-next-line react-hooks/purity
+      const txId = 'TXN' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2,6).toUpperCase();
+      
+      addTransaction({
+        id: txId,
+        shiftId: currentShift?.id || 'unknown',
+        cashierId: user?.id || 'unknown',
+        customerId: selectedCustomerId || undefined,
+        customerName: selectedCustomerId ? customers.find(c => c.id === selectedCustomerId)?.name : undefined,
+        items: [...items],
+        total,
+        paymentMethod,
+        cashGiven: paymentMethod === 'TUNAI' ? parseInt(cashGiven.replace(/\D/g, '')) : undefined,
+        timestamp: new Date(),
+        status: 'COMPLETED'
+      });
+
+      // Customer Points Logic
+      if (selectedCustomerId) {
+        useCustomerStore.getState().addPoints(selectedCustomerId, Math.floor(total / 10000)); // 1 Point per 10k
+      }
+
+      // Success
+      addSalesToShift(total);
       setConfirmPaymentOpen(false);
-      return;
+      setIsPaymentOpen(false);
+      setIsReceiptOpen(true);
+      setSelectedCustomerId(null);
+      toast.success('TRANSAKSI BERHASIL', { description: 'Pembayaran telah diterima dan dicatat.', id: loadToast });
+    } catch (e) {
+      toast.error('GAGAL MEMPROSES PEMBAYARAN', { id: loadToast });
+      setConfirmPaymentOpen(false);
     }
-
-    // Add transaction to history
-    // eslint-disable-next-line react-hooks/purity
-    const txId = 'TXN' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2,6).toUpperCase();
-    
-    addTransaction({
-      id: txId,
-      shiftId: currentShift?.id || 'unknown',
-      cashierId: user?.id || 'unknown',
-      customerId: selectedCustomerId || undefined,
-      customerName: selectedCustomerId ? customers.find(c => c.id === selectedCustomerId)?.name : undefined,
-      items: [...items],
-      total,
-      paymentMethod,
-      cashGiven: paymentMethod === 'TUNAI' ? parseInt(cashGiven.replace(/\D/g, '')) : undefined,
-      timestamp: new Date(),
-      status: 'COMPLETED'
-    });
-
-    // Customer Points Logic
-    if (selectedCustomerId) {
-      useCustomerStore.getState().addPoints(selectedCustomerId, Math.floor(total / 10000)); // 1 Point per 10k
-    }
-
-    // Success
-    addSalesToShift(total);
-    setConfirmPaymentOpen(false);
-    setIsPaymentOpen(false);
-    setIsReceiptOpen(true);
-    setSelectedCustomerId(null);
-    toast.success('TRANSAKSI BERHASIL', { description: 'Pembayaran telah diterima dan dicatat.', duration: 3000 });
   };
 
   const finishTransaction = () => {

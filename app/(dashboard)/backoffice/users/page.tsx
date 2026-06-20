@@ -70,28 +70,35 @@ export default function UsersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.username || !formData.fullName || !formData.pin) {
       toast.error('Gagal: Semua kolom wajib diisi');
       return;
     }
 
-    if (editingId) {
-      updateUser(editingId, formData);
-      toast.success('Pengguna berhasil diperbarui');
-    } else {
-      // check duplicate username
-      if (users.find(u => u.username === formData.username)) {
-         toast.error('Gagal: Username sudah digunakan');
-         return;
-      }
-      addUser(formData);
-      toast.success('Pengguna berhasil ditambahkan');
+    if (!editingId && users.find(u => u.username === formData.username)) {
+       toast.error('Gagal: Username sudah digunakan');
+       return;
     }
-    setFormOpen(false);
+
+    const loadToast = toast.loading("Menyimpan data karyawan...");
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulasi loading
+      if (editingId) {
+        updateUser(editingId, formData);
+        toast.success('Pengguna berhasil diperbarui', { id: loadToast });
+      } else {
+        addUser(formData);
+        toast.success('Pengguna berhasil ditambahkan', { id: loadToast });
+      }
+      setFormOpen(false);
+    } catch(err) {
+      toast.error('Terjadi kesalahan saat menyimpan', { id: loadToast });
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
        // Prevent deleting oneself
        if (deleteId === currentUser?.id) {
@@ -99,9 +106,16 @@ export default function UsersPage() {
           setDeleteId(null);
           return;
        }
-       deleteUser(deleteId);
-       toast.success('Pengguna berhasil dihapus');
-       setDeleteId(null);
+       const loadToast = toast.loading("Menghapus karyawan...");
+       try {
+         await new Promise(resolve => setTimeout(resolve, 600)); // Simulasi loading
+         deleteUser(deleteId);
+         toast.success('Pengguna berhasil dihapus', { id: loadToast });
+       } catch (error) {
+         toast.error('Gagal menghapus pengguna!', { id: loadToast });
+       } finally {
+         setDeleteId(null);
+       }
     }
   };
 

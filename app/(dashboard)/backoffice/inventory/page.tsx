@@ -57,25 +57,31 @@ export default function InventoryPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.unit) {
       toast.error('Nama dan Satuan wajib diisi!');
       return;
     }
     
-    if (editingId) {
-       updateRawMaterial(editingId, form);
-       toast.success('Bahan baku diperbaharui');
-    } else {
-       addRawMaterial({
-         id: 'rm_' + Date.now().toString(36),
-         name: form.name as string,
-         unit: form.unit as string,
-         currentStock: form.currentStock || 0
-       });
-       toast.success('Bahan baku berhasil ditambahkan');
+    const loadToast = toast.loading("Menyimpan bahan baku...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (editingId) {
+         updateRawMaterial(editingId, form);
+         toast.success('Bahan baku diperbaharui', { id: loadToast });
+      } else {
+         addRawMaterial({
+           id: 'rm_' + Date.now().toString(36),
+           name: form.name as string,
+           unit: form.unit as string,
+           currentStock: form.currentStock || 0
+         });
+         toast.success('Bahan baku berhasil ditambahkan', { id: loadToast });
+      }
+      setIsModalOpen(false);
+    } catch(err) {
+      toast.error("Gagal menyimpan bahan baku!", { id: loadToast });
     }
-    setIsModalOpen(false);
   };
 
   const handleOpenAddRecipe = () => {
@@ -90,27 +96,36 @@ export default function InventoryPage() {
     setIsRecipeModalOpen(true);
   };
 
-  const handleSaveRecipe = () => {
+  const handleSaveRecipe = async () => {
     if (!recipeForm.productId) return toast.error('Pilih Menu (Produk) terlebih dahulu!');
     if (!recipeForm.ingredients || recipeForm.ingredients.length === 0) return toast.error('Minimal 1 bahan wajib!');
 
-    if (editingRecipeId) {
-       updateRecipe(editingRecipeId, recipeForm);
-       toast.success('Resep berhasil diubah!');
-    } else {
-       // check if product already has recipe
-       const existing = recipes.find(x => x.productId === recipeForm.productId);
-       if (existing) return toast.error('Menu ini sudah memiliki resep! Silahkan edit yang sudah ada.');
-       
-       addRecipe({
-         id: 'rec_' + Date.now().toString(36),
-         productId: recipeForm.productId,
-         ingredients: recipeForm.ingredients,
-         instructions: recipeForm.instructions
-       });
-       toast.success('Resep berhasil disimpan!');
+    const loadToast = toast.loading("Menyimpan resep...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (editingRecipeId) {
+         updateRecipe(editingRecipeId, recipeForm);
+         toast.success('Resep berhasil diubah!', { id: loadToast });
+      } else {
+         // check if product already has recipe
+         const existing = recipes.find(x => x.productId === recipeForm.productId);
+         if (existing) {
+            toast.error('Menu ini sudah memiliki resep! Silahkan edit yang sudah ada.', { id: loadToast });
+            return;
+         }
+         
+         addRecipe({
+           id: 'rec_' + Date.now().toString(36),
+           productId: recipeForm.productId,
+           ingredients: recipeForm.ingredients,
+           instructions: recipeForm.instructions
+         });
+         toast.success('Resep berhasil ditambahkan!', { id: loadToast });
+      }
+      setIsRecipeModalOpen(false);
+    } catch(err) {
+      toast.error("Gagal menyimpan resep!", { id: loadToast });
     }
-    setIsRecipeModalOpen(false);
   };
 
   return (
@@ -387,10 +402,12 @@ export default function InventoryPage() {
         onOpenChange={(open) => !open && setDeleteConfirmId(null)}
         title="Hapus Bahan Baku?"
         description="Data bahan baku tidak dapat dikembalikan."
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteConfirmId) {
+            const loadToast = toast.loading("Menghapus bahan baku...");
+            await new Promise(resolve => setTimeout(resolve, 600));
             deleteRawMaterial(deleteConfirmId);
-            toast.success("Bahan baku dihapus");
+            toast.success("Bahan baku dihapus", { id: loadToast });
           }
         }}
       />
@@ -400,10 +417,12 @@ export default function InventoryPage() {
         onOpenChange={(open) => !open && setDeleteRecipeConfirm(null)}
         title="Hapus Resep?"
         description="Menu terkait tidak akan memotong stok bahan lagi."
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteRecipeConfirm) {
+            const loadToast = toast.loading("Menghapus resep...");
+            await new Promise(resolve => setTimeout(resolve, 600));
             deleteRecipe(deleteRecipeConfirm);
-            toast.success("Resep dihapus");
+            toast.success("Resep dihapus", { id: loadToast });
           }
         }}
       />

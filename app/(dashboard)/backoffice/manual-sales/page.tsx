@@ -63,7 +63,7 @@ export default function ManualSalesPage() {
 
   const currentTotal = calculateTotal();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!cashierId) return toast.error('Pilih/isi kasir terlebih dahulu');
     if (!timestamp) return toast.error('Isi waktu transaksi');
     if (items.length === 0) return toast.error('Belum ada item yang ditambahkan');
@@ -89,12 +89,18 @@ export default function ManualSalesPage() {
       status: 'COMPLETED'
     };
 
-    addTransaction(tx);
-    toast.success('Transaksi masa lalu berhasil diinput!');
+    const loadToast = toast.loading("Merekam transaksi manual...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      addTransaction(tx);
+      toast.success('Transaksi masa lalu berhasil diinput!', { id: loadToast });
 
-    // Reset
-    setItems([]);
-    setTimestamp('');
+      // Reset
+      setItems([]);
+      setTimestamp('');
+    } catch (e) {
+      toast.error('Gagal merekam transaksi', { id: loadToast });
+    }
   };
 
   return (

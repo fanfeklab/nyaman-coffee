@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { LayoutGrid, Coffee, PieChart, PackageOpen, ArrowRight, User, Clock, Wallet, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { DashboardOverview } from '@/components/organisms/DashboardOverview';
 
 export default function ShiftPage() {
@@ -25,20 +26,34 @@ export default function ShiftPage() {
   const [confirmClose, setConfirmClose] = useState(false);
   const [forceCloseConfirmOpen, setForceCloseConfirmOpen] = useState(false);
 
-  const handleOpenShift = () => {
+  const handleOpenShift = async () => {
     if (!user) return;
     const amount = parseInt(startingCash.replace(/\D/g, ''));
     if (!isNaN(amount) && amount >= 0) {
-      openShift(user.id, amount);
-      setConfirmOpen(false);
+      const loadToast = toast.loading("Membuka shift kasir...");
+      try {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        openShift(user.id, amount);
+        toast.success("Shift berhasil dibuka!", { id: loadToast });
+        setConfirmOpen(false);
+      } catch (e) {
+        toast.error("Gagal membuka shift", { id: loadToast });
+      }
     }
   };
 
-  const handleCloseShift = () => {
+  const handleCloseShift = async () => {
     const amount = parseInt(actualCash.replace(/\D/g, ''));
     if (!isNaN(amount) && amount >= 0) {
-      closeShift(amount);
-      setConfirmClose(false);
+      const loadToast = toast.loading("Menutup sesi shift...");
+      try {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        closeShift(amount);
+        toast.success("Shift ditutup. Laporan tersimpan.", { id: loadToast });
+        setConfirmClose(false);
+      } catch (e) {
+        toast.error("Gagal menutup shift", { id: loadToast });
+      }
     }
   };
 
@@ -134,8 +149,11 @@ export default function ShiftPage() {
          <ConfirmDialog 
            open={forceCloseConfirmOpen}
            onOpenChange={setForceCloseConfirmOpen}
-           onConfirm={() => {
+           onConfirm={async () => {
+             const loadToast = toast.loading("Melakukan Force Close...");
+             await new Promise(resolve => setTimeout(resolve, 800));
              forceCloseShift(currentShift.id);
+             toast.success("Shift ditutup secara paksa!", { id: loadToast });
              window.location.reload();
            }}
            title="Force End Shift?"

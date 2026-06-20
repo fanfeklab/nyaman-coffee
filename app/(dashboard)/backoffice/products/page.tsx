@@ -70,29 +70,35 @@ export default function ProductsPage() {
     setIsProductModalOpen(true);
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     if (!productForm.name || !productForm.categoryId || !moneyText) {
       return toast.error('Harap lengkapi data wajib (Nama, Kategori, Harga)!');
     }
     
     const finalPrice = parseInt(moneyText) || 0;
-    
-    if (editingProductId) {
-       updateProduct(editingProductId, { ...productForm, basePrice: finalPrice });
-       toast.success('Menu diubah!');
-    } else {
-       addProduct({
-          id: 'p' + Date.now().toString(36).substring(3, 7) + Math.floor(Math.random() * 1000).toString(),
-          name: productForm.name,
-          categoryId: productForm.categoryId,
-          basePrice: finalPrice,
-          type: productForm.type as 'SINGLE' | 'COMBO',
-          variantIds: productForm.variantIds || [],
-          comboItems: productForm.comboItems || []
-       });
-       toast.success('Menu ditambahkan!');
+    const loadToast = toast.loading("Menyimpan menu...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      if (editingProductId) {
+         updateProduct(editingProductId, { ...productForm, basePrice: finalPrice });
+         toast.success('Menu diubah!', { id: loadToast });
+      } else {
+         addProduct({
+            id: 'p' + Date.now().toString(36).substring(3, 7) + Math.floor(Math.random() * 1000).toString(),
+            name: productForm.name,
+            categoryId: productForm.categoryId,
+            basePrice: finalPrice,
+            type: productForm.type as 'SINGLE' | 'COMBO',
+            variantIds: productForm.variantIds || [],
+            comboItems: productForm.comboItems || []
+         });
+         toast.success('Menu ditambahkan!', { id: loadToast });
+      }
+      setIsProductModalOpen(false);
+    } catch(e) {
+      toast.error('Gagal menyimpan menu!', { id: loadToast });
     }
-    setIsProductModalOpen(false);
   };
 
   const handleOpenAddCategory = () => {
@@ -109,20 +115,26 @@ export default function ProductsPage() {
     setIsCategoryModalOpen(true);
   };
 
-  const handleSaveCategory = () => {
+  const handleSaveCategory = async () => {
     if (!newCatName) return toast.error('Nama kategori wajib diisi!');
-    if (editingCategoryId) {
-       updateCategory(editingCategoryId, { name: newCatName, color: newCatColor });
-       toast.success('Kategori diubah!');
-    } else {
-       addCategory({
-          id: 'c' + Date.now().toString(36),
-          name: newCatName,
-          color: newCatColor
-       });
-       toast.success('Kategori ditambahkan!');
+    const loadToast = toast.loading("Menyimpan kategori...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (editingCategoryId) {
+         updateCategory(editingCategoryId, { name: newCatName, color: newCatColor });
+         toast.success('Kategori diubah!', { id: loadToast });
+      } else {
+         addCategory({
+            id: 'c' + Date.now().toString(36),
+            name: newCatName,
+            color: newCatColor
+         });
+         toast.success('Kategori ditambahkan!', { id: loadToast });
+      }
+      setIsCategoryModalOpen(false);
+    } catch(e) {
+      toast.error('Gagal menyimpan kategori!', { id: loadToast });
     }
-    setIsCategoryModalOpen(false);
   };
 
   const handleOpenAddVariant = () => {
@@ -137,7 +149,7 @@ export default function ProductsPage() {
     setIsVariantModalOpen(true);
   };
 
-  const handleSaveVariant = () => {
+  const handleSaveVariant = async () => {
     if (!variantForm.name) return toast.error('Nama varian wajib!');
     if (!variantForm.options || variantForm.options.length === 0) return toast.error('Minimal 1 opsi varian wajib!');
     
@@ -147,20 +159,26 @@ export default function ProductsPage() {
        priceAdjustment: o.priceAdjustment || 0
     }));
 
-    if (editingVariantId) {
-      updateVariant(editingVariantId, { ...variantForm, options: cleanOptions });
-      toast.success('Varian berhasil diubah!');
-    } else {
-      addVariant({
-        id: 'var_' + Date.now().toString(36),
-        name: variantForm.name,
-        isRequired: variantForm.isRequired,
-        type: variantForm.type,
-        options: cleanOptions
-      });
-      toast.success('Varian berhasil ditambahkan!');
+    const loadToast = toast.loading("Menyimpan varian...");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (editingVariantId) {
+        updateVariant(editingVariantId, { ...variantForm, options: cleanOptions });
+        toast.success('Varian berhasil diubah!', { id: loadToast });
+      } else {
+        addVariant({
+          id: 'var_' + Date.now().toString(36),
+          name: variantForm.name,
+          isRequired: variantForm.isRequired,
+          type: variantForm.type,
+          options: cleanOptions
+        });
+        toast.success('Varian berhasil ditambahkan!', { id: loadToast });
+      }
+      setIsVariantModalOpen(false);
+    } catch (e) {
+      toast.error("Gagal menyimpan varian!", { id: loadToast });
     }
-    setIsVariantModalOpen(false);
   };
 
   const formatRupiah = (val: number) => 
@@ -647,10 +665,12 @@ export default function ProductsPage() {
         onOpenChange={(open) => !open && setDeleteCategoryConfirm(null)}
         title="Hapus Kategori?"
         description="Semua menu di kategori ini dapat kehilangan referensi kategori."
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteCategoryConfirm) {
+            const loadToast = toast.loading("Menghapus kategori...");
+            await new Promise(resolve => setTimeout(resolve, 600));
             deleteCategory(deleteCategoryConfirm);
-            toast.success("Kategori berhasil dihapus");
+            toast.success("Kategori berhasil dihapus", { id: loadToast });
           }
         }}
       />
@@ -660,10 +680,12 @@ export default function ProductsPage() {
         onOpenChange={(open) => !open && setDeleteProductConfirm(null)}
         title="Hapus Menu?"
         description="Menu yang dihapus tidak akan tampil lagi di kasir."
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteProductConfirm) {
+            const loadToast = toast.loading("Menghapus menu...");
+            await new Promise(resolve => setTimeout(resolve, 600));
             deleteProduct(deleteProductConfirm);
-            toast.success("Menu berhasil dihapus");
+            toast.success("Menu berhasil dihapus", { id: loadToast });
           }
         }}
       />
@@ -673,10 +695,12 @@ export default function ProductsPage() {
         onOpenChange={(open) => !open && setDeleteVariantConfirm(null)}
         title="Hapus Varian?"
         description="Semua menu yang menggunakan varian ini akan kehilangan pilihan varian ini secara otomatis."
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteVariantConfirm) {
+            const loadToast = toast.loading("Menghapus varian...");
+            await new Promise(resolve => setTimeout(resolve, 600));
             deleteVariant(deleteVariantConfirm);
-            toast.success("Varian berhasil dihapus");
+            toast.success("Varian berhasil dihapus", { id: loadToast });
           }
         }}
       />
