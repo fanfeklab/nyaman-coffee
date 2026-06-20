@@ -183,7 +183,7 @@ export default function SettingsPage() {
 
            {activeTab === 'INVENTORY' && (
              <div className="bg-[#FFD100] border-4 border-black p-6 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
-               <h2 className="font-space-grotesk font-black text-2xl uppercase border-b-4 border-black pb-2">Inventory Mode</h2>
+               <h2 className="font-space-grotesk font-black text-2xl uppercase border-b-4 border-black pb-2">Inventory Mode & Data Pokok</h2>
                
                <div className="flex flex-col gap-4">
                   <div 
@@ -219,6 +219,81 @@ export default function SettingsPage() {
                      <p className="font-inter font-bold text-sm text-gray-700">Pemotongan inventori bahan baku dimatikan total. Ini berguna jika hanya butuh perhitungan kasir tanpa pusing mencatat gramasi bahan baku.</p>
                   </div>
                </div>
+
+               <h2 className="font-space-grotesk font-black text-2xl uppercase border-b-4 border-black pb-2 mt-4">Ekspor / Impor Data</h2>
+               <div className="flex flex-col gap-4 bg-white p-4 rounded-xl border-4 border-black">
+                 <p className="font-inter font-bold text-sm text-gray-700 mb-2">Anda dapat mengekspor data master (kategori, menu, varian, bahan baku, dan resep) ke format JSON untuk dicadangkan, lalu mengunggahnya kembali jika diperlukan.</p>
+                 <div className="flex flex-col sm:flex-row gap-4">
+                   <Button onClick={() => {
+                     const state = useInventoryStore.getState();
+                     const exportData = {
+                       categories: state.categories,
+                       products: state.products,
+                       rawMaterials: state.rawMaterials,
+                       variants: state.variants,
+                       recipes: state.recipes
+                     };
+                     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                     const downloadAnchorNode = document.createElement('a');
+                     downloadAnchorNode.setAttribute("href", dataStr);
+                     downloadAnchorNode.setAttribute("download", "nyaman_pos_data_" + new Date().getTime() + ".json");
+                     document.body.appendChild(downloadAnchorNode);
+                     downloadAnchorNode.click();
+                     downloadAnchorNode.remove();
+                     toast.success("Berhasil mengunduh data JSON");
+                   }} className="flex-1 bg-black text-white hover:bg-gray-800 font-bold border-2 border-black">
+                     📥 EKSPOR KE JSON
+                   </Button>
+
+                   <div className="flex-1 relative">
+                     <input 
+                       type="file" 
+                       accept=".json" 
+                       onChange={(e) => {
+                         const file = e.target.files?.[0];
+                         if (!file) return;
+                         const reader = new FileReader();
+                         reader.onload = (event) => {
+                           try {
+                             const data = JSON.parse(event.target?.result as string);
+                             if (data.products && data.rawMaterials) {
+                               const proceed = window.confirm("Peringatan: Mengimpor data JSON ini akan MENIMPA dan MENGGANTI seluruh data Master saat ini. Lanjutkan?");
+                               if (!proceed) return;
+
+                               const state = useInventoryStore.getState();
+                               
+                               // Batch update
+                               useInventoryStore.setState({
+                                 categories: data.categories || [],
+                                 products: data.products || [],
+                                 rawMaterials: data.rawMaterials || [],
+                                 variants: data.variants || [],
+                                 recipes: data.recipes || []
+                               });
+                               
+                               // Seed to firebase in background to sync changes
+                               seedMockDataToFirebase();
+                               
+                               toast.success("Data berhasil di-import dan ditimpa!");
+                             } else {
+                               toast.error("Format JSON tidak valid!");
+                             }
+                           } catch (err) {
+                             toast.error("Gagal membaca file JSON!");
+                           }
+                           e.target.value = ''; // reset
+                         };
+                         reader.readAsText(file);
+                       }}
+                       className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10" 
+                     />
+                     <Button className="w-full bg-white text-black hover:bg-gray-100 font-bold border-2 border-black">
+                       📤 IMPOR DARI JSON
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+
              </div>
            )}
 
