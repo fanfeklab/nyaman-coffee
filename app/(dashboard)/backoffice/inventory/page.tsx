@@ -11,11 +11,11 @@ import { Plus, Edit2, Trash2, Search, PackageOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function InventoryPage() {
+  // force cache invalidation
   const router = useRouter();
   const { user } = useAuthStore();
   
@@ -138,20 +138,18 @@ export default function InventoryPage() {
          </div>
 
          <div className="flex bg-white border-4 border-black p-1 rounded-xl">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setActiveTab('MATERIALS')}
-                    className={`font-space-grotesk font-black uppercase rounded-[7px] transition-all border-none shadow-none h-auto px-4 py-2 ${activeTab === 'MATERIALS' ? 'bg-[#FFD100] text-black hover:bg-[#FFD100]' : 'text-gray-500 hover:text-black hover:bg-transparent bg-transparent'}`}
-                  >
-                    Data Bahan Baku
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setActiveTab('RECIPES')}
-                    className={`font-space-grotesk font-black uppercase rounded-[7px] transition-all border-none shadow-none h-auto px-4 py-2 ${activeTab === 'RECIPES' ? 'bg-[#FFD100] text-black hover:bg-[#FFD100]' : 'text-gray-500 hover:text-black hover:bg-transparent bg-transparent'}`}
-                  >
-                    Resep Menu
-                  </Button>
+            <button 
+              onClick={() => setActiveTab('MATERIALS')}
+              className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === 'MATERIALS' ? 'bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]' : 'text-gray-500 hover:text-black border-2 border-transparent'}`}
+            >
+              Data Bahan Baku
+            </button>
+            <button 
+              onClick={() => setActiveTab('RECIPES')}
+              className={`px-4 py-2 font-space-grotesk font-black uppercase rounded-lg transition-all ${activeTab === 'RECIPES' ? 'bg-[#FFD100] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]' : 'text-gray-500 hover:text-black border-2 border-transparent'}`}
+            >
+              Resep Menu
+            </button>
          </div>
       </div>
 
@@ -211,12 +209,12 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="icon" onClick={() => handleOpenEdit(rm)}>
+                          <button onClick={() => handleOpenEdit(rm)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                             <Edit2 className="w-4 h-4"/>
-                          </Button>
-                          <Button variant="destructive" size="icon" onClick={() => setDeleteConfirmId(rm.id)}>
+                          </button>
+                          <button onClick={() => setDeleteConfirmId(rm.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                             <Trash2 className="w-4 h-4"/>
-                          </Button>
+                          </button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -232,12 +230,12 @@ export default function InventoryPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon" onClick={() => handleOpenEditRecipe(r)}>
+                            <button onClick={() => handleOpenEditRecipe(r)} className="p-2 border-2 border-black rounded hover:bg-gray-100 transition-colors">
                               <Edit2 className="w-4 h-4"/>
-                            </Button>
-                            <Button variant="destructive" size="icon" onClick={() => setDeleteRecipeConfirm(r.id)}>
+                            </button>
+                            <button onClick={() => setDeleteRecipeConfirm(r.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                               <Trash2 className="w-4 h-4"/>
-                            </Button>
+                            </button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -338,17 +336,16 @@ export default function InventoryPage() {
                                }}
                                className="w-24 text-right"
                              />
-                             <Button 
-                               variant="destructive"
-                               size="icon"
+                             <button 
                                onClick={() => {
                                  const newIngs = [...recipeForm.ingredients];
                                  newIngs.splice(idx, 1);
                                  setRecipeForm({...recipeForm, ingredients: newIngs});
                                }}
+                               className="text-red-500 hover:text-red-700 p-2"
                              >
-                               <Trash2 className="w-4 h-4"/>
-                             </Button>
+                               <Trash2 className="w-5 h-5"/>
+                             </button>
                           </div>
                         )
                      })}
@@ -384,11 +381,11 @@ export default function InventoryPage() {
 
               <div className="flex flex-col gap-2">
                  <Label>Instruksi Penyajian (Opsional)</Label>
-                 <Textarea 
+                 <textarea 
                    value={recipeForm.instructions}
                    onChange={e => setRecipeForm({...recipeForm, instructions: e.target.value})}
                    rows={4}
-                   className="resize-none"
+                   className="flex w-full min-w-0 rounded-xl border-4 border-black bg-white px-4 py-2 text-base transition-all outline-none font-inter font-bold placeholder:font-normal placeholder:text-gray-400 focus-visible:shadow-[4px_4px_0_0_#000]"
                    placeholder="Tuliskan instruksi penyeduhan/pembuatan..."
                  />
               </div>
