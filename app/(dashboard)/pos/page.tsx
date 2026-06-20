@@ -530,16 +530,16 @@ export default function POSPage() {
                   {/* Cart Footer / Checkout Sticky Panel */}
                   <div className="p-4 md:p-6 bg-white border-t-8 border-black shrink-0">
                     <div className="flex flex-col gap-2 text-sm font-inter font-bold uppercase mb-4 px-2">
-                       <div className="flex justify-between items-center text-gray-600">
-                          <span>Subtotal</span>
-                          <span>{formatRupiah(getSubtotal())}</span>
+                       <div className="flex justify-between items-center text-gray-600 gap-4">
+                          <span className="shrink-0">Subtotal</span>
+                          <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getSubtotal())}</span>
                        </div>
                        {(discountType || discountValue > 0) && (
-                         <div className="flex justify-between items-center text-[#FF6321]">
-                            <span className="flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setIsDiscountOpen(true)}>
+                         <div className="flex justify-between items-center text-[#FF6321] gap-4">
+                            <span className="flex items-center gap-2 cursor-pointer hover:underline shrink-0" onClick={() => setIsDiscountOpen(true)}>
                               Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-4 h-4"/>
                             </span>
-                            <span>-{formatRupiah(getDiscountAmount())}</span>
+                            <span className="truncate max-w-[150px] md:max-w-none text-right">-{formatRupiah(getDiscountAmount())}</span>
                          </div>
                        )}
                        {!discountType && (
@@ -550,15 +550,15 @@ export default function POSPage() {
                          </div>
                        )}
                        {getServiceChargeAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600">
-                            <span>Service ({serviceChargeRate}%)</span>
-                            <span>{formatRupiah(getServiceChargeAmount())}</span>
+                         <div className="flex justify-between items-center text-gray-600 gap-4">
+                            <span className="shrink-0">Service ({serviceChargeRate}%)</span>
+                            <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getServiceChargeAmount())}</span>
                          </div>
                        )}
                        {getTaxAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600">
-                            <span>Pajak ({taxRate}%)</span>
-                            <span>{formatRupiah(getTaxAmount())}</span>
+                         <div className="flex justify-between items-center text-gray-600 gap-4">
+                            <span className="shrink-0">Pajak ({taxRate}%)</span>
+                            <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getTaxAmount())}</span>
                          </div>
                        )}
                     </div>
@@ -577,9 +577,9 @@ export default function POSPage() {
                        </select>
                     </div>
 
-                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">
-                       <span>Total</span>
-                       <span>{formatRupiah(getTotal())}</span>
+                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase gap-4">
+                       <span className="shrink-0">Total</span>
+                       <span className="truncate text-right">{formatRupiah(getTotal())}</span>
                     </div>
                     <Button 
                       onClick={() => {

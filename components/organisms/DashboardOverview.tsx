@@ -90,13 +90,13 @@ export function DashboardOverview() {
              </div>
              
              <div className="grid grid-cols-2 gap-2 mt-2 pt-4 border-t-4 border-black border-dashed">
-                <div>
-                   <p className="text-[10px] font-black uppercase text-gray-600 tracking-widest">Tunai</p>
-                   <p className="font-inter font-bold text-sm">{formatRupiah(cashRevenue)}</p>
+                <div className="min-w-0">
+                   <p className="text-[10px] font-black uppercase text-gray-600 tracking-widest truncate">Tunai</p>
+                   <p className="font-inter font-bold text-sm truncate">{formatRupiah(cashRevenue)}</p>
                 </div>
-                <div>
-                   <p className="text-[10px] font-black uppercase text-gray-600 tracking-widest">QRIS / Non-Tunai</p>
-                   <p className="font-inter font-bold text-sm">{formatRupiah(qrisRevenue)}</p>
+                <div className="min-w-0">
+                   <p className="text-[10px] font-black uppercase text-gray-600 tracking-widest truncate">QRIS/Non-Tunai</p>
+                   <p className="font-inter font-bold text-sm truncate">{formatRupiah(qrisRevenue)}</p>
                 </div>
              </div>
           </div>
