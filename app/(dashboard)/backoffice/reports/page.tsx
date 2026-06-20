@@ -183,25 +183,25 @@ export default function ReportsPage() {
       </div>
 
       <div className="flex gap-4 border-b-4 border-black pb-2 overflow-x-auto hide-scrollbar">
-         <button 
+         <Button 
            onClick={() => setActiveTab('penjualan')}
            className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'penjualan' ? 'bg-[#FFD100] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
          >
            LAPORAN PENJUALAN
-         </button>
-         <button 
+         </Button>
+         <Button 
            onClick={() => setActiveTab('shift')}
            className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'shift' ? 'bg-[#00E5FF] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
          >
            LAPORAN SHIFT
-         </button>
+         </Button>
          {user?.role !== 'CASHIER' && (
-           <button 
+           <Button 
              onClick={() => setActiveTab('analitik')}
              className={`px-6 py-3 font-space-grotesk font-black uppercase tracking-widest text-lg rounded-t-2xl transition-all border-t-4 border-x-4 border-black ${activeTab === 'analitik' ? 'bg-[#FF90E8] text-black shadow-[4px_0_0_0_rgba(0,0,0,1)]' : 'bg-gray-100 text-gray-400 border-b-4 translate-y-1'}`}
            >
              ANALITIK MENU
-           </button>
+           </Button>
          )}
       </div>
 
@@ -209,10 +209,10 @@ export default function ReportsPage() {
          <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
             {/* Filter Section */}
             <div className="flex border-4 border-black rounded-xl w-max overflow-hidden font-space-grotesk font-black uppercase text-sm shadow-[4px_4px_0_0_#000]">
-               <button onClick={() => setDateFilter('today')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'today' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Hari Ini</button>
-               <button onClick={() => setDateFilter('yesterday')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'yesterday' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Kemarin</button>
-               <button onClick={() => setDateFilter('7days')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === '7days' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>7 Hari</button>
-               <button onClick={() => setDateFilter('all')} className={`px-4 py-2 ${dateFilter === 'all' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Semua</button>
+               <Button onClick={() => setDateFilter('today')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'today' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Hari Ini</Button>
+               <Button onClick={() => setDateFilter('yesterday')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === 'yesterday' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Kemarin</Button>
+               <Button onClick={() => setDateFilter('7days')} className={`px-4 py-2 border-r-4 border-black ${dateFilter === '7days' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>7 Hari</Button>
+               <Button onClick={() => setDateFilter('all')} className={`px-4 py-2 ${dateFilter === 'all' ? 'bg-[#FFD100]' : 'bg-white hover:bg-gray-100'}`}>Semua</Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
@@ -333,19 +333,19 @@ export default function ReportsPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {tx.status === 'COMPLETED' && (
-                            <button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi">
+                            <Button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi">
                               <Ban className="w-4 h-4"/>
-                            </button>
+                            </Button>
                           )}
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-                            <button onClick={() => {
+                            <Button onClick={() => {
                                if (confirm('Hapus histori transaksi ini secara permanen?')) {
                                   useTransactionStore.getState().deleteTransaction?.(tx.id);
                                   toast.success('Transaksi dihapus permanen');
                                }
                             }} className="p-2 border-2 border-black rounded bg-gray-100 hover:bg-gray-200 transition-colors" title="Hapus Permanen">
                               <Trash2 className="w-4 h-4"/>
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </TableCell>

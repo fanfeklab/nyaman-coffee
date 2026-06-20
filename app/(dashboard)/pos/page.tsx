@@ -19,6 +19,11 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import { PosHeader, SortOption, ViewOption } from '@/components/organisms/pos/PosHeader';
+import { PosCategories } from '@/components/organisms/pos/PosCategories';
+import { PosProductGrid } from '@/components/organisms/pos/PosProductGrid';
+import { CartDrawer } from '@/components/organisms/pos/CartDrawer';
+import { PaymentModal } from '@/components/organisms/pos/PaymentModal';
 import {
   Dialog,
   DialogContent,
@@ -29,8 +34,6 @@ import {
 const formatRupiah = (val: number) => 
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
 
-type SortOption = 'A-Z' | 'Z-A' | 'Highest' | 'Lowest';
-type ViewOption = 'Grid' | 'Compact';
 
 export default function POSPage() {
   const router = useRouter();
@@ -98,6 +101,8 @@ export default function POSPage() {
   // Protect POS access
   useEffect(() => {
     const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER';
+
+
     if (isAdmin) {
       toast.error('AKSES DITOLAK', { description: 'Admin tidak dapat bertransaksi.' });
       router.push('/shift');
@@ -328,362 +333,54 @@ export default function POSPage() {
        {/* Bottom: Products Area */}
        <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden">
           
-          {/* Header & Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-4 md:mb-6 shrink-0 z-10 relative">
-             <div className="relative flex-grow">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-               <Input 
-                 placeholder="Cari Menu..." 
-                 className="pl-10 h-12 border-4 border-black text-lg bg-white rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-               />
-             </div>
-             
-             {/* Views & Filters */}
-             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                 <Popover>
-                   <PopoverTrigger className="h-12 w-12 border-4 border-black shadow-[4px_4px_0_0_#000] p-0 flex items-center justify-center rounded-xl bg-white hover:bg-gray-100 transition-colors" title="Urutkan" type="button">
-                     <Filter className="w-5 h-5"/>
-                   </PopoverTrigger>
-                   <PopoverContent align="end" className="w-56 p-2 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-2xl bg-white">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-space-grotesk font-black uppercase text-xs tracking-widest text-gray-500 mb-2 px-2">Urutkan Berdasarkan</span>
-                        {[
-                          { id: 'A-Z', label: 'Nama A - Z', icon: ArrowDownAZ },
-                          { id: 'Z-A', label: 'Nama Z - A', icon: ArrowUpZA },
-                          { id: 'Highest', label: 'Harga Tertinggi', icon: ArrowDown10 },
-                          { id: 'Lowest', label: 'Harga Terendah', icon: ArrowUp01 },
-                        ].map(opt => (
-                           <button 
-                             key={opt.id}
-                             onClick={() => handleSortChange(opt.id as SortOption)}
-                             className={cn("flex items-center gap-2 px-3 py-2 text-sm font-inter font-bold rounded-xl text-left transition-colors", sortOption === opt.id ? "bg-[#00E5FF] border-2 border-black" : "hover:bg-gray-100 border-2 border-transparent")}
-                           >
-                             <opt.icon className="w-4 h-4"/>
-                             {opt.label}
-                             {sortOption === opt.id && <Check className="w-4 h-4 ml-auto"/>}
-                           </button>
-                        ))}
-                      </div>
-                   </PopoverContent>
-                 </Popover>
-
-                 <div className="flex items-center bg-white border-4 border-black rounded-xl p-1 shadow-[4px_4px_0_0_#000]">
-                    <button 
-                      onClick={() => handleViewChange('Grid')}
-                      className={cn("p-2 rounded-lg transition-colors", viewOption === 'Grid' ? "bg-black text-white" : "text-gray-500 hover:text-black")}
-                      title="Tampilan Grid (Gambar)"
-                    >
-                      <Grid3X3 className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleViewChange('Compact')}
-                      className={cn("p-2 rounded-lg transition-colors", viewOption === 'Compact' ? "bg-black text-white" : "text-gray-500 hover:text-black")}
-                      title="Tampilan Kompak (Tanpa Gambar)"
-                    >
-                      <AlignJustify className="w-5 h-5" />
-                    </button>
-                 </div>
-
-                 <Button 
-                   onClick={() => setCustomItemOpen(true)}
-                   className="h-12 bg-black text-white hover:bg-gray-800 border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
-                 >
-                   <Plus className="w-5 h-5 mr-0 lg:mr-2" />
-                   <span className="hidden lg:inline">Custom</span>
-                 </Button>
-
-                 <Button 
-                   onClick={() => setIsRecipeBookOpen(true)}
-                   variant="secondary"
-                   className="h-12 bg-[#FF90E8] border-4 border-black font-space-grotesk font-black uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:shadow-none active:translate-y-2 transition-all"
-                 >
-                   <BookOpen className="w-5 h-5 mr-0 md:mr-2 text-black" />
-                   <span className="hidden md:inline">Resep</span>
-                 </Button>
-             </div>
-          </div>
-
-          {/* Categories */}
-          <div className="flex gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 shrink-0 hide-scrollbar pt-1 pl-1">
-             <button 
-               onClick={() => setActiveCategory('all')}
-               className={cn(
-                 "whitespace-nowrap px-6 py-3 border-4 border-black rounded-xl font-space-grotesk font-black uppercase text-sm active:translate-y-1 transition-all",
-                 activeCategory === 'all' ? "bg-black text-white shadow-none translate-y-1" : "bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-y-1"
-               )}
-             >
-               Semua
-             </button>
-             {categories.map(c => (
-               <button 
-                 key={c.id}
-                 onClick={() => setActiveCategory(c.id)}
-                 style={{ backgroundColor: activeCategory === c.id ? c.color : 'white' }}
-                 className={cn(
-                   "whitespace-nowrap px-6 py-3 border-4 border-black rounded-xl font-space-grotesk font-black uppercase text-sm transition-all",
-                   activeCategory === c.id ? "text-black shadow-none translate-y-1" : "text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-y-1 active:translate-y-1"
-                 )}
-               >
-                 {c.name}
-               </button>
-             ))}
-          </div>
-
-          {/* Grid Products */}
-          <div className="flex-1 overflow-y-auto pr-2 pb-32">
-             <div className={cn("grid gap-4 md:gap-6 pt-1 pl-1", viewOption === 'Grid' ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3")}>
-                {filteredProducts.map(p => {
-                  const cat = categories.find(c => c.id === p.categoryId);
-                  
-                  if (viewOption === 'Compact') {
-                    return (
-                      <div 
-                        key={p.id}
-                        onClick={() => handleProductClick(p)}
-                        className="bg-white border-4 border-black rounded-2xl p-4 flex justify-between items-center cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 active:translate-x-2 transition-all select-none group"
-                      >
-                         <div className="flex flex-col">
-                           <span className="font-space-grotesk font-black uppercase text-black line-clamp-1 text-lg mb-1">{p.name}</span>
-                           <div className="flex items-center gap-2">
-                             <span className="font-inter font-black text-[#FF6321]">{formatRupiah(p.basePrice)}</span>
-                             {cat && (
-                               <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 border-2 border-black rounded-md" style={{ backgroundColor: cat.color }}>
-                                  {cat.name}
-                               </span>
-                             )}
-                           </div>
-                         </div>
-                         <Button variant="outline" className="h-10 w-10 p-0 border-2 border-black bg-[#FFD100] group-hover:bg-[#FFD100]">
-                           <Plus className="w-5 h-5 text-black" />
-                         </Button>
-                      </div>
-                    );
-                  }
-
-                  // Grid View (Default)
-                  return (
-                    <div 
-                      key={p.id}
-                      onClick={() => handleProductClick(p)}
-                      className="bg-white border-4 border-black rounded-2xl p-4 flex flex-col cursor-pointer shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 active:translate-x-2 transition-all select-none group"
-                    >
-                       <div className="w-full aspect-square bg-gray-100 border-4 border-black rounded-xl mb-4 flex items-center justify-center overflow-hidden">
-                          {p.image ? (
-                             <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                          ) : (
-                             <Coffee className="w-12 h-12 text-gray-300" />
-                          )}
-                       </div>
-                       <span className="font-space-grotesk font-black uppercase text-black line-clamp-2 flex-grow mb-1">{p.name}</span>
-                       <span className="font-inter font-black text-[#FF6321]">{formatRupiah(p.basePrice)}</span>
-                       {cat && (
-                         <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 border-2 border-black rounded-md w-max mt-2" style={{ backgroundColor: cat.color }}>
-                            {cat.name}
-                         </span>
-                       )}
-                    </div>
-                  )
-                })}
-             </div>
-          </div>
+          <PosHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            sortOption={sortOption}
+            handleSortChange={handleSortChange}
+            viewOption={viewOption}
+            handleViewChange={handleViewChange}
+            setCustomItemOpen={setCustomItemOpen}
+            setIsRecipeBookOpen={setIsRecipeBookOpen}
+          />
+          <PosCategories
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+          />
+          <PosProductGrid
+            filteredProducts={filteredProducts}
+            categories={categories}
+            viewOption={viewOption}
+            handleProductClick={handleProductClick}
+          />
        </div>
 
        {/* Floating Cart & Bottom Drawer overlay */}
-       <AnimatePresence>
-         {items.length > 0 && (
-           <>
-             {/* Floating sticky bar when drawer is CLOSED */}
-             {!isCartDrawerOpen && (
-               <motion.div
-                 initial={{ y: 100 }}
-                 animate={{ y: 0 }}
-                 exit={{ y: 100 }}
-                 className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-40 bg-transparent flex justify-center pointer-events-none"
-               >
-                  <button 
-                    className="pointer-events-auto bg-[#00E5FF] border-4 border-black px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group gap-2"
-                    onClick={() => setIsCartDrawerOpen(true)}
-                  >
-                      <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                         <div className="bg-black text-[#00E5FF] w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform shrink-0">{items.reduce((a,b) => a+b.qty, 0)}</div>
-                         <div className="flex flex-col items-start gap-0 text-left">
-                             <span className="font-space-grotesk font-black uppercase text-lg md:text-xl leading-none">Keranjang</span>
-                             <span className="font-inter font-bold text-black/70 text-[10px] md:text-xs">Klik buka pesanan</span>
-                         </div>
-                      </div>
-                      <span className="font-space-grotesk font-black text-sm md:text-2xl bg-white px-2 py-1.5 md:px-4 md:py-1.5 rounded-lg border-2 border-black shrink-0 truncate">{formatRupiah(getTotal())}</span>
-                  </button>
-               </motion.div>
-             )}
-
-             {/* Backdrop when drawer is OPEN */}
-             {isCartDrawerOpen && (
-               <motion.div
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 0.6 }}
-                 exit={{ opacity: 0 }}
-                 className="absolute inset-0 bg-black z-40"
-                 onClick={() => setIsCartDrawerOpen(false)}
-               />
-             )}
-
-             {/* Bottom Drawer Cart Area */}
-             {isCartDrawerOpen && (
-               <motion.div
-                 initial={{ y: "100%" }}
-                 animate={{ y: 0 }}
-                 exit={{ y: "100%" }}
-                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                 className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-white border-t-8 border-x-8 border-black rounded-t-[2.5rem] z-50 flex flex-col shadow-[0px_-8px_0px_0px_rgba(0,0,0,0.5)] md:max-w-3xl md:mx-auto"
-               >
-                  {/* Handle & Header */}
-                  <div className="p-4 md:p-5 border-b-4 border-black bg-[#FFD100] flex justify-between items-center rounded-t-[2rem] shrink-0">
-                     <div className="flex items-center gap-3">
-                       <button onClick={() => setIsCartDrawerOpen(false)} className="p-2 bg-white border-4 border-black rounded-xl hover:translate-y-1 hover:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-2 transition-all">
-                          <ChevronDown className="w-5 h-5 font-black"/>
-                       </button>
-                       <h2 className="font-space-grotesk font-black uppercase tracking-wider text-xl md:text-2xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
-                     </div>
-                     
-                     <div className="flex items-center gap-2">
-                       <button 
-                         onClick={() => setLoadBillOpen(true)}
-                         title="Buka Tagihan"
-                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
-                       >
-                         <FolderOpen className="w-5 h-5 text-black" />
-                         {savedBills.length > 0 && <span className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-black px-2 py-0.5 rounded-full border-4 border-black">{savedBills.length}</span>}
-                       </button>
-                       <button 
-                         onClick={() => setSaveBillOpen(true)}
-                         title="Simpan Tagihan (Open Tab)"
-                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF90E8] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
-                         disabled={items.length === 0}
-                       >
-                         <Save className="w-5 h-5 text-black" />
-                       </button>
-                       <button 
-                         onClick={() => setClearConfirmOpen(true)}
-                         title="Kosongkan Keranjang"
-                         className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF6321] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
-                       >
-                         <Trash2 className="w-5 h-5" />
-                       </button>
-                     </div>
-                  </div>
-                  
-                  {/* Cart Items List */}
-                  <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 min-h-[30vh] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
-                      {items.map(item => {
-                       const itemOptsPrice = (item.selectedOptions || []).reduce((a:any,b:any)=>a+b.priceAdjustment, 0);
-                       const itemTotalPrice = (item.product.basePrice + itemOptsPrice) * item.qty;
-                       return (
-                       <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-start gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                          <div className="flex-1 flex flex-col">
-                             <span className="font-space-grotesk font-black text-lg uppercase line-clamp-1">{item.product.name}</span>
-                             {item.selectedOptions && item.selectedOptions.length > 0 && (
-                               <div className="flex flex-wrap gap-1 my-1">
-                                 {item.selectedOptions.map((o: any, oidx: number) => (
-                                   <span key={oidx} className="text-[10px] font-bold uppercase bg-gray-100 border-2 border-black px-1.5 py-0.5 rounded-md">
-                                     {o.optionName} {o.priceAdjustment > 0 ? `(+${o.priceAdjustment})` : ''}
-                                   </span>
-                                 ))}
-                               </div>
-                             )}
-                             <span className="font-inter font-bold text-gray-500 text-sm">
-                               {formatRupiah(item.product.basePrice)}
-                               {itemOptsPrice > 0 && ` + ${formatRupiah(itemOptsPrice)} varian`}
-                             </span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200 mt-2 md:mt-0">
-                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(itemTotalPrice)}</span>
-                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
-                                <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
-                                <span className="font-black text-lg w-8 text-center">{item.qty}</span>
-                                <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
-                             </div>
-                          </div>
-                       </div>
-                     )})}
-                  </div>
-
-                  {/* Cart Footer / Checkout Sticky Panel */}
-                  <div className="p-4 md:p-6 bg-white border-t-8 border-black shrink-0">
-                    <div className="flex flex-col gap-2 text-sm font-inter font-bold uppercase mb-4 px-2">
-                       <div className="flex justify-between items-center text-gray-600">
-                          <span>Subtotal</span>
-                          <span>{formatRupiah(getSubtotal())}</span>
-                       </div>
-                       {(discountType || discountValue > 0) && (
-                         <div className="flex justify-between items-center text-[#FF6321]">
-                            <span className="flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setIsDiscountOpen(true)}>
-                              Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-4 h-4"/>
-                            </span>
-                            <span>-{formatRupiah(getDiscountAmount())}</span>
-                         </div>
-                       )}
-                       {!discountType && (
-                         <div className="flex justify-between items-center text-gray-400">
-                            <span className="flex items-center gap-2 cursor-pointer hover:text-black transition-colors" onClick={() => setIsDiscountOpen(true)}>
-                              Tambah Diskon <Tag className="w-4 h-4"/>
-                            </span>
-                         </div>
-                       )}
-                       {getServiceChargeAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600">
-                            <span>Service ({serviceChargeRate}%)</span>
-                            <span>{formatRupiah(getServiceChargeAmount())}</span>
-                         </div>
-                       )}
-                       {getTaxAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600">
-                            <span>Pajak ({taxRate}%)</span>
-                            <span>{formatRupiah(getTaxAmount())}</span>
-                         </div>
-                       )}
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 mt-2 mb-4 px-2">
-                       <Label className="text-sm font-bold uppercase">Pelanggan (Opsional)</Label>
-                       <Select 
-                         value={selectedCustomerId || "none"}
-                         onValueChange={(val) => setSelectedCustomerId(val === "none" ? null : val)}
-                       >
-                         <SelectTrigger className="flex h-10 w-full rounded-xl border-4 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-inter font-bold uppercase transition-all shadow-[2px_2px_0_0_#000]">
-                           <SelectValue placeholder="-- Pilih Pelanggan --" />
-                         </SelectTrigger>
-                         <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold uppercase">
-                           <SelectItem value="none" label="-- Tanpa Pelanggan --">-- Tanpa Pelanggan --</SelectItem>
-                           {customers.map(c => (
-                             <SelectItem key={c.id} value={c.id} label={`${c.name} (${c.points} Poin)`}>{c.name} ({c.points} Poin)</SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                    </div>
-
-                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">
-                       <span>Total</span>
-                       <span>{formatRupiah(getTotal())}</span>
-                    </div>
-                    <Button 
-                      onClick={() => {
-                        setIsCartDrawerOpen(false);
-                        handleCheckoutClick();
-                      }}
-                      size="lg" 
-                      className="w-full h-16 text-2xl bg-[#00E5FF] hover:bg-cyan-400 text-black border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 active:translate-y-2 active:shadow-none transition-all uppercase tracking-widest font-space-grotesk font-black"
-                    >
-                       BAYAR SEKARANG
-                    </Button>
-                  </div>
-               </motion.div>
-             )}
-           </>
-         )}
-       </AnimatePresence>
+       <CartDrawer
+          items={items}
+          isCartDrawerOpen={isCartDrawerOpen}
+          setIsCartDrawerOpen={setIsCartDrawerOpen}
+          getTotal={getTotal}
+          getSubtotal={getSubtotal}
+          getDiscountAmount={getDiscountAmount}
+          getTaxAmount={getTaxAmount}
+          getServiceChargeAmount={getServiceChargeAmount}
+          discountType={discountType}
+          discountValue={discountValue}
+          taxRate={taxRate}
+          serviceChargeRate={serviceChargeRate}
+          setLoadBillOpen={setLoadBillOpen}
+          setSaveBillOpen={setSaveBillOpen}
+          setClearConfirmOpen={setClearConfirmOpen}
+          savedBills={savedBills}
+          updateQty={updateQty}
+          setIsDiscountOpen={setIsDiscountOpen}
+          selectedCustomerId={selectedCustomerId}
+          setSelectedCustomerId={setSelectedCustomerId}
+          customers={customers}
+          handleCheckoutClick={handleCheckoutClick}
+       />
 
        {/* ================= CUSTOMIZE MODAL ================= */}
        <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
@@ -750,97 +447,18 @@ export default function POSPage() {
        </Dialog>
 
        {/* ================= PAYMENT MODAL ================= */}
-       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-         <DialogContent className="border-8 border-black rounded-[2rem] max-w-2xl bg-[#FFFDF7] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[95vh] flex flex-col">
-            <div className="p-5 md:p-6 bg-[#00A19D] border-b-8 border-black shrink-0 flex justify-between items-center">
-               <h2 className="font-space-grotesk font-black text-2xl md:text-3xl uppercase text-black text-center">Pembayaran</h2>
-               <div className="bg-white px-4 py-2 rounded-xl border-4 border-black font-space-grotesk font-black text-xl md:text-2xl shadow-[4px_4px_0_0_#000]">
-                  {formatRupiah(total)}
-               </div>
-            </div>
-            
-            <div className="flex flex-col p-5 md:p-8 gap-6 md:gap-8 overflow-y-auto hide-scrollbar bg-white">
-                <div className="grid grid-cols-2 gap-4 shrink-0">
-                  <Button 
-                    variant={paymentMethod === 'TUNAI' ? 'default' : 'outline'} 
-                    className={cn("h-16 md:h-20 justify-center px-4 text-xl font-space-grotesk font-black uppercase tracking-widest border-4 border-black transition-all", paymentMethod === 'TUNAI' ? "bg-[#FF6321] text-white shadow-none translate-y-1" : "bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none")}
-                    onClick={() => setPaymentMethod('TUNAI')}
-                  >
-                    TUNAI
-                  </Button>
-                  <Button 
-                    variant={paymentMethod === 'QRIS' ? 'default' : 'outline'} 
-                    className={cn("h-16 md:h-20 justify-center px-4 text-xl font-space-grotesk font-black uppercase tracking-widest border-4 border-black transition-all", paymentMethod === 'QRIS' ? "bg-[#FFD100] text-black shadow-none translate-y-1" : "bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none")}
-                    onClick={() => setPaymentMethod('QRIS')}
-                  >
-                    QRIS
-                  </Button>
-                </div>
-                
-                <div className="flex-1 flex flex-col min-h-[30vh]">
-                   {paymentMethod === 'TUNAI' && (
-                     <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-                        <Label className="text-xl font-space-grotesk font-black uppercase">Diterima Tunai</Label>
-                        <Input 
-                          type="text"
-                          inputMode="numeric"
-                          value={cashGiven ? new Intl.NumberFormat('id-ID').format(parseInt(cashGiven.replace(/\D/g, '')) || 0) : ''}
-                          onChange={(e) => setCashGiven(e.target.value.replace(/\D/g, ''))}
-                          className="text-3xl h-20 font-black border-4 border-black shadow-[4px_4px_0_0_#000] text-center"
-                          placeholder="0"
-                          autoFocus
-                        />
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                           <Button variant="outline" className="h-14 font-black border-4 border-black shadow-[2px_2px_0_0_#000] active:translate-y-1 active:shadow-none" onClick={() => setCashGiven(total.toString())}>UANG PAS</Button>
-                           <Button variant="outline" className="h-14 font-black border-4 border-black shadow-[2px_2px_0_0_#000] active:translate-y-1 active:shadow-none" onClick={() => setCashGiven('50000')}>50.000</Button>
-                           <Button variant="outline" className="h-14 font-black border-4 border-black shadow-[2px_2px_0_0_#000] active:translate-y-1 active:shadow-none" onClick={() => setCashGiven('100000')}>100.000</Button>
-                           <Button variant="outline" className="h-14 font-black border-4 border-black shadow-[2px_2px_0_0_#000] active:translate-y-1 active:shadow-none" onClick={() => {
-                             const current = parseInt(cashGiven.replace(/\D/g, '')) || 0;
-                             setCashGiven('0');
-                           }}>RESET</Button>
-                        </div>
-
-                        {!!cashGiven && (
-                           <div className={cn("border-4 border-black rounded-2xl p-6 mt-4 flex flex-col md:flex-row justify-between md:items-center shadow-[4px_4px_0_0_#000]", parseInt(cashGiven.replace(/\D/g, '')) >= total ? "bg-[#00E5FF] text-black" : "bg-red-500 text-white")}>
-                             <span className="font-space-grotesk font-black uppercase text-xl mb-2 md:mb-0">{parseInt(cashGiven.replace(/\D/g, '')) >= total ? "Kembalian" : "Uang Kurang"}</span>
-                             <span className="font-space-grotesk font-black uppercase text-4xl">{formatRupiah(Math.abs(parseInt(cashGiven.replace(/\D/g, '')) - total))}</span>
-                           </div>
-                        )}
-                     </div>
-                   )}
-
-                   {paymentMethod === 'QRIS' && (
-                     <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-                        <Label className="text-xl font-space-grotesk font-black uppercase">No Referensi Transaksi (Opsional)</Label>
-                        <Input 
-                          value={qrisRef}
-                          onChange={(e) => setQrisRef(e.target.value)}
-                          className="text-2xl h-16 uppercase border-4 border-black shadow-[4px_4px_0_0_#000]"
-                          placeholder="INPUT REF ID"
-                          autoFocus
-                        />
-                        <div className="bg-[#FFD100] border-4 border-black p-4 rounded-xl shadow-[4px_4px_0_0_#000] mt-2">
-                          <p className="font-inter font-black text-sm text-black uppercase">Instruksi Kasir:</p>
-                          <p className="font-inter font-bold text-sm text-black/80 mt-1">Pastikan pembeli melihatkan layar sukses (hijau) pada aplikasi dompet digital / m-banking dan masukkan 4-6 digit terakhir nomor referensi sebagai bukti.</p>
-                        </div>
-                     </div>
-                   )}
-
-                   {!paymentMethod && (
-                     <div className="flex-1 flex items-center justify-center font-space-grotesk font-black uppercase tracking-widest text-center text-gray-300 text-2xl h-full border-4 border-dashed border-gray-200 rounded-2xl p-8">
-                        Pilih Menu Pembayaran<br />di Atas
-                     </div>
-                   )}
-                </div>
-            </div>
-
-            <div className="p-5 md:p-6 border-t-8 border-black bg-gray-50 flex flex-col-reverse md:flex-row justify-end gap-4 shrink-0">
-               <Button variant="outline" className="h-16 px-6 text-xl font-space-grotesk font-black border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase w-full md:w-auto" onClick={() => setIsPaymentOpen(false)}>KEMBALI</Button>
-               <Button onClick={handleOpenPaymentConfirm} disabled={!paymentMethod} className="h-16 px-8 text-xl font-space-grotesk font-black tracking-widest bg-[#00E5FF] hover:bg-cyan-400 border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 transition-all text-black uppercase w-full md:w-auto">PROSES TRANSAKSI</Button>
-            </div>
-         </DialogContent>
-       </Dialog>
+       <PaymentModal
+          isPaymentOpen={isPaymentOpen}
+          setIsPaymentOpen={setIsPaymentOpen}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          cashGiven={cashGiven}
+          setCashGiven={setCashGiven}
+          qrisRef={qrisRef}
+          setQrisRef={setQrisRef}
+          handleOpenPaymentConfirm={handleOpenPaymentConfirm}
+          total={total}
+       />
 
        {/* ================= RECEIPT MODAL ================= */}
        <Dialog open={isReceiptOpen} onOpenChange={() => {}}>
