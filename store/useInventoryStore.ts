@@ -19,6 +19,31 @@ export interface ProductRecipeIngredient {
   amount: number;
 }
 
+export interface VariantOption {
+  name: string;
+  priceAdjustment: number;
+}
+
+export interface Variant {
+  id: string;
+  name: string;
+  options: VariantOption[];
+  isRequired: boolean;
+  type: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE';
+}
+
+export interface RecipeItem {
+  rawMaterialId: string;
+  qty: number;
+}
+
+export interface Recipe {
+  id: string;
+  productId: string;
+  instructions: string;
+  ingredients: RecipeItem[];
+}
+
 export interface StockOpname {
   id: string;
   date: string;
@@ -59,16 +84,21 @@ export interface Product {
   categoryId: string;
   basePrice: number;
   image?: string;
-  recipe?: string; // Markdown or plain text instructions
   type: 'SINGLE' | 'COMBO';
-  ingredients?: ProductRecipeIngredient[]; // for SINGLE
-  comboItems?: string[]; // Array of Product IDs for COMBO
+  variantIds?: string[]; // References to Variant.id
+  comboItems?: string[]; // For COMBO: Array of Product IDs
+  
+  // Legacy / Fallback properties
+  ingredients?: ProductRecipeIngredient[]; 
+  recipe?: string; 
 }
 
 interface InventoryState {
   categories: Category[];
   products: Product[];
   rawMaterials: RawMaterial[];
+  variants: Variant[];
+  recipes: Recipe[];
   inventoryMode: 'LOOSE' | 'STRICT' | 'OFF';
   
   addCategory: (cat: Category) => void;
@@ -83,6 +113,14 @@ interface InventoryState {
   updateRawMaterial: (id: string, material: Partial<RawMaterial>) => void;
   deleteRawMaterial: (id: string) => void;
   
+  addVariant: (variant: Variant) => void;
+  updateVariant: (id: string, variant: Partial<Variant>) => void;
+  deleteVariant: (id: string) => void;
+
+  addRecipe: (recipe: Recipe) => void;
+  updateRecipe: (id: string, recipe: Partial<Recipe>) => void;
+  deleteRecipe: (id: string) => void;
+
   setInventoryMode: (mode: 'LOOSE' | 'STRICT' | 'OFF') => void;
   clearInventory: () => void;
   
@@ -199,7 +237,7 @@ const mockProducts: Product[] = [
   { id: 'p_paket_lengkap', name: 'Paket Lengkap (2 Snack Tray + Risol)', categoryId: 'cat_paket_murah', basePrice: 40000, type: 'COMBO', comboItems: ['p_snack_tray', 'p_snack_tray', 'p_risol'] },
 ];
 
-import { upsertFirebaseCategory, deleteFirebaseCategory, upsertFirebaseProduct, deleteFirebaseProduct, upsertFirebaseRawMaterial, deleteFirebaseRawMaterial } from '@/lib/firebase/services';
+import { upsertFirebaseCategory, deleteFirebaseCategory, upsertFirebaseProduct, deleteFirebaseProduct, upsertFirebaseRawMaterial, deleteFirebaseRawMaterial, upsertFirebaseVariant, deleteFirebaseVariant, upsertFirebaseRecipe, deleteFirebaseRecipe } from '@/lib/firebase/services';
 
 export const useInventoryStore = create<InventoryState>()(
   persist(
@@ -207,6 +245,8 @@ export const useInventoryStore = create<InventoryState>()(
       categories: mockCategories,
       products: mockProducts,
       rawMaterials: mockRawMaterials,
+      variants: [],
+      recipes: [],
       inventoryMode: 'LOOSE',
       stockOpnames: [],
       suppliers: [],
@@ -261,6 +301,40 @@ export const useInventoryStore = create<InventoryState>()(
       deleteRawMaterial: (id) => {
         deleteFirebaseRawMaterial(id);
         set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) }));
+      },
+      
+      addVariant: (variant) => {
+        upsertFirebaseVariant(variant);
+        set(state => ({ variants: [...state.variants, variant] }));
+      },
+      updateVariant: (id, variant) => {
+        set(state => {
+          const newVars = state.variants.map(v => v.id === id ? { ...v, ...variant } : v);
+          const updated = newVars.find(v => v.id === id);
+          if (updated) upsertFirebaseVariant(updated);
+          return { variants: newVars };
+        });
+      },
+      deleteVariant: (id) => {
+        deleteFirebaseVariant(id);
+        set(state => ({ variants: state.variants.filter(v => v.id !== id) }));
+      },
+
+      addRecipe: (recipe) => {
+        upsertFirebaseRecipe(recipe);
+        set(state => ({ recipes: [...state.recipes, recipe] }));
+      },
+      updateRecipe: (id, recipe) => {
+        set(state => {
+          const newRecs = state.recipes.map(r => r.id === id ? { ...r, ...recipe } : r);
+          const updated = newRecs.find(r => r.id === id);
+          if (updated) upsertFirebaseRecipe(updated);
+          return { recipes: newRecs };
+        });
+      },
+      deleteRecipe: (id) => {
+        deleteFirebaseRecipe(id);
+        set(state => ({ recipes: state.recipes.filter(r => r.id !== id) }));
       },
       
       setInventoryMode: (mode) => set({ inventoryMode: mode }),
@@ -337,15 +411,27 @@ export const useInventoryStore = create<InventoryState>()(
                   const subP = state.products.find(p => p.id === subId);
                   if (subP) processProduct(subP, multiplier);
                 }
-              } else if (prod.ingredients) {
-                for (const ing of prod.ingredients) {
+              } else {
+                // Check if there is a separate Recipe object linked
+                const recipe = state.recipes.find(r => r.productId === prod.id);
+                // Unified ingredients array to process
+                let ingredientsToProcess: { rawMaterialId: string, qty: number }[] = [];
+                
+                if (recipe && recipe.ingredients) {
+                  ingredientsToProcess = recipe.ingredients;
+                } else if (prod.ingredients) {
+                  // Fallback for legacy
+                  ingredientsToProcess = prod.ingredients.map(ing => ({ rawMaterialId: ing.rawMaterialId, qty: ing.amount }));
+                }
+
+                for (const ing of ingredientsToProcess) {
                   const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
                   if (rmIdx >= 0) {
-                    if (state.inventoryMode === 'STRICT' && nextMaterials[rmIdx].currentStock < ing.amount * multiplier) {
+                    if (state.inventoryMode === 'STRICT' && nextMaterials[rmIdx].currentStock < ing.qty * multiplier) {
                       success = false;
                       reason = `Stok bahan baku ${nextMaterials[rmIdx].name} tidak mencukupi untuk menu ${prod.name}`;
                     }
-                    nextMaterials[rmIdx].currentStock -= ing.amount * multiplier;
+                    nextMaterials[rmIdx].currentStock -= ing.qty * multiplier;
                   }
                 }
               }
@@ -384,11 +470,20 @@ export const useInventoryStore = create<InventoryState>()(
                   const subP = state.products.find(p => p.id === subId);
                   if (subP) revertProduct(subP, multiplier);
                 }
-              } else if (prod.ingredients) {
-                for (const ing of prod.ingredients) {
+              } else {
+                const recipe = state.recipes.find(r => r.productId === prod.id);
+                let ingredientsToProcess: { rawMaterialId: string, qty: number }[] = [];
+                
+                if (recipe && recipe.ingredients) {
+                  ingredientsToProcess = recipe.ingredients;
+                } else if (prod.ingredients) {
+                  ingredientsToProcess = prod.ingredients.map(ing => ({ rawMaterialId: ing.rawMaterialId, qty: ing.amount }));
+                }
+
+                for (const ing of ingredientsToProcess) {
                   const rmIdx = nextMaterials.findIndex(rm => rm.id === ing.rawMaterialId);
                   if (rmIdx >= 0) {
-                    nextMaterials[rmIdx].currentStock += ing.amount * multiplier;
+                    nextMaterials[rmIdx].currentStock += ing.qty * multiplier;
                   }
                 }
               }

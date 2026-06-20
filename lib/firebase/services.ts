@@ -1,6 +1,6 @@
 import { collection, doc, writeBatch, onSnapshot, query, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
-import { useInventoryStore, Category, Product, RawMaterial } from '@/store/useInventoryStore';
+import { useInventoryStore, Category, Product, RawMaterial, Variant, Recipe } from '@/store/useInventoryStore';
 import { Transaction, useTransactionStore } from '@/store/useTransactionStore';
 import { Shift, PettyCashTransaction, useShiftStore } from '@/store/useShiftStore';
 
@@ -32,6 +32,26 @@ export async function upsertFirebaseRawMaterial(rm: RawMaterial) {
 export async function deleteFirebaseRawMaterial(id: string) {
   if (!db) return;
   await deleteDoc(doc(db, 'rawMaterials', id));
+}
+
+export async function upsertFirebaseVariant(variant: Variant) {
+  if (!db) return;
+  await setDoc(doc(db, 'variants', variant.id), variant);
+}
+
+export async function deleteFirebaseVariant(id: string) {
+  if (!db) return;
+  await deleteDoc(doc(db, 'variants', id));
+}
+
+export async function upsertFirebaseRecipe(recipe: Recipe) {
+  if (!db) return;
+  await setDoc(doc(db, 'recipes', recipe.id), recipe);
+}
+
+export async function deleteFirebaseRecipe(id: string) {
+  if (!db) return;
+  await deleteDoc(doc(db, 'recipes', id));
 }
 
 export async function upsertFirebaseTransaction(tx: Transaction) {
@@ -110,10 +130,26 @@ export function subscribeToInventoryData() {
     }
   });
 
+  const unsubVariants = onSnapshot(query(collection(db, 'variants')), (snapshot) => {
+    const vars = snapshot.docs.map(doc => doc.data() as any);
+    if (vars.length > 0) {
+      useInventoryStore.setState({ variants: vars });
+    }
+  });
+
+  const unsubRecipes = onSnapshot(query(collection(db, 'recipes')), (snapshot) => {
+    const recs = snapshot.docs.map(doc => doc.data() as any);
+    if (recs.length > 0) {
+      useInventoryStore.setState({ recipes: recs });
+    }
+  });
+
   return () => {
     unsubCategories();
     unsubProducts();
     unsubRawMaterials();
+    unsubVariants();
+    unsubRecipes();
   };
 }
 
