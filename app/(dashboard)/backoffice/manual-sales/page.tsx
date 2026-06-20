@@ -201,13 +201,13 @@ export default function ManualSalesPage() {
            )}
          </div>
 
-         <div className="bg-[#FFD100] border-4 border-black p-4 rounded-xl flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-4">
-           <div>
+         <div className="bg-[#FFD100] border-4 border-black p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-4 gap-4">
+           <div className="w-full md:w-auto">
               <span className="font-space-grotesk font-black uppercase text-gray-800 text-sm block">Total Tagihan Transaksi</span>
               <span className="text-3xl font-black text-black">Rp {currentTotal.toLocaleString('id-ID')}</span>
            </div>
            
-           <Button onClick={handleSave} className="h-14 text-lg bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all">
+           <Button onClick={handleSave} className="w-full md:w-auto h-14 text-sm md:text-lg bg-[#00E5FF] text-black hover:bg-cyan-400 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all">
              <Save className="w-5 h-5 mr-2" />
              Simpan Ke Riwayat
            </Button>

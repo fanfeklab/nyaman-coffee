@@ -109,16 +109,16 @@ export default function PurchaseOrdersPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 md:p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl gap-4">
         <div>
           <h1 className="text-3xl font-space-grotesk font-black uppercase text-black">Purchase Orders</h1>
           <p className="text-gray-600 font-inter font-bold mt-1">Manajemen PO & Supplier</p>
         </div>
-        <div className="flex gap-4">
-          <Button onClick={() => setIsSupplierModalOpen(true)} variant="outline" size="lg" className="border-2 border-black">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-4 w-full md:w-auto">
+          <Button onClick={() => setIsSupplierModalOpen(true)} variant="outline" size="lg" className="border-2 border-black w-full sm:w-auto">
             + SUPPLIER BARU
           </Button>
-          <Button onClick={handleOpenPOModal} size="lg" className="border-2 border-black bg-[#FFD100] text-black hover:bg-[#FFD100]/80">
+          <Button onClick={handleOpenPOModal} size="lg" className="border-2 border-black bg-[#FFD100] text-black hover:bg-[#FFD100]/80 w-full sm:w-auto">
             BUAT PO BARU
           </Button>
         </div>

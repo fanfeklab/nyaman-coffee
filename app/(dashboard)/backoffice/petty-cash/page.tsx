@@ -62,16 +62,16 @@ export default function PettyCashPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 md:p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl gap-4">
         <div>
           <h1 className="text-3xl font-space-grotesk font-black uppercase text-black">Kas Laci Darurat</h1>
           <p className="text-gray-600 font-inter font-bold mt-1">Pencatatan uang masuk/keluar di luar transaksi penjualan</p>
         </div>
-        <div className="flex gap-4">
-          <Button onClick={() => handleOpenModal('OUT')} size="lg" className="border-2 border-black bg-red-500 hover:bg-red-600 text-white">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-4 w-full md:w-auto">
+          <Button onClick={() => handleOpenModal('OUT')} size="lg" className="border-2 border-black bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
             KAS KELUAR
           </Button>
-          <Button onClick={() => handleOpenModal('IN')} size="lg" className="border-2 border-black bg-green-500 hover:bg-green-600 text-white">
+          <Button onClick={() => handleOpenModal('IN')} size="lg" className="border-2 border-black bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto">
             KAS MASUK
           </Button>
         </div>

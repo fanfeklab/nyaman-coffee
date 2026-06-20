@@ -442,10 +442,10 @@ export default function POSPage() {
                          <div className="bg-black text-[#00E5FF] w-10 h-10 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform shrink-0">{items.reduce((a,b) => a+b.qty, 0)}</div>
                          <div className="flex flex-col items-start gap-0 text-left">
                              <span className="font-space-grotesk font-black uppercase text-lg md:text-xl leading-none">Keranjang</span>
-                             <span className="font-inter font-bold text-black/70 text-[10px] md:text-xs">Klik untuk pesanan</span>
+                             <span className="font-inter font-bold text-black/70 text-[10px] md:text-xs">Klik buka pesanan</span>
                          </div>
                       </div>
-                      <span className="font-space-grotesk font-black text-sm md:text-2xl bg-white px-2 py-1.5 md:px-4 md:py-1.5 rounded-lg border-2 border-black shrink-0 truncate max-w-[130px] md:max-w-none">{formatRupiah(getTotal())}</span>
+                      <span className="font-space-grotesk font-black text-sm md:text-2xl bg-white px-2 py-1.5 md:px-4 md:py-1.5 rounded-lg border-2 border-black shrink-0 truncate">{formatRupiah(getTotal())}</span>
                   </button>
                </motion.div>
              )}
@@ -510,14 +510,14 @@ export default function POSPage() {
                   <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 min-h-[30vh] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
                      {items.map(item => (
                        <div key={item.id} className="w-full border-4 border-black rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                          <div className="flex-1 flex flex-col min-w-0">
-                             <span className="font-space-grotesk font-black text-base md:text-lg uppercase truncate">{item.product.name}</span>
+                          <div className="flex-1 flex flex-col">
+                             <span className="font-space-grotesk font-black text-lg uppercase line-clamp-1">{item.product.name}</span>
                              <span className="font-inter font-bold text-gray-500 text-sm">{formatRupiah(item.product.basePrice)}</span>
                           </div>
                           
-                          <div className="flex items-center justify-between md:justify-end gap-2 md:gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
-                             <span className="font-space-grotesk font-black text-[#FF6321] text-base md:text-xl truncate max-w-[100px] md:max-w-none">{formatRupiah(item.product.basePrice * item.qty)}</span>
-                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
+                          <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200">
+                             <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(item.product.basePrice * item.qty)}</span>
+                             <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1">
                                 <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
                                 <span className="font-black text-lg w-8 text-center">{item.qty}</span>
                                 <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
@@ -530,16 +530,16 @@ export default function POSPage() {
                   {/* Cart Footer / Checkout Sticky Panel */}
                   <div className="p-4 md:p-6 bg-white border-t-8 border-black shrink-0">
                     <div className="flex flex-col gap-2 text-sm font-inter font-bold uppercase mb-4 px-2">
-                       <div className="flex justify-between items-center text-gray-600 gap-4">
-                          <span className="shrink-0">Subtotal</span>
-                          <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getSubtotal())}</span>
+                       <div className="flex justify-between items-center text-gray-600">
+                          <span>Subtotal</span>
+                          <span>{formatRupiah(getSubtotal())}</span>
                        </div>
                        {(discountType || discountValue > 0) && (
-                         <div className="flex justify-between items-center text-[#FF6321] gap-4">
-                            <span className="flex items-center gap-2 cursor-pointer hover:underline shrink-0" onClick={() => setIsDiscountOpen(true)}>
+                         <div className="flex justify-between items-center text-[#FF6321]">
+                            <span className="flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setIsDiscountOpen(true)}>
                               Diskon {discountType === 'PERCENTAGE' && `(${discountValue}%)`} <Edit className="w-4 h-4"/>
                             </span>
-                            <span className="truncate max-w-[150px] md:max-w-none text-right">-{formatRupiah(getDiscountAmount())}</span>
+                            <span>-{formatRupiah(getDiscountAmount())}</span>
                          </div>
                        )}
                        {!discountType && (
@@ -550,15 +550,15 @@ export default function POSPage() {
                          </div>
                        )}
                        {getServiceChargeAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600 gap-4">
-                            <span className="shrink-0">Service ({serviceChargeRate}%)</span>
-                            <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getServiceChargeAmount())}</span>
+                         <div className="flex justify-between items-center text-gray-600">
+                            <span>Service ({serviceChargeRate}%)</span>
+                            <span>{formatRupiah(getServiceChargeAmount())}</span>
                          </div>
                        )}
                        {getTaxAmount() > 0 && (
-                         <div className="flex justify-between items-center text-gray-600 gap-4">
-                            <span className="shrink-0">Pajak ({taxRate}%)</span>
-                            <span className="truncate max-w-[150px] md:max-w-none text-right">{formatRupiah(getTaxAmount())}</span>
+                         <div className="flex justify-between items-center text-gray-600">
+                            <span>Pajak ({taxRate}%)</span>
+                            <span>{formatRupiah(getTaxAmount())}</span>
                          </div>
                        )}
                     </div>
@@ -577,9 +577,9 @@ export default function POSPage() {
                        </select>
                     </div>
 
-                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase gap-4">
-                       <span className="shrink-0">Total</span>
-                       <span className="truncate text-right">{formatRupiah(getTotal())}</span>
+                    <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">
+                       <span>Total</span>
+                       <span>{formatRupiah(getTotal())}</span>
                     </div>
                     <Button 
                       onClick={() => {

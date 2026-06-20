@@ -79,13 +79,13 @@ export default function StockOpnamePage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 md:p-6 border-4 border-black shadow-[4px_4px_0_0_#000] rounded-xl gap-4">
         <div>
           <h1 className="text-3xl font-space-grotesk font-black uppercase text-black">Stock Opname</h1>
           <p className="text-gray-600 font-inter font-bold mt-1">Penyesuaian stok bahan baku</p>
         </div>
         {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-          <Button onClick={handleStartOpname} size="lg" className="border-2 border-black">
+          <Button onClick={handleStartOpname} size="lg" className="border-2 border-black bg-[#FFD100] text-black hover:bg-[#FFD100]/80 w-full md:w-auto mt-4 md:mt-0">
             MULAI OPNAME
           </Button>
         )}

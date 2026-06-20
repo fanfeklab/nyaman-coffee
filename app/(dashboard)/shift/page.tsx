@@ -171,7 +171,7 @@ export default function ShiftPage() {
      const selisih = currentShift.actualEndingCash - currentShift.expectedEndingCash;
      
      return (
-       <div className="p-4 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center">
+       <div className="p-4 md:p-12 flex flex-col min-h-full bg-[#FFFDF7] items-center py-10 md:py-20">
           <div className="bg-white border-8 border-black p-6 md:p-10 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
              <div className="flex justify-center mb-6">
                 <div className="bg-[#FFD100] border-4 border-black p-4 rounded-full shadow-[4px_4px_0_0_#000]">
@@ -213,7 +213,7 @@ export default function ShiftPage() {
   // default: NO OPEN SHIFT
   if (isAdmin) {
     return (
-      <div className="p-6 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+      <div className="p-6 md:p-12 flex flex-col min-h-full bg-[#FFFDF7] items-center py-10 md:py-20 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
          <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full flex flex-col items-center">
             
             <div className="w-20 h-20 bg-gray-100 border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000] mb-6 flex items-center justify-center">
@@ -232,7 +232,7 @@ export default function ShiftPage() {
   }
 
   return (
-    <div className="p-6 md:p-12 flex flex-col h-full bg-[#FFFDF7] items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
+    <div className="p-6 md:p-12 flex flex-col min-h-full bg-[#FFFDF7] items-center py-10 md:py-20 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px]">
        <div className="bg-white border-8 border-black p-8 md:p-12 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full flex flex-col items-center">
           
           <div className="w-20 h-20 bg-gray-100 border-4 border-black rounded-full overflow-hidden shrink-0 shadow-[4px_4px_0_0_#000] mb-6">
