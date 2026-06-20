@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Trash2, Edit, Plus, Users, Ban } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
@@ -207,15 +208,19 @@ export default function UsersPage() {
 
               <div className="flex flex-col gap-2">
                  <Label>Role Akses</Label>
-                 <select 
-                    className="flex-grow h-12 w-full min-w-0 rounded-xl border-4 border-black bg-white px-4 py-2 text-base transition-all outline-none font-inter font-bold focus-visible:shadow-[4px_4px_0_0_#000]"
+                 <Select 
                     value={formData.role}
-                    onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
+                    onValueChange={val => setFormData({...formData, role: (val as UserRole) || 'CASHIER'})}
                  >
-                    <option value="CASHIER">CASHIER (Kasir Biasa)</option>
-                    <option value="MANAGER">MANAGER (Supervisor)</option>
-                    <option value="SUPER_ADMIN">SUPER ADMIN (Owner/Admin)</option>
-                 </select>
+                    <SelectTrigger className="flex-grow h-12 w-full min-w-0 rounded-xl border-4 border-black bg-white px-4 py-2 text-base transition-all outline-none font-inter font-bold focus-visible:shadow-[4px_4px_0_0_#000]">
+                       <SelectValue placeholder="Pilih Role Akses" />
+                    </SelectTrigger>
+                    <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                       <SelectItem value="CASHIER">CASHIER (Kasir Biasa)</SelectItem>
+                       <SelectItem value="MANAGER">MANAGER (Supervisor)</SelectItem>
+                       <SelectItem value="SUPER_ADMIN">SUPER ADMIN (Owner/Admin)</SelectItem>
+                    </SelectContent>
+                 </Select>
               </div>
 
               <div className="flex flex-col gap-2">

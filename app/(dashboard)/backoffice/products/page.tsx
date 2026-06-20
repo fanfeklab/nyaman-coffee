@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -368,25 +369,32 @@ export default function ProductsPage() {
               <div className="flex flex-col md:flex-row gap-4">
                  <div className="flex flex-col gap-2 flex-1">
                     <Label>Kategori *</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                      value={productForm.categoryId}
-                      onChange={e => setProductForm({...productForm, categoryId: e.target.value})}
+                    <Select 
+                      value={productForm.categoryId || ""}
+                      onValueChange={val => setProductForm({...productForm, categoryId: val || ''})}
                     >
-                      <option value="" disabled>Pilih Kategori</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                      <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                        <SelectValue placeholder="Pilih Kategori" />
+                      </SelectTrigger>
+                      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                  </div>
                  <div className="flex flex-col gap-2 flex-1">
                     <Label>Tipe / Jenis</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                    <Select 
                       value={productForm.type}
-                      onChange={e => setProductForm({...productForm, type: e.target.value as 'SINGLE' | 'COMBO'})}
+                      onValueChange={val => setProductForm({...productForm, type: (val as 'SINGLE' | 'COMBO') || 'SINGLE'})}
                     >
-                      <option value="SINGLE">Single (Menu Satuan)</option>
-                      <option value="COMBO">Combo (Paket)</option>
-                    </select>
+                      <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                        <SelectValue placeholder="Pilih Tipe" />
+                      </SelectTrigger>
+                      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                        <SelectItem value="SINGLE">Single (Menu Satuan)</SelectItem>
+                        <SelectItem value="COMBO">Combo (Paket)</SelectItem>
+                      </SelectContent>
+                    </Select>
                  </div>
               </div>
 
@@ -540,25 +548,33 @@ export default function ProductsPage() {
               <div className="flex flex-col md:flex-row gap-4">
                  <div className="flex flex-col gap-2 flex-1">
                     <Label>Sifat Pilihan</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                    <Select 
                       value={variantForm.type}
-                      onChange={e => setVariantForm({...variantForm, type: e.target.value as 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE'})}
+                      onValueChange={val => setVariantForm({...variantForm, type: (val as 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE') || 'SINGLE_CHOICE'})}
                     >
-                      <option value="SINGLE_CHOICE">Pilih Satu Saja (Radio)</option>
-                      <option value="MULTIPLE_CHOICE">Pilih Banyak (Checkbox)</option>
-                    </select>
+                      <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                        <SelectValue placeholder="Sifat Pilihan" />
+                      </SelectTrigger>
+                      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                        <SelectItem value="SINGLE_CHOICE">Pilih Satu Saja (Radio)</SelectItem>
+                        <SelectItem value="MULTIPLE_CHOICE">Pilih Banyak (Checkbox)</SelectItem>
+                      </SelectContent>
+                    </Select>
                  </div>
                  <div className="flex flex-col gap-2 flex-1">
                     <Label>Kondisi Wajib</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                    <Select 
                       value={variantForm.isRequired ? 'true' : 'false'}
-                      onChange={e => setVariantForm({...variantForm, isRequired: e.target.value === 'true'})}
+                      onValueChange={val => setVariantForm({...variantForm, isRequired: val === 'true'})}
                     >
-                      <option value="false">Tidak Wajib (Opsional)</option>
-                      <option value="true">Wajib Diisi (Mandatory)</option>
-                    </select>
+                      <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                        <SelectValue placeholder="Kondisi Wajib" />
+                      </SelectTrigger>
+                      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                        <SelectItem value="false">Tidak Wajib (Opsional)</SelectItem>
+                        <SelectItem value="true">Wajib Diisi (Mandatory)</SelectItem>
+                      </SelectContent>
+                    </Select>
                  </div>
               </div>
 

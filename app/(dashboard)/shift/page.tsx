@@ -23,6 +23,7 @@ export default function ShiftPage() {
   
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [forceCloseConfirmOpen, setForceCloseConfirmOpen] = useState(false);
 
   const handleOpenShift = () => {
     if (!user) return;
@@ -83,12 +84,7 @@ export default function ShiftPage() {
 
                <div className="mt-8">
                  {isAdmin ? (
-                   <Button onClick={() => {
-                      if(window.confirm('Anda yakin ingin menutup shift ini secara paksa? Laporan akan disesuaikan otomatis.')) {
-                        forceCloseShift(currentShift.id);
-                        window.location.reload();
-                      }
-                   }} variant="outline" className="w-full h-14 bg-red-500 hover:bg-red-600 text-white border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
+                   <Button onClick={() => setForceCloseConfirmOpen(true)} variant="outline" className="w-full h-14 bg-red-500 hover:bg-red-600 text-white border-4 border-black shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none active:translate-y-2 uppercase font-space-grotesk font-black text-lg">
                       FORCE END SHIFT
                    </Button>
                  ) : (
@@ -135,6 +131,19 @@ export default function ShiftPage() {
          <DashboardOverview />
 
          {/* END SHIFT DIALOG MODAL (Clean, no form on dashboard itself) */}
+         <ConfirmDialog 
+           open={forceCloseConfirmOpen}
+           onOpenChange={setForceCloseConfirmOpen}
+           onConfirm={() => {
+             forceCloseShift(currentShift.id);
+             window.location.reload();
+           }}
+           title="Force End Shift?"
+           confirmLabel="Tutup Paksa"
+           cancelLabel="Batal"
+           description="Anda yakin ingin menutup shift ini secara paksa? Laporan akan disesuaikan otomatis."
+           />
+           
          <ConfirmDialog 
            open={confirmClose}
            onOpenChange={setConfirmClose}

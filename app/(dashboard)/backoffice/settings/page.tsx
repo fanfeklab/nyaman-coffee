@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -12,8 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Store, Receipt, Printer, PackageSearch, Save, Database } from 'lucide-react';
+import { Store, Receipt, Printer, PackageSearch, Save, Database, AlertCircle } from 'lucide-react';
 import { seedMockDataToFirebase } from '@/lib/firebase/services';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -36,6 +43,16 @@ export default function SettingsPage() {
   const [enableServiceCharge, setEnableServiceCharge] = useState(settings.enableServiceCharge);
   const [receiptFooter, setReceiptFooter] = useState(settings.receiptFooter);
   const [printerAddress, setPrinterAddress] = useState(settings.printerAddress);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importDataContent, setImportDataContent] = useState<any>(null);
+  const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
+
+  // Danger zone auth states
+  const [dangerAction, setDangerAction] = useState<string | null>(null);
+  const [isDangerAuthOpen, setIsDangerAuthOpen] = useState(false);
+  const [dangerUsername, setDangerUsername] = useState('');
+  const [dangerPin, setDangerPin] = useState('');
 
   useEffect(() => {
     if (user && user.role !== 'SUPER_ADMIN' && user.role !== 'MANAGER') {
@@ -247,6 +264,7 @@ export default function SettingsPage() {
 
                    <div className="flex-1 relative">
                      <input 
+                       ref={fileInputRef}
                        type="file" 
                        accept=".json" 
                        onChange={(e) => {
@@ -257,37 +275,21 @@ export default function SettingsPage() {
                            try {
                              const data = JSON.parse(event.target?.result as string);
                              if (data.products && data.rawMaterials) {
-                               const proceed = window.confirm("Peringatan: Mengimpor data JSON ini akan MENIMPA dan MENGGANTI seluruh data Master saat ini. Lanjutkan?");
-                               if (!proceed) return;
-
-                               const state = useInventoryStore.getState();
-                               
-                               // Batch update
-                               useInventoryStore.setState({
-                                 categories: data.categories || [],
-                                 products: data.products || [],
-                                 rawMaterials: data.rawMaterials || [],
-                                 variants: data.variants || [],
-                                 recipes: data.recipes || []
-                               });
-                               
-                               // Seed to firebase in background to sync changes
-                               seedMockDataToFirebase();
-                               
-                               toast.success("Data berhasil di-import dan ditimpa!");
+                               setImportDataContent(data);
+                               setIsImportConfirmOpen(true);
                              } else {
                                toast.error("Format JSON tidak valid!");
                              }
                            } catch (err) {
                              toast.error("Gagal membaca file JSON!");
                            }
-                           e.target.value = ''; // reset
+                           if (fileInputRef.current) fileInputRef.current.value = ''; // reset
                          };
                          reader.readAsText(file);
                        }}
                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10" 
                      />
-                     <Button className="w-full bg-white text-black hover:bg-gray-100 font-bold border-2 border-black">
+                     <Button className="w-full bg-white text-black hover:bg-gray-100 font-bold border-2 border-black" onClick={() => fileInputRef.current?.click()}>
                        📤 IMPOR DARI JSON
                      </Button>
                    </div>
@@ -355,37 +357,28 @@ export default function SettingsPage() {
                  
                  <div className="flex flex-col md:flex-row gap-4 mt-4">
                    <Button onClick={() => {
-                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
-                     if (username !== user.username) return toast.error('Username salah');
-                     const pin = window.prompt('Masukkan PIN Anda:');
-                     if (pin !== user.pin) return toast.error('PIN salah');
-                     
-                     clearTransactions();
-                     toast.success('Semua transaksi berhasil dihapus');
+                     setDangerAction('clearTransactions');
+                     setDangerUsername('');
+                     setDangerPin('');
+                     setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
                      Hapus Semua Transaksi
                    </Button>
 
                    <Button onClick={() => {
-                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
-                     if (username !== user.username) return toast.error('Username salah');
-                     const pin = window.prompt('Masukkan PIN Anda:');
-                     if (pin !== user.pin) return toast.error('PIN salah');
-                     
-                     clearShiftHistory();
-                     toast.success('Semua Riwayat Shift berhasil dihapus');
+                     setDangerAction('clearShiftHistory');
+                     setDangerUsername('');
+                     setDangerPin('');
+                     setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
                      Hapus Semua Riwayat Shift
                    </Button>
 
                    <Button onClick={() => {
-                     const username = window.prompt('Masukkan Username SUPER ADMIN untuk konfirmasi:');
-                     if (username !== user.username) return toast.error('Username salah');
-                     const pin = window.prompt('Masukkan PIN Anda:');
-                     if (pin !== user.pin) return toast.error('PIN salah');
-                     
-                     clearInventory();
-                     toast.success('Semua Menu dan Bahan Baku berhasil dihapus');
+                     setDangerAction('clearInventory');
+                     setDangerUsername('');
+                     setDangerPin('');
+                     setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
                      Hapus Seluruh Menu/Item
                    </Button>
@@ -396,6 +389,100 @@ export default function SettingsPage() {
 
          </div>
        </div>
+
+     {/* --- Dialogs --- */}
+     <ConfirmDialog 
+       open={isImportConfirmOpen}
+       onOpenChange={setIsImportConfirmOpen}
+       title="TINDAKAN BERISIKO"
+       description="Mengimpor data JSON ini akan MENIMPA dan MENGGANTI seluruh data Master saat ini. Anda setuju untuk melanjutkan?"
+       onConfirm={() => {
+         if (!importDataContent) return;
+         const data = importDataContent;
+         
+         // Batch update
+         useInventoryStore.setState({
+           categories: data.categories || [],
+           products: data.products || [],
+           rawMaterials: data.rawMaterials || [],
+           variants: data.variants || [],
+           recipes: data.recipes || []
+         });
+         
+         // Seed to firebase in background to sync changes
+         seedMockDataToFirebase();
+         
+         toast.success("Data berhasil di-import dan ditimpa!");
+         setImportDataContent(null);
+       }}
+     />
+
+     <Dialog open={isDangerAuthOpen} onOpenChange={setIsDangerAuthOpen}>
+       <DialogContent className="border-8 border-black rounded-[2rem] bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm">
+         <DialogHeader className="flex flex-col items-center pt-4">
+           <AlertCircle className="w-16 h-16 text-red-500 mb-2" strokeWidth={2.5} />
+           <DialogTitle className="font-space-grotesk font-black text-2xl uppercase text-center mt-2 text-red-600">
+             Otorisasi SUPER ADMIN
+           </DialogTitle>
+         </DialogHeader>
+         <div className="py-2 text-center text-gray-600 font-inter font-bold text-sm">
+           Tindakan ini sangat berbahaya. Masukkan kredensial SUPER ADMIN untuk melanjutkan.
+         </div>
+         
+         <div className="flex flex-col gap-4 py-4 w-full">
+           <div className="flex flex-col gap-2">
+             <Label className="font-bold text-black">Username</Label>
+             <Input 
+               value={dangerUsername}
+               onChange={(e) => setDangerUsername(e.target.value)}
+               className="w-full border-4 border-black font-bold h-12 text-black"
+               placeholder="Username"
+             />
+           </div>
+           <div className="flex flex-col gap-2">
+             <Label className="font-bold text-black">PIN</Label>
+             <Input 
+               type="password"
+               value={dangerPin}
+               onChange={(e) => setDangerPin(e.target.value)}
+               className="w-full border-4 border-black font-bold h-12 text-black"
+               placeholder="****"
+             />
+           </div>
+         </div>
+         <div className="mt-2 flex flex-col gap-3 w-full">
+           <Button 
+             className="w-full h-12 font-space-grotesk font-black text-lg bg-red-600 hover:bg-red-700 text-white border-4 border-black shadow-[4px_4px_0_0_#000] uppercase transition-all active:translate-y-1 active:shadow-none" 
+             onClick={() => {
+               if (dangerUsername !== user?.username) return toast.error('Username salah');
+               if (dangerPin !== user?.pin) return toast.error('PIN salah');
+               
+               if (dangerAction === 'clearTransactions') {
+                 clearTransactions();
+                 toast.success('Semua transaksi berhasil dihapus');
+               } else if (dangerAction === 'clearShiftHistory') {
+                 clearShiftHistory();
+                 toast.success('Semua Riwayat Shift berhasil dihapus');
+               } else if (dangerAction === 'clearInventory') {
+                 clearInventory();
+                 toast.success('Semua Menu dan Bahan Baku berhasil dihapus');
+               }
+               
+               setIsDangerAuthOpen(false);
+             }}
+           >
+             PROSES PENGHAPUSAN
+           </Button>
+           <Button 
+             variant="outline" 
+             className="w-full h-12 font-space-grotesk font-black text-lg bg-white hover:bg-gray-50 text-black border-4 border-black shadow-[4px_4px_0_0_#000] uppercase transition-all active:translate-y-1 active:shadow-none" 
+             onClick={() => setIsDangerAuthOpen(false)}
+           >
+             BATAL
+           </Button>
+         </div>
+       </DialogContent>
+     </Dialog>
     </div>
   );
 }

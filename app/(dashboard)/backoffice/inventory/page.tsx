@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Edit2, Trash2, Search, PackageOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -275,17 +276,20 @@ export default function InventoryPage() {
            <div className="flex flex-col gap-4 py-4">
               <div className="flex flex-col gap-2">
                  <Label>Menu Tersedia (Single) *</Label>
-                 <select 
-                   className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                   value={recipeForm.productId}
-                   onChange={e => setRecipeForm({...recipeForm, productId: e.target.value})}
+                 <Select 
+                   value={recipeForm.productId || ""}
+                   onValueChange={val => setRecipeForm({...recipeForm, productId: val || ''})}
                    disabled={!!editingRecipeId}
                  >
-                   <option value="" disabled>Pilih Menu</option>
-                   {products.filter(p => p.type === 'SINGLE').map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                   ))}
-                 </select>
+                   <SelectTrigger className="flex h-10 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                     <SelectValue placeholder="Pilih Menu" />
+                   </SelectTrigger>
+                   <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                     {products.filter(p => p.type === 'SINGLE').map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
               </div>
 
               <div className="flex flex-col gap-2 border-4 border-black p-4 rounded-xl mt-2 bg-gray-50">
@@ -333,10 +337,9 @@ export default function InventoryPage() {
                         <div className="text-sm text-center text-gray-500 font-bold py-4">Belum ada bahan baku.</div>
                      )}
                      
-                     <select 
-                       className="flex h-10 mt-2 w-full rounded-xl border-4 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                       onChange={(e) => {
-                          const val = e.target.value;
+                     <Select 
+                       value=""
+                       onValueChange={(val) => {
                           if (!val) return;
                           
                           const exists = recipeForm.ingredients.find((i:any) => i.rawMaterialId === val);
@@ -346,15 +349,17 @@ export default function InventoryPage() {
                                ingredients: [...(recipeForm.ingredients || []), { rawMaterialId: val, qty: 1 }]
                              });
                           }
-                          e.target.value = "";
                        }}
-                       defaultValue=""
                      >
-                       <option value="" disabled>+ Tambah Bahan Baru</option>
-                       {rawMaterials.map(rm => (
-                         <option key={rm.id} value={rm.id}>{rm.name} ({rm.unit})</option>
-                       ))}
-                     </select>
+                       <SelectTrigger className="flex h-10 mt-2 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0 text-black">
+                         <SelectValue placeholder="+ Tambah Bahan Baru" />
+                       </SelectTrigger>
+                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold text-black">
+                         {rawMaterials.map(rm => (
+                           <SelectItem key={rm.id} value={rm.id}>{rm.name} ({rm.unit})</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
                   </div>
               </div>
 

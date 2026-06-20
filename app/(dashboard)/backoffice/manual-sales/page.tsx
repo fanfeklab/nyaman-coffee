@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Save, Plus, Trash } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -118,30 +119,37 @@ export default function ManualSalesPage() {
 
            <div className="flex flex-col gap-2">
              <Label className="font-bold text-lg">Kasir Yang Bertugas</Label>
-             <select 
+             <Select 
                value={cashierId} 
-               onChange={(e) => setCashierId(e.target.value)}
-               className="flex h-12 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+               onValueChange={(val) => setCashierId(val || '')}
              >
-               <option value="" disabled>-- Pilih Kasir --</option>
-               {users.map(u => (
-                 <option key={u.id} value={u.username}>{u.fullName} ({u.username})</option>
-               ))}
-               <option value="kasir_lainnya">Lainnya...</option>
-             </select>
+               <SelectTrigger className="flex h-12 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                 <SelectValue placeholder="-- Pilih Kasir --" />
+               </SelectTrigger>
+               <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                 {users.map(u => (
+                   <SelectItem key={u.id} value={u.username}>{u.fullName} ({u.username})</SelectItem>
+                 ))}
+                 <SelectItem value="kasir_lainnya">Lainnya...</SelectItem>
+               </SelectContent>
+             </Select>
            </div>
          </div>
 
          <div className="flex flex-col gap-2">
              <Label className="font-bold text-lg">Metode Pembayaran</Label>
-             <select 
+             <Select 
                value={paymentMethod} 
-               onChange={(e) => setPaymentMethod(e.target.value as 'TUNAI' | 'QRIS')}
-               className="flex h-12 w-full md:w-1/2 rounded-md border-2 border-black bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+               onValueChange={(val) => setPaymentMethod((val as 'TUNAI' | 'QRIS') || 'TUNAI')}
              >
-               <option value="TUNAI">TUNAI</option>
-               <option value="QRIS">QRIS</option>
-             </select>
+               <SelectTrigger className="flex h-12 w-full md:w-1/2 rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                 <SelectValue placeholder="Pilih Metode Pembayaran" />
+               </SelectTrigger>
+               <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                 <SelectItem value="TUNAI">TUNAI</SelectItem>
+                 <SelectItem value="QRIS">QRIS</SelectItem>
+               </SelectContent>
+             </Select>
          </div>
 
          <div className="border-t-4 border-black pt-6">
@@ -163,16 +171,19 @@ export default function ManualSalesPage() {
                  <div key={idx} className="flex flex-col md:flex-row gap-4 items-center bg-gray-50 p-4 border-2 border-black rounded-xl">
                    <div className="flex-1 w-full">
                      <Label className="font-bold mb-1 block">Produk Menu</Label>
-                     <select 
+                     <Select 
                        value={item.productId} 
-                       onChange={(e) => handleUpdateItem(idx, 'productId', e.target.value)}
-                       className="flex h-12 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus-visible:outline-none"
+                       onValueChange={(val) => handleUpdateItem(idx, 'productId', val || '')}
                      >
-                       <option value="" disabled>-- Pilih Menu --</option>
-                       {products.map(p => (
-                         <option key={p.id} value={p.id}>{p.name} - Rp {p.basePrice.toLocaleString()}</option>
-                       ))}
-                     </select>
+                       <SelectTrigger className="flex h-12 w-full rounded-md border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0">
+                         <SelectValue placeholder="-- Pilih Menu --" />
+                       </SelectTrigger>
+                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
+                         {products.map(p => (
+                           <SelectItem key={p.id} value={p.id}>{p.name} - Rp {p.basePrice.toLocaleString()}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="w-full md:w-32 shrink-0">

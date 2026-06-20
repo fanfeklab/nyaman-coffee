@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import {
   Dialog,
@@ -637,16 +638,20 @@ export default function POSPage() {
                     
                     <div className="flex flex-col gap-2 mt-2 mb-4 px-2">
                        <Label className="text-sm font-bold uppercase">Pelanggan (Opsional)</Label>
-                       <select 
-                         className="flex h-10 w-full rounded-xl border-4 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black font-inter font-bold uppercase transition-all shadow-[2px_2px_0_0_#000]"
-                         value={selectedCustomerId || ''}
-                         onChange={(e) => setSelectedCustomerId(e.target.value || null)}
+                       <Select 
+                         value={selectedCustomerId || "none"}
+                         onValueChange={(val) => setSelectedCustomerId(val === "none" ? null : val)}
                        >
-                         <option value="">-- Pilih Pelanggan --</option>
-                         {customers.map(c => (
-                           <option key={c.id} value={c.id}>{c.name} ({c.points} Poin)</option>
-                         ))}
-                       </select>
+                         <SelectTrigger className="flex h-10 w-full rounded-xl border-4 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-inter font-bold uppercase transition-all shadow-[2px_2px_0_0_#000]">
+                           <SelectValue placeholder="-- Pilih Pelanggan --" />
+                         </SelectTrigger>
+                         <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold uppercase">
+                           <SelectItem value="none">-- Tanpa Pelanggan --</SelectItem>
+                           {customers.map(c => (
+                             <SelectItem key={c.id} value={c.id}>{c.name} ({c.points} Poin)</SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
                     </div>
 
                     <div className="border-t-4 border-black border-dashed pt-4 mb-4 flex justify-between items-center font-space-grotesk font-black text-3xl uppercase">

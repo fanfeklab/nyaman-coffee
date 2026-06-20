@@ -1,0 +1,118 @@
+{
+  "categories": [
+    { "id": "cat_paket", "name": "Paket Murah", "color": "#FFC107" },
+    { "id": "cat_minuman", "name": "Minuman", "color": "#03A9F4" },
+    { "id": "cat_makanan", "name": "Makanan & Snack", "color": "#FF5722" }
+  ],
+  "variants": [],
+  "rawMaterials": [
+    { "id": "rm_esp", "name": "Espresso", "unit": "ml", "currentStock": 5000 },
+    { "id": "rm_air", "name": "Air Putih", "unit": "ml", "currentStock": 10000 },
+    { "id": "rm_susu", "name": "Susu UHT", "unit": "ml", "currentStock": 10000 },
+    { "id": "rm_es_batu", "name": "Es Batu", "unit": "gram", "currentStock": 10000 },
+    { "id": "rm_strw", "name": "Syrup Strawberry", "unit": "ml", "currentStock": 2000 },
+    { "id": "rm_pandan", "name": "Syrup Pandan", "unit": "ml", "currentStock": 2000 },
+    { "id": "rm_almond", "name": "Syrup Almond", "unit": "ml", "currentStock": 2000 },
+    { "id": "rm_coco", "name": "Syrup Cocopandan", "unit": "ml", "currentStock": 2000 },
+    { "id": "rm_thai", "name": "Powder Thai Tea", "unit": "gram", "currentStock": 2000 },
+    { "id": "rm_choc", "name": "Powder Cokelat", "unit": "gram", "currentStock": 2000 }
+  ],
+  "products": [
+    { "id": "p_americano", "name": "Americano", "categoryId": "cat_minuman", "basePrice": 13000, "type": "SINGLE" },
+    { "id": "p_americano_straw", "name": "Americano Strawberry", "categoryId": "cat_minuman", "basePrice": 14000, "type": "SINGLE" },
+    { "id": "p_kopsus_almond", "name": "Kopi Susu Almond", "categoryId": "cat_minuman", "basePrice": 14000, "type": "SINGLE" },
+    { "id": "p_thai_tea", "name": "Thai Tea", "categoryId": "cat_minuman", "basePrice": 10000, "type": "SINGLE" },
+    { "id": "p_pink_lava", "name": "Pink Lava", "categoryId": "cat_minuman", "basePrice": 15000, "type": "SINGLE" },
+    { "id": "p_chocolate", "name": "Chocolate", "categoryId": "cat_minuman", "basePrice": 11000, "type": "SINGLE" },
+    { "id": "p_choco_almond", "name": "Choco Almond", "categoryId": "cat_minuman", "basePrice": 14000, "type": "SINGLE" },
+    { "id": "p_taro", "name": "Taro", "categoryId": "cat_minuman", "basePrice": 14000, "type": "SINGLE" },
+    { "id": "p_snack_tray", "name": "Snack Tray", "categoryId": "cat_minuman", "basePrice": 25000, "type": "SINGLE" },
+    { "id": "p_le_minerale", "name": "Le Minerale", "categoryId": "cat_minuman", "basePrice": 5000, "type": "SINGLE" },
+    { "id": "p_pocary", "name": "Pocary Sweat", "categoryId": "cat_minuman", "basePrice": 10000, "type": "SINGLE" },
+    { "id": "p_sosis_telor", "name": "Sosis Telor", "categoryId": "cat_makanan", "basePrice": 11000, "type": "SINGLE" },
+    { "id": "p_mix_platter", "name": "Mix Platter", "categoryId": "cat_makanan", "basePrice": 20000, "type": "SINGLE" },
+    { "id": "p_risol", "name": "Risol", "categoryId": "cat_makanan", "basePrice": 5000, "type": "SINGLE" },
+    { "id": "p_pop_mie", "name": "Pop Mie", "categoryId": "cat_makanan", "basePrice": 10000, "type": "SINGLE" },
+    { "id": "p_makaroni", "name": "Makaroni", "categoryId": "cat_makanan", "basePrice": 5000, "type": "SINGLE" },
+    { "id": "p_keripik", "name": "Keripik", "categoryId": "cat_makanan", "basePrice": 5000, "type": "SINGLE" },
+    { "id": "c_paket_biasa", "name": "Paket Biasa", "categoryId": "cat_paket", "basePrice": 13000, "type": "COMBO", "comboItems": ["p_sosis_telor", "p_le_minerale"] },
+    { "id": "c_paket_spesial", "name": "Paket Spesial", "categoryId": "cat_paket", "basePrice": 16000, "type": "COMBO", "comboItems": ["p_risol", "p_pink_lava", "p_makaroni"] },
+    { "id": "c_paket_istimewa", "name": "Paket Istimewa", "categoryId": "cat_paket", "basePrice": 25000, "type": "COMBO", "comboItems": ["p_risol", "p_risol", "p_americano", "p_taro"] },
+    { "id": "c_paket_lengkap", "name": "Paket Lengkap", "categoryId": "cat_paket", "basePrice": 40000, "type": "COMBO", "comboItems": ["p_snack_tray", "p_snack_tray", "p_risol"] }
+  ],
+  "recipes": [
+    {
+      "id": "rec_americano",
+      "productId": "p_americano",
+      "instructions": "1. Masukkan espresso ke dalam cup 14 Oz\n2. Tuang air",
+      "ingredients": [
+        { "rawMaterialId": "rm_esp", "qty": 30 },
+        { "rawMaterialId": "rm_air", "qty": 150 }
+      ]
+    },
+    {
+      "id": "rec_amer_straw",
+      "productId": "p_americano_straw",
+      "instructions": "1. Masukkan espresso ke dalam cup 14 Oz\n2. Masukkan syrup\n3. Tuang air",
+      "ingredients": [
+        { "rawMaterialId": "rm_esp", "qty": 20 },
+        { "rawMaterialId": "rm_air", "qty": 170 },
+        { "rawMaterialId": "rm_strw", "qty": 20 }
+      ]
+    },
+    {
+      "id": "rec_kopsus_almond",
+      "productId": "p_kopsus_almond",
+      "instructions": "1. Tuang syrup ke dalam gelas HI BALL 14 OZ\n2. Tuang susu UHT lalu stir dengan mixer\n3. Masukkan es batu\n4. Tuang espresso",
+      "ingredients": [
+        { "rawMaterialId": "rm_esp", "qty": 20 },
+        { "rawMaterialId": "rm_almond", "qty": 20 },
+        { "rawMaterialId": "rm_air", "qty": 60 },
+        { "rawMaterialId": "rm_susu", "qty": 100 },
+        { "rawMaterialId": "rm_es_batu", "qty": 150 }
+      ]
+    },
+    {
+      "id": "rec_thai_tea",
+      "productId": "p_thai_tea",
+      "instructions": "1. Tuang powder\n2. Isi gelas dengan es batu\n3. Tuang air putih\n4. Masukkan susu",
+      "ingredients": [
+        { "rawMaterialId": "rm_thai", "qty": 20 },
+        { "rawMaterialId": "rm_air", "qty": 100 },
+        { "rawMaterialId": "rm_susu", "qty": 100 },
+        { "rawMaterialId": "rm_es_batu", "qty": 150 }
+      ]
+    },
+    {
+      "id": "rec_pink_lava",
+      "productId": "p_pink_lava",
+      "instructions": "1. Masukkan syrup dan susu\n2. Mixer\n3. Tuang air & es batu\n(Pada gelas satunya buat adonan charcoal dan susu)",
+      "ingredients": [
+        { "rawMaterialId": "rm_coco", "qty": 40 },
+        { "rawMaterialId": "rm_air", "qty": 100 },
+        { "rawMaterialId": "rm_susu", "qty": 100 },
+        { "rawMaterialId": "rm_es_batu", "qty": 150 }
+      ]
+    },
+    {
+      "id": "rec_chocolate",
+      "productId": "p_chocolate",
+      "instructions": "1. Tuang powder ke dalam gelas\n2. Tuang susu UHT lalu stir dengan mixer\n3. Isi gelas dengan es batu",
+      "ingredients": [
+        { "rawMaterialId": "rm_choc", "qty": 20 },
+        { "rawMaterialId": "rm_susu", "qty": 100 },
+        { "rawMaterialId": "rm_es_batu", "qty": 200 }
+      ]
+    },
+    {
+      "id": "rec_choco_almond",
+      "productId": "p_choco_almond",
+      "instructions": "1. Tuang powder dan air ke dalam gelas (Cup 7 OZ)\n2. Masukkan susu dan es batu\n3. Masukkan syrup",
+      "ingredients": [
+        { "rawMaterialId": "rm_choc", "qty": 20 },
+        { "rawMaterialId": "rm_almond", "qty": 20 },
+        { "rawMaterialId": "rm_susu", "qty": 100 }
+      ]
+    }
+  ]
+}
