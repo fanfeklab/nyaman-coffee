@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CartItem } from './useCartStore';
-import { upsertFirebaseTransaction } from '@/lib/firebase/services';
+import { upsertFirebaseTransaction, deleteFirebaseTransaction } from '@/lib/firebase/services';
 
 export interface Transaction {
   id: string;
@@ -21,6 +21,7 @@ interface TransactionState {
   transactions: Transaction[];
   addTransaction: (tx: Transaction) => void;
   voidTransaction: (txId: string) => void;
+  deleteTransaction?: (txId: string) => void;
   clearTransactions: () => void;
 }
 
@@ -38,6 +39,10 @@ export const useTransactionStore = create<TransactionState>()(
         if (updated) upsertFirebaseTransaction(updated);
         return { transactions: nextTx };
       }),
+      deleteTransaction: (txId) => {
+        deleteFirebaseTransaction(txId);
+        set((state) => ({ transactions: state.transactions.filter(t => t.id !== txId) }));
+      },
       clearTransactions: () => set({ transactions: [] })
     }),
     {

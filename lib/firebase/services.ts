@@ -60,6 +60,11 @@ export async function upsertFirebaseTransaction(tx: Transaction) {
   await setDoc(doc(db, 'transactions', tx.id), txData);
 }
 
+export async function deleteFirebaseTransaction(id: string) {
+  if (!db) return;
+  await deleteDoc(doc(db, 'transactions', id));
+}
+
 export async function upsertFirebaseShift(shift: Shift) {
   if (!db) return;
   await setDoc(doc(db, 'shifts', shift.id), shift);

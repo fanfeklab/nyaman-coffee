@@ -9,7 +9,7 @@ import { useShiftStore } from '@/store/useShiftStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Ban, Search, FileText } from 'lucide-react';
+import { Ban, Search, FileText, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -331,13 +331,23 @@ export default function ReportsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {tx.status === 'COMPLETED' && (
-                          <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2">
+                          {tx.status === 'COMPLETED' && (
                             <button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi">
                               <Ban className="w-4 h-4"/>
                             </button>
-                          </div>
-                        )}
+                          )}
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
+                            <button onClick={() => {
+                               if (confirm('Hapus histori transaksi ini secara permanen?')) {
+                                  useTransactionStore.getState().deleteTransaction?.(tx.id);
+                                  toast.success('Transaksi dihapus permanen');
+                               }
+                            }} className="p-2 border-2 border-black rounded bg-gray-100 hover:bg-gray-200 transition-colors" title="Hapus Permanen">
+                              <Trash2 className="w-4 h-4"/>
+                            </button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                  ))}

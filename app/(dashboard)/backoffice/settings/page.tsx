@@ -350,7 +350,6 @@ export default function SettingsPage() {
                  <div className="flex flex-col md:flex-row gap-4 mt-4">
                    <Button onClick={() => {
                      setDangerAction('clearTransactions');
-                     setDangerUsername('');
                      setDangerPin('');
                      setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
@@ -359,7 +358,6 @@ export default function SettingsPage() {
 
                    <Button onClick={() => {
                      setDangerAction('clearShiftHistory');
-                     setDangerUsername('');
                      setDangerPin('');
                      setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">
@@ -368,7 +366,6 @@ export default function SettingsPage() {
 
                    <Button onClick={() => {
                      setDangerAction('clearInventory');
-                     setDangerUsername('');
                      setDangerPin('');
                      setIsDangerAuthOpen(true);
                    }} className="flex-1 h-14 text-sm bg-black text-white hover:bg-gray-800 font-space-grotesk font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all">

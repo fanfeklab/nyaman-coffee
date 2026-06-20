@@ -194,49 +194,6 @@ export default function ShiftPage() {
     );
   }
 
-  if (currentShift?.status === 'CLOSED') {
-     const selisih = currentShift.actualEndingCash - currentShift.expectedEndingCash;
-     
-     return (
-       <div className="p-4 md:p-12 flex flex-col min-h-full bg-[#FFFDF7] items-center py-10 md:py-20">
-          <div className="bg-white border-8 border-black p-6 md:p-10 rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
-             <div className="flex justify-center mb-6">
-                <div className="bg-[#FFD100] border-4 border-black p-4 rounded-full shadow-[4px_4px_0_0_#000]">
-                   <CheckCircle2 className="w-12 h-12 text-black" strokeWidth={3} />
-                </div>
-             </div>
-             <h1 className="font-space-grotesk font-black text-3xl uppercase tracking-widest text-black text-center mb-2">Shift Selesai</h1>
-             <p className="font-inter font-bold text-gray-500 text-center mb-8">Laporan akhir shift Anda telah disimpan.</p>
-             
-             <div className="flex flex-col gap-3 font-inter font-bold bg-gray-50 p-6 rounded-2xl border-4 border-black">
-               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 pb-3">
-                 <span className="text-gray-500 uppercase text-xs tracking-widest">Modal Awal</span> 
-                 <span className="text-lg">{formatRupiah(currentShift.startingCash)}</span>
-               </div>
-               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3">
-                 <span className="text-gray-500 uppercase text-xs tracking-widest">Sistem (Estimasi)</span> 
-                 <span className="text-lg">{formatRupiah(currentShift.expectedEndingCash)}</span>
-               </div>
-               <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 py-3">
-                 <span className="text-gray-500 uppercase text-xs tracking-widest">Fisik Laci (Aktual)</span> 
-                 <span className="text-lg font-black">{formatRupiah(currentShift.actualEndingCash)}</span>
-               </div>
-               <div className={`flex justify-between items-center p-4 rounded-xl border-4 border-black mt-3 font-black uppercase text-xl ${selisih < 0 ? 'bg-red-500 text-white shadow-[4px_4px_0_0_#000]' : 'bg-[#00E5FF] text-black shadow-[4px_4px_0_0_#000]'}`}>
-                 <span>Selisih</span> 
-                 <span>
-                    {selisih > 0 ? "+" : ""}{formatRupiah(selisih)}
-                 </span>
-               </div>
-             </div>
-
-             <Button className="w-full mt-8 h-16 text-xl font-space-grotesk font-black tracking-widest uppercase border-4 border-black bg-[#FF6321] hover:bg-[#ff7a40] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all text-white" onClick={() => useAuthStore.getState().logout()}>
-               KEMBALI KE LOGIN
-             </Button>
-          </div>
-       </div>
-     );
-  }
-
   // default: NO OPEN SHIFT
   if (isAdmin) {
     return (
