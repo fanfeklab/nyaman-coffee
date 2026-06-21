@@ -72,8 +72,9 @@ export function CartDrawer({
               exit={{ y: 100 }}
               className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-40 bg-transparent flex justify-center pointer-events-none"
             >
-               <button 
-                 className="pointer-events-auto bg-[#00E5FF] border-4 border-black px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group gap-2"
+               <Button 
+                 variant="ghost"
+                 className="h-auto pointer-events-auto bg-[#00E5FF] border-4 border-black px-4 py-3 md:px-6 md:py-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#00E5FF]/90 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-2 transition-all w-full max-w-2xl flex justify-between items-center group gap-2 text-black hover:text-black"
                  onClick={() => setIsCartDrawerOpen(true)}
                >
                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
@@ -84,7 +85,7 @@ export function CartDrawer({
                       </div>
                    </div>
                    <span className="font-space-grotesk font-black text-sm md:text-2xl bg-white px-2 py-1.5 md:px-4 md:py-1.5 rounded-lg border-2 border-black shrink-0 truncate">{formatRupiah(getTotal())}</span>
-               </button>
+               </Button>
             </motion.div>
           )}
 
@@ -111,36 +112,39 @@ export function CartDrawer({
                {/* Handle & Header */}
                <div className="p-4 md:p-5 border-b-4 border-black bg-[#FFD100] flex justify-between items-center rounded-t-[2rem] shrink-0">
                   <div className="flex items-center gap-3">
-                    <button onClick={() => setIsCartDrawerOpen(false)} className="p-2 bg-white border-4 border-black rounded-xl hover:translate-y-1 hover:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-2 transition-all">
+                    <Button variant="outline" size="icon" onClick={() => setIsCartDrawerOpen(false)} className="h-10 w-10 p-2 bg-white border-4 border-black rounded-xl hover:translate-y-1 hover:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-2 transition-all">
                        <ChevronDown className="w-5 h-5 font-black"/>
-                    </button>
+                    </Button>
                     <h2 className="font-space-grotesk font-black uppercase tracking-wider text-xl md:text-2xl text-black">Pesanan: {items.reduce((a,b) => a+b.qty, 0)} Items</h2>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <button 
+                    <Button 
+                      variant="outline" size="icon"
                       onClick={() => setLoadBillOpen(true)}
                       title="Buka Tagihan"
-                      className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
+                      className="h-12 w-12 p-2 md:p-3 border-4 border-black rounded-xl hover:bg-gray-100 transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 relative"
                     >
                       <FolderOpen className="w-5 h-5 text-black" />
                       {savedBills.length > 0 && <span className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-black px-2 py-0.5 rounded-full border-4 border-black">{savedBills.length}</span>}
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                      variant="ghost" size="icon"
                       onClick={() => setSaveBillOpen(true)}
                       title="Simpan Tagihan (Open Tab)"
-                      className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF90E8] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                      className="h-12 w-12 p-2 md:p-3 border-4 border-black rounded-xl hover:bg-[#FF90E8]/80 transition-colors bg-[#FF90E8] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 text-black"
                       disabled={items.length === 0}
                     >
                       <Save className="w-5 h-5 text-black" />
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                      variant="destructive" size="icon"
                       onClick={() => setClearConfirmOpen(true)}
                       title="Kosongkan Keranjang"
-                      className="p-2 md:p-3 border-4 border-black rounded-xl hover:bg-white transition-colors bg-[#FF6321] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+                      className="h-12 w-12 p-2 md:p-3 border-4 border-black rounded-xl hover:bg-[#FF6321]/90 transition-colors bg-[#FF6321] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
                     >
                       <Trash2 className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                </div>
                
@@ -170,11 +174,11 @@ export function CartDrawer({
                        
                        <div className="flex items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t-2 border-dashed md:border-none border-gray-200 mt-2 md:mt-0">
                           <span className="font-space-grotesk font-black text-[#FF6321] text-xl">{formatRupiah(itemTotalPrice)}</span>
-                          <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
-                             <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></button>
+                           <div className="flex items-center gap-1 bg-gray-100 border-4 border-black rounded-xl p-1 shrink-0">
+                             <Button variant="outline" size="icon" onClick={() => updateQty(item.id, item.qty - 1)} className="h-8 w-8 p-1 bg-white border-2 border-black rounded-lg hover:bg-gray-100 active:scale-95 transition-transform"><Minus className="w-4 h-4"/></Button>
                              <span className="font-black text-lg w-8 text-center">{item.qty}</span>
-                             <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-2 bg-[#FFD100] border-2 border-black rounded-lg hover:brightness-95 active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
-                          </div>
+                             <Button variant="default" size="icon" onClick={() => updateQty(item.id, item.qty + 1)} className="h-8 w-8 p-1 bg-[#FFD100] border-2 border-black rounded-lg hover:bg-[#FFD100]/80 active:scale-95 transition-transform text-black"><Plus className="w-4 h-4"/></Button>
+                           </div>
                        </div>
                     </div>
                   )})}

@@ -5,6 +5,7 @@ import { Sidebar } from '../organisms/Sidebar';
 import { cn } from '@/lib/utils';
 import { Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { Button } from '@/components/ui/button';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -27,12 +28,14 @@ export function AppLayout({ children, className, hideSidebar = false }: AppLayou
            {/* Mobile Topbar for Hamburger */}
            <div className="lg:hidden absolute top-0 left-0 w-full h-16 bg-white border-b-4 border-black z-30 flex items-center px-4 justify-between">
               <span className="font-space-grotesk font-black uppercase text-xl">NYAMAN POS</span>
-              <button 
+              <Button 
+                variant="default"
+                size="icon"
                 onClick={() => setIsMobileNavOpen(!isMobileNavOpen)} 
-                className="bg-[#FFD100] p-2 border-2 border-black rounded-lg active:translate-y-1 transition-transform"
+                className="bg-[#FFD100] p-2 border-2 border-black rounded-lg active:translate-y-1 transition-transform hover:bg-[#FFD100]/90 h-10 w-10 shadow-none focus-visible:shadow-none hover:shadow-none"
               >
                 {isMobileNavOpen ? <X className="w-6 h-6 text-black" /> : <Menu className="w-6 h-6 text-black" />}
-              </button>
+              </Button>
            </div>
 
            {/* Mobile Sidebar Overlay */}

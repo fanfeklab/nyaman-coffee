@@ -55,35 +55,40 @@ export function PosHeader({
                     { id: "Highest", label: "Harga Tertinggi", icon: ArrowDown10 },
                     { id: "Lowest", label: "Harga Terendah", icon: ArrowUp01 },
                   ].map(opt => (
-                     <button 
+                     <Button 
                        key={opt.id}
+                       variant="ghost"
                        onClick={() => handleSortChange(opt.id as SortOption)}
-                       className={cn("flex items-center gap-2 px-3 py-2 text-sm font-inter font-bold rounded-xl text-left transition-colors", sortOption === opt.id ? "bg-[#00E5FF] border-2 border-black" : "hover:bg-gray-100 border-2 border-transparent")}
+                       className={cn("flex justify-start h-auto items-center gap-2 px-3 py-2 text-sm font-inter font-bold rounded-xl text-left transition-colors", sortOption === opt.id ? "bg-[#00E5FF] border-2 border-black hover:bg-[#00E5FF]/80 text-black hover:text-black" : "hover:bg-gray-100 border-2 border-transparent text-black")}
                      >
                        <opt.icon className="w-4 h-4"/>
                        {opt.label}
                        {sortOption === opt.id && <Check className="w-4 h-4 ml-auto"/>}
-                     </button>
+                     </Button>
                   ))}
                 </div>
              </PopoverContent>
            </Popover>
 
            <div className="flex items-center bg-white border-4 border-black rounded-xl p-1 shadow-[4px_4px_0_0_#000]">
-              <button 
+              <Button 
+                variant="ghost"
+                size="icon"
                 onClick={() => handleViewChange("Grid")}
-                className={cn("p-2 rounded-lg transition-colors", viewOption === "Grid" ? "bg-black text-white" : "text-gray-500 hover:text-black")}
+                className={cn("p-2 rounded-lg transition-colors h-10 w-10", viewOption === "Grid" ? "bg-black text-white hover:bg-black/90 hover:text-white" : "text-gray-500 hover:text-black")}
                 title="Tampilan Grid (Gambar)"
               >
                 <Grid3X3 className="w-5 h-5" />
-              </button>
-              <button 
+              </Button>
+              <Button 
+                variant="ghost"
+                size="icon"
                 onClick={() => handleViewChange("Compact")}
-                className={cn("p-2 rounded-lg transition-colors", viewOption === "Compact" ? "bg-black text-white" : "text-gray-500 hover:text-black")}
+                className={cn("p-2 rounded-lg transition-colors h-10 w-10", viewOption === "Compact" ? "bg-black text-white hover:bg-black/90 hover:text-white" : "text-gray-500 hover:text-black")}
                 title="Tampilan Kompak (Tanpa Gambar)"
               >
                 <AlignJustify className="w-5 h-5" />
-              </button>
+              </Button>
            </div>
 
            <Button 
