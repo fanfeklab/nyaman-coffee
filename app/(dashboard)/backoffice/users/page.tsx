@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore, User, UserRole } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { Trash2, Edit, Plus, Users, Ban } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -24,8 +25,6 @@ export default function UsersPage() {
     }
   }, [currentUser, router]);
 
-  const [search, setSearch] = useState('');
-  
   // Dialog States
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,31 +43,44 @@ export default function UsersPage() {
     pin: ''
   });
 
-  const filteredUsers = users.filter(u => 
-    u.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    u.username.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleOpenForm = (userToEdit?: User) => {
-    if (userToEdit) {
-      setEditingId(userToEdit.id);
+  const handleOpenForm = React.useCallback((u?: User) => {
+    if (u) {
+      setEditingId(u.id);
       setFormData({
-        username: userToEdit.username,
-        fullName: userToEdit.fullName,
-        role: userToEdit.role,
-        pin: userToEdit.pin
+        username: u.username,
+        fullName: u.fullName,
+        role: u.role,
+        pin: u.pin
       });
     } else {
       setEditingId(null);
-      setFormData({
-        username: '',
-        fullName: '',
-        role: 'CASHIER',
-        pin: ''
-      });
+      setFormData({ username: '', fullName: '', role: 'CASHIER', pin: '' });
     }
     setFormOpen(true);
-  };
+  }, []);
+
+  const columns = useMemo<ColumnDef<User>[]>(() => [
+    { accessorKey: 'fullName', header: 'Nama Lengkap' },
+    { accessorKey: 'username', header: 'Username' },
+    { accessorKey: 'role', header: 'Role', cell: ({ row }) => (
+        <span className={`px-2 py-1 border-2 border-black rounded uppercase font-black text-xs ${
+          row.original.role === 'SUPER_ADMIN' ? 'bg-red-300' :
+          row.original.role === 'MANAGER' ? 'bg-blue-300' : 'bg-green-300'
+        }`}>
+          {row.original.role.replace('_', ' ')}
+        </span>
+    ) },
+    { id: 'actions', header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button size="icon-sm" variant="outline" onClick={() => handleOpenForm(row.original)}>
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button size="icon-sm" variant="destructive" onClick={() => setDeleteId(row.original.id)} disabled={row.original.id === currentUser?.id}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+    ) }
+  ], [currentUser, handleOpenForm]);
 
   const handleSave = async () => {
     if (!formData.username || !formData.fullName || !formData.pin) {
@@ -137,60 +149,7 @@ export default function UsersPage() {
       </div>
 
       <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden mb-8">
-         <div className="flex justify-between items-center mb-4">
-           <div className="relative w-full md:w-96">
-             <Input 
-               placeholder="Cari nama atau username..." 
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-             />
-           </div>
-         </div>
-
-         <div className="border-4 border-black rounded-xl overflow-hidden">
-           <Table>
-             <TableHeader className="bg-[#FFD100]">
-               <TableRow className="border-b-4 border-black hover:bg-[#FFD100]">
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Nama Lengkap</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Username</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Role</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase text-right">Aksi</TableHead>
-               </TableRow>
-             </TableHeader>
-             <TableBody>
-               {filteredUsers.length === 0 ? (
-                 <TableRow>
-                   <TableCell colSpan={4} className="text-center py-8 font-inter font-bold text-gray-500">
-                     Tidak ada data pengguna ditemukan.
-                   </TableCell>
-                 </TableRow>
-               ) : filteredUsers.map((u) => (
-                 <TableRow key={u.id} className="border-b-2 border-dashed border-gray-200">
-                   <TableCell className="font-inter font-bold text-black">{u.fullName}</TableCell>
-                   <TableCell className="font-inter font-bold text-black">{u.username}</TableCell>
-                   <TableCell>
-                     <span className={`px-2 py-1 border-2 border-black rounded uppercase font-black text-xs ${
-                       u.role === 'SUPER_ADMIN' ? 'bg-red-300' :
-                       u.role === 'MANAGER' ? 'bg-blue-300' : 'bg-green-300'
-                     }`}>
-                       {u.role.replace('_', ' ')}
-                     </span>
-                   </TableCell>
-                   <TableCell className="text-right">
-                     <div className="flex justify-end gap-2">
-                       <Button size="icon-sm" variant="outline" onClick={() => handleOpenForm(u)}>
-                         <Edit className="w-4 h-4" />
-                       </Button>
-                       <Button size="icon-sm" variant="destructive" onClick={() => setDeleteId(u.id)} disabled={u.id === currentUser?.id}>
-                         <Trash2 className="w-4 h-4" />
-                       </Button>
-                     </div>
-                   </TableCell>
-                 </TableRow>
-               ))}
-             </TableBody>
-           </Table>
-         </div>
+         <DataTable columns={columns} data={users} searchPlaceholder="Cari pengguna..." />
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

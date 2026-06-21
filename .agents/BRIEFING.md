@@ -1,29 +1,29 @@
-# BRIEFING — 2026-06-21T04:40:31Z
+# BRIEFING — 2026-06-21T05:10:34Z
 
 ## Mission
-Initialize the project orchestration for Nyaman Coffee Shop POS development.
+Overhaul UI/UX to implement Shadcn DataTable, Sidebar, and standardize Neobrutalism design across the POS app.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: /home/nara_events/Workspace/Project/nyaman-coffee/.agents/
-- Orchestrator: a642a254-2cbd-44b4-b73b-b48975f7dae2
-- Victory Auditor: 0b2f92d7-4492-4aeb-bf02-cded0b949110
+- Orchestrator: 071f7a02-8e9d-4698-b5a1-280f4f1c4107
+- Victory Auditor: [to be spawned on victory claim]
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
 - Victory Audit is MANDATORY before reporting completion
-- Must use specific tech stack (Shadcn, Radix UI, framer-motion, lucide-react, zustand, zod, react-hook-form, dnd-kit, tanstack/react-table, Next.js App Router).
+- Must use specific tech stack (Shadcn, Radix UI, framer-motion, lucide-react, zustand, zod, react-hook-form, dnd-kit, tanstack/react-table, Next.js App Router)
 - Neobrutalism design style is required.
 - All interactions require feedback (Sonner, Toast).
-- UI-First & Mock Data Mode (No actual backend connection unless explicitly permitted, but Supabase Auth strategy for offline-first is required as PoC).
+- UI-First & Mock Data Mode.
 
 ## User Context
-- **Last user request**: System audit & roadmap, Supabase Auth strategy, Offline-first queue PoC for a standalone high-capacity coffee shop POS.
+- **Last user request**: UI/UX overhaul using Shadcn DataTable, Sidebar, and Neobrutalism standard.
 - **Pending clarifications**: none
-- **Delivered results**: none
+- **Delivered results**: none for current mission.
 
 ## Project Status
-- **Phase**: not started
+- **Phase**: in progress
 
 ## Victory Audit Status
 - **Triggered**: no

@@ -10,14 +10,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { Plus, Edit2, Trash2, Search, Coffee, Tag } from "lucide-react";
 import {
   Dialog,
@@ -67,7 +61,6 @@ export default function ProductsPage() {
   const [activeTab, setActiveTab] = useState<
     "PRODUCTS" | "CATEGORIES" | "VARIANTS"
   >("PRODUCTS");
-  const [search, setSearch] = useState("");
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -106,16 +99,53 @@ export default function ProductsPage() {
     string | null
   >(null);
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
-  );
-  const filteredCategories = categories.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()),
-  );
-  const filteredVariants =
-    variants?.filter((v) =>
-      v.name.toLowerCase().includes(search.toLowerCase()),
-    ) || [];
+  const productColumns = React.useMemo<ColumnDef<Product>[]>(() => [
+    { accessorKey: "type", header: "Tipe", cell: ({ row }) => <span className={`px-2 py-1 text-xs border-2 border-black rounded-md ${row.original.type === "COMBO" ? "bg-[#FF90E8]" : "bg-gray-200"}`}>{row.original.type}</span> },
+    { accessorKey: "name", header: "Nama Menu", cell: ({ row }) => <div className="flex items-center gap-2"><div className="w-8 h-8 bg-gray-200 border-2 border-black rounded-md flex items-center justify-center"><Coffee className="w-4 h-4 text-gray-500" /></div>{row.original.name}</div> },
+    { accessorKey: "categoryId", header: "Kategori", cell: ({ row }) => {
+        const cat = categories.find((c) => c.id === row.original.categoryId);
+        return cat ? <span className="px-2 py-1 text-xs border-2 border-black rounded-md uppercase" style={{ backgroundColor: cat.color }}>{cat.name}</span> : null;
+    } },
+    { accessorKey: "basePrice", header: () => <div className="text-right">Harga Dasar</div>, cell: ({ row }) => <div className="text-right text-[#FF6321]">{formatRupiah(row.original.basePrice)}</div> },
+    { id: "actions", header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="icon" onClick={() => handleOpenEditProduct(row.original)}><Edit2 className="w-4 h-4" /></Button>
+          <Button variant="destructive" size="icon" onClick={() => setDeleteProductConfirm(row.original.id)}><Trash2 className="w-4 h-4" /></Button>
+        </div>
+    ) }
+  ], [categories]);
+
+  const categoryColumns = React.useMemo<ColumnDef<Category>[]>(() => [
+    { accessorKey: "color", header: "Warna", cell: ({ row }) => <div className="w-6 h-6 border-2 border-black rounded-full" style={{ backgroundColor: row.original.color }} /> },
+    { accessorKey: "name", header: "Nama Kategori", cell: ({ row }) => <span className="uppercase">{row.original.name}</span> },
+    { id: "actions", header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="icon" onClick={() => handleOpenEditCategory(row.original)}><Edit2 className="w-4 h-4" /></Button>
+          <Button variant="destructive" size="icon" onClick={() => setDeleteCategoryConfirm(row.original.id)}><Trash2 className="w-4 h-4" /></Button>
+        </div>
+    ) }
+  ], []);
+
+  const variantColumns = React.useMemo<ColumnDef<any>[]>(() => [
+    { accessorKey: "name", header: "Nama Varian", cell: ({ row }) => <span className="uppercase font-black">{row.original.name}</span> },
+    { accessorKey: "type", header: "Tipe & Sifat", cell: ({ row }) => (
+      <div className="text-sm">
+        <span className={`px-2 py-1 mr-2 border-2 border-black rounded-md ${row.original.type === "SINGLE_CHOICE" ? "bg-cyan-100" : "bg-purple-100"}`}>
+          {row.original.type === "SINGLE_CHOICE" ? "Pilih Satu" : "Pilih Banyak"}
+        </span>
+        <span className={`px-2 py-1 border-2 border-black rounded-md ${row.original.isRequired ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+          {row.original.isRequired ? "Wajib" : "Opsional"}
+        </span>
+      </div>
+    ) },
+    { accessorKey: "options", header: "Jumlah Opsi", cell: ({ row }) => <span>{row.original.options?.length || 0} Opsi</span> },
+    { id: "actions", header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="icon" onClick={() => handleOpenEditVariant(row.original)}><Edit2 className="w-4 h-4" /></Button>
+          <Button variant="destructive" size="icon" onClick={() => setDeleteVariantConfirm(row.original.id)}><Trash2 className="w-4 h-4" /></Button>
+        </div>
+    ) }
+  ], []);
 
   const handleOpenAddProduct = () => {
     setEditingProductId(null);
@@ -318,18 +348,7 @@ export default function ProductsPage() {
       </div>
 
       <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder={
-                activeTab === "PRODUCTS" ? "Cari menu..." : "Cari kategori..."
-              }
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+        <div className="flex flex-col md:flex-row justify-end gap-4 mb-4">
           {activeTab === "PRODUCTS" && (
             <div className="flex gap-2">
               <Button onClick={handleOpenAddProduct} className="gap-2">
@@ -355,215 +374,16 @@ export default function ProductsPage() {
           )}
         </div>
 
-        <div className="overflow-x-auto border-4 border-black rounded-xl">
-          <Table>
-            <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase">
-              {activeTab === "PRODUCTS" && (
-                <TableRow>
-                  <TableHead className="w-[100px] text-black border-r-2 border-black">
-                    Tipe
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Nama Menu
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Kategori
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black text-right">
-                    Harga Dasar
-                  </TableHead>
-                  <TableHead className="text-right text-black w-[150px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              )}
-              {activeTab === "CATEGORIES" && (
-                <TableRow>
-                  <TableHead className="text-black border-r-2 border-black w-[200px]">
-                    Warna
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Nama Kategori
-                  </TableHead>
-                  <TableHead className="text-right text-black w-[150px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              )}
-              {activeTab === "VARIANTS" && (
-                <TableRow>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Nama Varian
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Tipe & Sifat
-                  </TableHead>
-                  <TableHead className="text-black border-r-2 border-black">
-                    Jumlah Opsi
-                  </TableHead>
-                  <TableHead className="text-right text-black w-[150px]">
-                    Aksi
-                  </TableHead>
-                </TableRow>
-              )}
-            </TableHeader>
-            <TableBody className="font-inter font-bold">
-              {activeTab === "PRODUCTS" &&
-                filteredProducts.map((p) => {
-                  const cat = categories.find((c) => c.id === p.categoryId);
-                  return (
-                    <TableRow
-                      key={p.id}
-                      className="border-b-2 border-gray-200 hover:bg-gray-50"
-                    >
-                      <TableCell className="border-r-2 border-gray-200">
-                        <span
-                          className={`px-2 py-1 text-xs border-2 border-black rounded-md ${p.type === "COMBO" ? "bg-[#FF90E8]" : "bg-gray-200"}`}
-                        >
-                          {p.type}
-                        </span>
-                      </TableCell>
-                      <TableCell className="border-r-2 border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gray-200 border-2 border-black rounded-md flex items-center justify-center">
-                            <Coffee className="w-4 h-4 text-gray-500" />
-                          </div>
-                          {p.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className="border-r-2 border-gray-200">
-                        {cat && (
-                          <span
-                            className="px-2 py-1 text-xs border-2 border-black rounded-md uppercase"
-                            style={{ backgroundColor: cat.color }}
-                          >
-                            {cat.name}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right border-r-2 border-gray-200 text-[#FF6321]">
-                        {formatRupiah(p.basePrice)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleOpenEditProduct(p)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => setDeleteProductConfirm(p.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              {activeTab === "CATEGORIES" &&
-                filteredCategories.map((c) => (
-                  <TableRow
-                    key={c.id}
-                    className="border-b-2 border-gray-200 hover:bg-gray-50"
-                  >
-                    <TableCell className="border-r-2 border-gray-200">
-                      <div
-                        className="w-6 h-6 border-2 border-black rounded-full"
-                        style={{ backgroundColor: c.color }}
-                      />
-                    </TableCell>
-                    <TableCell className="border-r-2 border-gray-200 uppercase">
-                      {c.name}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleOpenEditCategory(c)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => setDeleteCategoryConfirm(c.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-              {activeTab === "VARIANTS" &&
-                filteredVariants.map((v) => (
-                  <TableRow
-                    key={v.id}
-                    className="border-b-2 border-gray-200 hover:bg-gray-50"
-                  >
-                    <TableCell className="border-r-2 border-gray-200 uppercase font-black">
-                      {v.name}
-                    </TableCell>
-                    <TableCell className="border-r-2 border-gray-200 text-sm">
-                      <span
-                        className={`px-2 py-1 mr-2 border-2 border-black rounded-md ${v.type === "SINGLE_CHOICE" ? "bg-cyan-100" : "bg-purple-100"}`}
-                      >
-                        {v.type === "SINGLE_CHOICE"
-                          ? "Pilih Satu"
-                          : "Pilih Banyak"}
-                      </span>
-                      <span
-                        className={`px-2 py-1 border-2 border-black rounded-md ${v.isRequired ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
-                      >
-                        {v.isRequired ? "Wajib" : "Opsional"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="border-r-2 border-gray-200">
-                      {v.options?.length || 0} Opsi
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleOpenEditVariant(v)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => setDeleteVariantConfirm(v.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-              {((activeTab === "PRODUCTS" && filteredProducts.length === 0) ||
-                (activeTab === "CATEGORIES" &&
-                  filteredCategories.length === 0) ||
-                (activeTab === "VARIANTS" &&
-                  filteredVariants.length === 0)) && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase"
-                  >
-                    Tidak ada data ditemukan.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+        <div className="border-4 border-black rounded-xl overflow-hidden">
+          {activeTab === "PRODUCTS" && (
+            <DataTable columns={productColumns} data={products} searchPlaceholder="Cari menu..." />
+          )}
+          {activeTab === "CATEGORIES" && (
+            <DataTable columns={categoryColumns} data={categories} searchPlaceholder="Cari kategori..." />
+          )}
+          {activeTab === "VARIANTS" && (
+            <DataTable columns={variantColumns} data={variants || []} searchPlaceholder="Cari varian..." />
+          )}
         </div>
       </div>
 

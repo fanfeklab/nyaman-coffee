@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useAuthStore, User } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Plus, Pencil, Trash, Shield, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 
 export default function EmployeesPage() {
   const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuthStore();
@@ -30,7 +31,7 @@ export default function EmployeesPage() {
 
   const generateId = () => `usr_${Date.now().toString(36)}_${Math.random().toString(36).substring(7)}`;
 
-  const handleOpenDialog = (user?: User) => {
+  const handleOpenDialog = useCallback((user?: User) => {
     if (user) {
       setEditingItem(user);
       setFormData({
@@ -49,7 +50,7 @@ export default function EmployeesPage() {
       });
     }
     setIsDialogOpen(true);
-  };
+  }, []);
 
   const handleSave = () => {
     if (!formData.username || !formData.fullName || !formData.pin) {
@@ -84,14 +85,14 @@ export default function EmployeesPage() {
     setIsDialogOpen(false);
   };
 
-  const handleDeleteRequest = (id: string) => {
+  const handleDeleteRequest = useCallback((id: string) => {
     if (id === currentUser?.id) {
       toast.error('Tidak dapat menghapus akun Anda sendiri yang sedang login');
       return;
     }
     setItemToDelete(id);
     setIsConfirmOpen(true);
-  };
+  }, [currentUser?.id]);
 
   const handleConfirmDelete = () => {
     if (itemToDelete) {
@@ -100,6 +101,24 @@ export default function EmployeesPage() {
       setItemToDelete(null);
     }
   };
+
+  const columns = useMemo<ColumnDef<User>[]>(() => [
+    { accessorKey: 'fullName', header: 'Nama Lengkap' },
+    { accessorKey: 'username', header: 'Username' },
+    { accessorKey: 'role', header: 'Role', cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.role === 'SUPER_ADMIN' || row.original.role === 'MANAGER' ? <Shield className="h-4 w-4 text-blue-500" /> : <UserIcon className="h-4 w-4 text-green-500" />}
+          <span className={row.original.role === 'SUPER_ADMIN' || row.original.role === 'MANAGER' ? 'text-blue-500 font-bold' : 'text-green-600 font-bold'}>{row.original.role}</span>
+        </div>
+    ) },
+    { accessorKey: 'pin', header: 'PIN', cell: () => <span className="font-mono">••••</span> },
+    { id: 'actions', header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="icon" onClick={() => handleOpenDialog(row.original)} className="h-8 w-8"><Pencil className="h-4 w-4 text-orange-500" /></Button>
+          <Button variant="outline" size="icon" onClick={() => handleDeleteRequest(row.original.id)} disabled={row.original.username === 'admin'} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"><Trash className="h-4 w-4" /></Button>
+        </div>
+    ) }
+  ], [handleOpenDialog, handleDeleteRequest]);
 
   return (
     <div className="space-y-6">
@@ -116,71 +135,7 @@ export default function EmployeesPage() {
 
       <Card className="border-2 shadow-sm">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Nama Lengkap</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>PIN</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Belum ada data karyawan.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.fullName}</TableCell>
-                    <TableCell>{u.username}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {u.role === 'SUPER_ADMIN' || u.role === 'MANAGER' ? (
-                          <Shield className="h-4 w-4 text-blue-500" />
-                        ) : (
-                          <UserIcon className="h-4 w-4 text-green-500" />
-                        )}
-                        <span className={
-                          u.role === 'SUPER_ADMIN' || u.role === 'MANAGER' ? 'text-blue-500 font-bold' : 'text-green-600 font-bold'
-                        }>
-                          {u.role}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      ••••
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleOpenDialog(u)}
-                          className="h-8 w-8"
-                        >
-                          <Pencil className="h-4 w-4 text-orange-500" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteRequest(u.id)}
-                          disabled={u.username === 'admin'} // Protect root admin
-                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={users} />
         </CardContent>
       </Card>
 

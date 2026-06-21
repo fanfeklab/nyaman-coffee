@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useTransactionStore } from '@/store/useTransactionStore';
+import { useTransactionStore, Transaction } from '@/store/useTransactionStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useShiftStore } from '@/store/useShiftStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTable, DataTableColumnHeader } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { Ban, Search, FileText, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -136,6 +137,64 @@ export default function ReportsPage() {
 
   const topSelling = productAnalytics.filter(p => p.soldQty > 0);
   const unsellable = productAnalytics.filter(p => p.soldQty === 0);
+
+
+  const transactionColumns = useMemo<ColumnDef<Transaction>[]>(() => [
+    { accessorKey: 'timestamp', header: ({ column }) => <DataTableColumnHeader column={column} title="Waktu" />, cell: ({ row }) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(row.original.timestamp)) },
+    { accessorKey: 'id', header: ({ column }) => <DataTableColumnHeader column={column} title="ID Transaksi" />, cell: ({ row }) => <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-gray-500" />{row.original.id}</div> },
+    { accessorKey: 'cashierId', header: ({ column }) => <DataTableColumnHeader column={column} title="Kasir" />, cell: ({ row }) => <span className="uppercase text-xs">{users.find(u => u.id === row.original.cashierId)?.fullName || row.original.cashierId}</span> },
+    { accessorKey: 'customerName', header: ({ column }) => <DataTableColumnHeader column={column} title="Pelanggan" />, cell: ({ row }) => <span className="uppercase text-xs">{row.original.customerName || '-'}</span> },
+    { accessorKey: 'paymentMethod', header: ({ column }) => <DataTableColumnHeader column={column} title="Metode" />, cell: ({ row }) => <span className="uppercase">{row.original.paymentMethod}</span> },
+    { accessorKey: 'total', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Total" /></div>, cell: ({ row }) => <div className="text-right text-[#FF6321]">{formatRupiah(row.original.total)}</div> },
+    { accessorKey: 'status', header: ({ column }) => <div className="flex justify-center"><DataTableColumnHeader column={column} title="Status" /></div>, cell: ({ row }) => <div className="text-center"><span className={`px-2 py-1 text-xs border-2 border-black rounded-md ${row.original.status === 'COMPLETED' ? 'bg-green-200' : 'bg-red-200'}`}>{row.original.status}</span></div> },
+    { id: 'actions', header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => {
+        const tx = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            {tx.status === 'COMPLETED' && <Button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi"><Ban className="w-4 h-4"/></Button>}
+            {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && <Button onClick={() => { if (confirm('Hapus histori transaksi ini secara permanen?')) { useTransactionStore.getState().deleteTransaction?.(tx.id); toast.success('Transaksi dihapus permanen'); } }} className="p-2 border-2 border-black rounded bg-gray-100 hover:bg-gray-200 transition-colors" title="Hapus Permanen"><Trash2 className="w-4 h-4"/></Button>}
+          </div>
+        );
+    } }
+  ], [users, user]);
+
+  const shiftColumns = useMemo<ColumnDef<any>[]>(() => [
+    { accessorKey: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />, cell: ({ row }) => {
+        if (row.original.id === 'current') return <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-[#00E5FF] font-black">OPEN</span>;
+        return <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-gray-200">{row.original.status}</span>;
+    } },
+    { accessorKey: 'cashierId', header: ({ column }) => <DataTableColumnHeader column={column} title="Kasir" />, cell: ({ row }) => <span className="uppercase">{users?.find(u => u.id === row.original.cashierId)?.fullName || row.original.cashierId}</span> },
+    { accessorKey: 'startTime', header: ({ column }) => <DataTableColumnHeader column={column} title="Waktu" />, cell: ({ row }) => {
+        if (row.original.id === 'current') return <>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(row.original.startTime))} - <span className="opacity-50">Sekarang</span></>;
+        return <>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(row.original.startTime))} - {row.original.endTime ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(row.original.endTime)) : 'N/A'}</>;
+    } },
+    { accessorKey: 'startingCash', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Modal Awal" /></div>, cell: ({ row }) => <div className="text-right">{formatRupiah(row.original.startingCash)}</div> },
+    { id: 'pendapatanTunai', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Pendapatan Tunai" /></div>, cell: ({ row }) => {
+        if (row.original.id === 'current') return <div className="text-right text-green-600">{formatRupiah(row.original.expectedEndingCash - row.original.startingCash)}</div>;
+        return <div className="text-right text-green-600">{formatRupiah(Math.max(0, row.original.expectedEndingCash - row.original.startingCash))}</div>;
+    } },
+    { accessorKey: 'expectedEndingCash', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Sistem (Laci)" /></div>, cell: ({ row }) => <div className="text-right">{formatRupiah(row.original.expectedEndingCash)}</div> },
+    { accessorKey: 'actualEndingCash', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Fisik Aktual" /></div>, cell: ({ row }) => {
+        if (row.original.id === 'current') return <div className="text-right">-</div>;
+        return <div className="text-right">{formatRupiah(row.original.actualEndingCash)}</div>;
+    } },
+    { id: 'selisih', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Selisih" /></div>, cell: ({ row }) => {
+        if (row.original.id === 'current') return <div className="text-right">-</div>;
+        const selisih = row.original.actualEndingCash - row.original.expectedEndingCash;
+        return <div className="text-right"><span className={cn("px-2 py-1 rounded-md border-2 border-black uppercase text-xs", selisih < 0 ? "bg-red-400 text-white" : selisih > 0 ? "bg-green-400 text-black" : "bg-white")}>{selisih > 0 ? '+' : ''}{formatRupiah(selisih)}</span></div>;
+    } },
+    { id: 'wajibSetor', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Wajib Setor" /></div>, cell: ({ row }) => {
+        if (row.original.id === 'current') return <div className="text-right">-</div>;
+        const setor = row.original.actualEndingCash - row.original.startingCash;
+        return <div className="text-right"><span className="font-black text-[#00E5FF] px-2 py-1 rounded-md border-2 border-black">{formatRupiah(setor)}</span></div>;
+    } }
+  ], [users]);
+
+  const topSellingColumns = useMemo<ColumnDef<any>[]>(() => [
+    { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Menu" />, cell: ({ row }) => row.original.name },
+    { accessorKey: 'soldQty', header: ({ column }) => <div className="flex justify-center"><DataTableColumnHeader column={column} title="Terjual (Qty)" /></div>, cell: ({ row }) => <div className="text-center text-[#FF6321] text-lg font-bold">{row.original.soldQty}</div> },
+    { accessorKey: 'revenue', header: ({ column }) => <div className="flex justify-end"><DataTableColumnHeader column={column} title="Total Pendapatan" /></div>, cell: ({ row }) => <div className="text-right text-black">{formatRupiah(row.original.revenue)}</div> }
+  ], []);
 
   const handleExportCSV = () => {
     if (visibleTransactions.length === 0) {
@@ -293,75 +352,7 @@ export default function ReportsPage() {
            </div>
          </div>
 
-         <div className="overflow-x-auto border-4 border-black rounded-xl">
-            <Table>
-               <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase">
-                 <TableRow>
-                   <TableHead className="text-black border-r-2 border-black w-[150px]">Waktu</TableHead>
-                   <TableHead className="text-black border-r-2 border-black w-[150px]">ID Transaksi</TableHead>
-                   <TableHead className="text-black border-r-2 border-black">Kasir</TableHead>
-                   <TableHead className="text-black border-r-2 border-black">Pelanggan</TableHead>
-                   <TableHead className="text-black border-r-2 border-black">Metode</TableHead>
-                   <TableHead className="text-black border-r-2 border-black text-right">Total</TableHead>
-                   <TableHead className="text-black border-r-2 border-black text-center">Status</TableHead>
-                   <TableHead className="text-right text-black w-[100px]">Aksi</TableHead>
-                 </TableRow>
-               </TableHeader>
-               <TableBody className="font-inter font-bold">
-                 {filteredData.map(tx => (
-                    <TableRow key={tx.id} className={`border-b-2 border-gray-200 hover:bg-gray-50 ${tx.status === 'VOID' ? 'opacity-50' : ''}`}>
-                      <TableCell className="border-r-2 border-gray-200">
-                         {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(tx.timestamp))}
-                      </TableCell>
-                      <TableCell className="border-r-2 border-gray-200">
-                         <div className="flex items-center gap-2">
-                           <FileText className="w-4 h-4 text-gray-500" />
-                           {tx.id}
-                         </div>
-                      </TableCell>
-                      <TableCell className="border-r-2 border-gray-200 uppercase text-xs">
-                         {users.find(u => u.id === tx.cashierId)?.fullName || tx.cashierId}
-                      </TableCell>
-                      <TableCell className="border-r-2 border-gray-200 uppercase text-xs">{tx.customerName || '-'}</TableCell>
-                      <TableCell className="border-r-2 border-gray-200 uppercase">{tx.paymentMethod}</TableCell>
-                      <TableCell className="text-right border-r-2 border-gray-200 text-[#FF6321]">{formatRupiah(tx.total)}</TableCell>
-                      <TableCell className="text-center border-r-2 border-gray-200">
-                        <span className={`px-2 py-1 text-xs border-2 border-black rounded-md ${tx.status === 'COMPLETED' ? 'bg-green-200' : 'bg-red-200'}`}>
-                          {tx.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {tx.status === 'COMPLETED' && (
-                            <Button onClick={() => setVoidConfirmId(tx.id)} className="p-2 border-2 border-black rounded bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Void Transaksi">
-                              <Ban className="w-4 h-4"/>
-                            </Button>
-                          )}
-                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER') && (
-                            <Button onClick={() => {
-                               if (confirm('Hapus histori transaksi ini secara permanen?')) {
-                                  useTransactionStore.getState().deleteTransaction?.(tx.id);
-                                  toast.success('Transaksi dihapus permanen');
-                               }
-                            }} className="p-2 border-2 border-black rounded bg-gray-100 hover:bg-gray-200 transition-colors" title="Hapus Permanen">
-                              <Trash2 className="w-4 h-4"/>
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                 ))}
-                 
-                 {filteredData.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
-                        Tidak ada transaksi.
-                      </TableCell>
-                    </TableRow>
-                 )}
-               </TableBody>
-            </Table>
-         </div>
+         <DataTable columns={transactionColumns} data={filteredData} searchPlaceholder="Cari transaksi..." />
          </div>
          </div>
       )}
@@ -370,79 +361,11 @@ export default function ReportsPage() {
          <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">
                <h2 className="font-space-grotesk font-black text-xl uppercase mb-4 px-2">Histori Sesi Shift</h2>
-               <div className="overflow-x-auto border-4 border-black rounded-xl">
-                  <Table>
-                     <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase text-xs">
-                       <TableRow>
-                         <TableHead className="text-black border-r-2 border-black w-[50px]">Status</TableHead>
-                         <TableHead className="text-black border-r-2 border-black min-w-[200px]">Kasir</TableHead>
-                         <TableHead className="text-black border-r-2 border-black min-w-[200px]">Waktu</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Modal Awal</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Pendapatan Tunai</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Sistem (Laci)</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Fisik Aktual</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-right min-w-[150px]">Selisih</TableHead>
-                         <TableHead className="text-black text-right min-w-[150px]">Wajib Setor</TableHead>
-                       </TableRow>
-                     </TableHeader>
-                     <TableBody className="font-inter font-bold">
-                       {currentShift && (
-                          <TableRow className="border-b-2 border-gray-200 bg-[#E0FFFF] hover:bg-cyan-50">
-                            <TableCell className="border-r-2 border-gray-200">
-                               <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-[#00E5FF] font-black">OPEN</span>
-                            </TableCell>
-                            <TableCell className="border-r-2 border-gray-200 uppercase">{users?.find(u => u.id === currentShift.cashierId)?.fullName || currentShift.cashierId}</TableCell>
-                            <TableCell className="border-r-2 border-gray-200">
-                               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(currentShift.startTime))} - <span className="opacity-50">Sekarang</span>
-                            </TableCell>
-                            <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(currentShift.startingCash)}</TableCell>
-                            <TableCell className="text-right border-r-2 border-gray-200 text-green-600">{formatRupiah(currentShift.expectedEndingCash - currentShift.startingCash)}</TableCell>
-                            <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(currentShift.expectedEndingCash)}</TableCell>
-                            <TableCell className="text-right border-r-2 border-gray-200">-</TableCell>
-                            <TableCell className="text-right border-r-2 border-gray-200">-</TableCell>
-                            <TableCell className="text-right">-</TableCell>
-                          </TableRow>
-                       )}
-                       {shiftHistory.map((shift, idx) => {
-                          const selisih = shift.actualEndingCash - shift.expectedEndingCash;
-                          const setor = shift.actualEndingCash - shift.startingCash;
-                          const pendapatan = shift.expectedEndingCash - shift.startingCash;
-                          return (
-                            <TableRow key={shift.id || idx} className="border-b-2 border-gray-200 hover:bg-gray-50">
-                              <TableCell className="border-r-2 border-gray-200">
-                                 <span className="px-2 py-1 text-xs border-2 border-black rounded-md bg-gray-200">{shift.status}</span>
-                              </TableCell>
-                              <TableCell className="border-r-2 border-gray-200 uppercase">{users?.find(u => u.id === shift.cashierId)?.fullName || shift.cashierId}</TableCell>
-                              <TableCell className="border-r-2 border-gray-200 text-xs text-gray-600">
-                                 {new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(shift.startTime))}
-                                 {' - '}
-                                 {shift.endTime ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(shift.endTime)) : 'N/A'}
-                              </TableCell>
-                              <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.startingCash)}</TableCell>
-                              <TableCell className="text-right border-r-2 border-gray-200 text-green-600">{formatRupiah(Math.max(0, pendapatan))}</TableCell>
-                              <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.expectedEndingCash)}</TableCell>
-                              <TableCell className="text-right border-r-2 border-gray-200">{formatRupiah(shift.actualEndingCash)}</TableCell>
-                              <TableCell className="text-right border-r-2 border-gray-200">
-                                 <span className={cn("px-2 py-1 rounded-md border-2 border-black uppercase text-xs", selisih < 0 ? "bg-red-400 text-white" : selisih > 0 ? "bg-green-400 text-black" : "bg-white")}>
-                                   {selisih > 0 ? '+' : ''}{formatRupiah(selisih)}
-                                 </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                 <span className="font-black text-[#00E5FF] px-2 py-1 rounded-md border-2 border-black">{formatRupiah(setor)}</span>
-                              </TableCell>
-                            </TableRow>
-                          );
-                       })}
-                       {shiftHistory.length === 0 && !currentShift && (
-                          <TableRow>
-                             <TableCell colSpan={9} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
-                               Tidak ada histori shift.
-                             </TableCell>
-                          </TableRow>
-                       )}
-                     </TableBody>
-                  </Table>
-               </div>
+               <DataTable 
+                    columns={shiftColumns} 
+                    data={currentShift ? [{...currentShift, id: 'current'}, ...shiftHistory] : shiftHistory} 
+                    searchPlaceholder="Cari histori shift..." 
+                  />
             </div>
          </div>
       )}
@@ -451,33 +374,7 @@ export default function ReportsPage() {
          <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">
                <h2 className="font-space-grotesk font-black text-xl uppercase mb-4 px-2">Menu Paling Laku (Top Selling)</h2>
-               <div className="overflow-x-auto border-4 border-black rounded-xl">
-                  <Table>
-                     <TableHeader className="bg-gray-100 border-b-4 border-black font-space-grotesk font-black uppercase text-xs">
-                       <TableRow>
-                         <TableHead className="text-black border-r-2 border-black">Nama Menu</TableHead>
-                         <TableHead className="text-black border-r-2 border-black text-center w-[150px]">Terjual (Qty)</TableHead>
-                         <TableHead className="text-black text-right w-[200px]">Total Pendapatan</TableHead>
-                       </TableRow>
-                     </TableHeader>
-                     <TableBody className="font-inter font-bold">
-                       {topSelling.map((item, idx) => (
-                          <TableRow key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50">
-                            <TableCell className="border-r-2 border-gray-200">{item.name}</TableCell>
-                            <TableCell className="border-r-2 border-gray-200 text-center text-[#FF6321] text-lg">{item.soldQty}</TableCell>
-                            <TableCell className="text-right text-black">{formatRupiah(item.revenue)}</TableCell>
-                          </TableRow>
-                       ))}
-                       {topSelling.length === 0 && (
-                          <TableRow>
-                             <TableCell colSpan={3} className="h-32 text-center text-gray-500 font-space-grotesk tracking-widest uppercase">
-                               Belum ada data penjualan.
-                             </TableCell>
-                          </TableRow>
-                       )}
-                     </TableBody>
-                  </Table>
-               </div>
+               <DataTable columns={topSellingColumns} data={topSelling} searchPlaceholder="Cari menu..." />
             </div>
 
             <div className="bg-[#FF90E8] border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden">

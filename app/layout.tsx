@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from "@/lib/utils";
 import { SyncProvider } from '@/components/providers/SyncProvider';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -27,7 +28,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
     <html lang="en" className={cn(spaceGrotesk.variable, inter.variable, "font-sans", geist.variable)}>
       <body className="font-inter bg-[#FFFDF7] text-black min-h-screen selection:bg-cyan-300 antialiased suppressHydrationWarning">
         <SyncProvider>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </SyncProvider>
         <Toaster />
       </body>

@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCustomerStore, Customer } from '@/store/useCustomerStore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit, Plus, Users, Search } from 'lucide-react';
+import { Trash2, Edit, Plus, Users } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -25,7 +26,6 @@ export default function CustomersPage() {
   }, [currentUser, router]);
 
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomerStore();
-  const [search, setSearch] = useState('');
   
   // Dialog States
   const [formOpen, setFormOpen] = useState(false);
@@ -41,10 +41,7 @@ export default function CustomersPage() {
     phone: '',
   });
 
-  const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.phone.includes(search)
-  ).sort((a,b) => b.points - a.points); // sort by highest points
+  const sortedCustomers = useMemo(() => [...customers].sort((a,b) => b.points - a.points), [customers]);
 
   const handleOpenForm = (customerToEdit?: Customer) => {
     if (customerToEdit) {
@@ -100,6 +97,18 @@ export default function CustomersPage() {
     }
   };
 
+  const columns = useMemo<ColumnDef<Customer>[]>(() => [
+    { accessorKey: 'name', header: 'Nama Pelanggan' },
+    { accessorKey: 'phone', header: 'Nomor HP' },
+    { accessorKey: 'points', header: 'Loyalty Points', cell: ({ row }) => <span className="px-2 py-1 bg-[#00E5FF] border-2 border-black rounded font-black text-xs">{row.original.points} Poin</span> },
+    { id: 'actions', header: () => <div className="text-right">Aksi</div>, cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button size="icon-sm" variant="outline" onClick={() => handleOpenForm(row.original)}><Edit className="w-4 h-4" /></Button>
+          <Button size="icon-sm" variant="destructive" onClick={() => setDeleteId(row.original.id)}><Trash2 className="w-4 h-4" /></Button>
+        </div>
+    ) }
+  ], []);
+
   if (currentUser?.role !== 'SUPER_ADMIN' && currentUser?.role !== 'MANAGER') {
     return null; // Will redirect
   }
@@ -118,58 +127,8 @@ export default function CustomersPage() {
       </div>
 
       <div className="bg-white border-4 border-black rounded-2xl flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 overflow-hidden mb-8">
-         <div className="flex justify-between items-center mb-4">
-           <div className="relative w-full md:w-96">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-             <Input 
-               className="pl-10 h-12"
-               placeholder="Cari nama atau nomor telepon..." 
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-             />
-           </div>
-         </div>
-
          <div className="border-4 border-black rounded-xl overflow-hidden">
-           <Table>
-             <TableHeader className="bg-[#FFD100]">
-               <TableRow className="border-b-4 border-black hover:bg-[#FFD100]">
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Nama Pelanggan</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Nomor HP</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase">Loyalty Points</TableHead>
-                 <TableHead className="font-space-grotesk font-black text-black uppercase text-right">Aksi</TableHead>
-               </TableRow>
-             </TableHeader>
-             <TableBody>
-               {filteredCustomers.length === 0 ? (
-                 <TableRow>
-                   <TableCell colSpan={4} className="text-center py-8 font-inter font-bold text-gray-500">
-                     Tidak ada data pelanggan.
-                   </TableCell>
-                 </TableRow>
-               ) : filteredCustomers.map((c) => (
-                 <TableRow key={c.id} className="border-b-2 border-dashed border-gray-200">
-                   <TableCell className="font-inter font-bold text-black">{c.name}</TableCell>
-                   <TableCell className="font-inter font-bold text-black">{c.phone}</TableCell>
-                   <TableCell>
-                     <span className="px-2 py-1 bg-[#00E5FF] border-2 border-black rounded font-black text-xs">
-                       {c.points} Poin
-                     </span>
-                   </TableCell>
-                   <TableCell className="text-right">
-                     <div className="flex justify-end gap-2">
-                       <Button size="icon-sm" variant="outline" onClick={() => handleOpenForm(c)}>
-                         <Edit className="w-4 h-4" />
-                       </Button>
-                       <Button size="icon-sm" variant="destructive" onClick={() => setDeleteId(c.id)}>
-                         <Trash2 className="w-4 h-4" />
-                       </Button>
-                     </div>
-                   </TableCell>
-                 </TableRow>
-               ))}
-             </TableBody>
-           </Table>
+           <DataTable columns={columns} data={sortedCustomers} />
          </div>
       </div>
 
