@@ -1,0 +1,198 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   🚀 SUPABASE SETUP FLOW DIAGRAM 🚀                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP 1: AMBIL CREDENTIALS DARI SUPABASE (5 MENIT)                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   https://supabase.com/dashboard
+            ↓
+   [Login dengan akun Anda]
+            ↓
+   [Pilih atau Buat Project]
+            ↓
+   ┌─────────────────────────────┐
+   │  Settings → API             │
+   ├─────────────────────────────┤
+   │ Copy 3 credentials:         │
+   │ 1. PROJECT_URL              │
+   │ 2. ANON_KEY (public)        │
+   │ 3. SERVICE_ROLE_KEY (secret)│
+   └─────────────────────────────┘
+            ↓
+   ┌─────────────────────────────┐
+   │  Settings → Database        │
+   ├─────────────────────────────┤
+   │ Copy 1 credential:          │
+   │ 4. DATABASE_URL             │
+   │    (Session Pool)           │
+   └─────────────────────────────┘
+            ↓
+   [Simpan 4 credentials di tempat aman]
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP 2: SET ENVIRONMENT VARIABLES DI VERCEL (5 MENIT)                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   https://vercel.com/dashboard
+            ↓
+   [Pilih project: ai-studio-applet]
+            ↓
+   [Settings (icon roda gigi)]
+            ↓
+   [Environment Variables / Vars]
+            ↓
+   ┌──────────────────────────────────────────────────┐
+   │ [Add New]                                        │
+   ├──────────────────────────────────────────────────┤
+   │ Name: NEXT_PUBLIC_SUPABASE_URL                   │
+   │ Value: [PROJECT_URL dari Step 1]                 │
+   │ Environments: ☑ Production ☑ Preview ☑ Dev      │
+   │ [Save]                                           │
+   └──────────────────────────────────────────────────┘
+            ↓
+   ┌──────────────────────────────────────────────────┐
+   │ [Add New]                                        │
+   ├──────────────────────────────────────────────────┤
+   │ Name: NEXT_PUBLIC_SUPABASE_ANON_KEY              │
+   │ Value: [ANON_KEY dari Step 1]                    │
+   │ Environments: ☑ Production ☑ Preview ☑ Dev      │
+   │ [Save]                                           │
+   └──────────────────────────────────────────────────┘
+            ↓
+   ┌──────────────────────────────────────────────────┐
+   │ [Add New]                                        │
+   ├──────────────────────────────────────────────────┤
+   │ Name: SUPABASE_SERVICE_ROLE_KEY                  │
+   │ Value: [SERVICE_ROLE_KEY dari Step 1]            │
+   │ Environments: ☑ Production ☑ Preview ☑ Dev      │
+   │ [Save]                                           │
+   └──────────────────────────────────────────────────┘
+            ↓
+   ┌──────────────────────────────────────────────────┐
+   │ [Add New]                                        │
+   ├──────────────────────────────────────────────────┤
+   │ Name: DATABASE_URL                               │
+   │ Value: [DATABASE_URL dari Step 1]                │
+   │ Environments: ☑ Production ☑ Preview ☑ Dev      │
+   │ [Save]                                           │
+   └──────────────────────────────────────────────────┘
+            ↓
+   [Semua 4 variables sudah ter-add]
+   [Tunggu 1-2 menit sync]
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP 3: JALANKAN MIGRASI DARI TERMINAL (2 MENIT)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   Terminal:
+            ↓
+   $ npm run db:generate
+   ✓ Generated migrations...
+            ↓
+   $ npm run db:push
+   ✓ Applied migrations to Supabase...
+            ↓
+   $ npm run db:test
+   ✅ SUCCESS: Connected to Supabase!
+   ✅ Found X tables
+   ✅ All tests passed!
+            ↓
+   [Setup Selesai! ✅]
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP 4: VERIFY & NEXT STEPS                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   ✅ Buka Supabase Dashboard → Database → Tables
+      [Pastikan semua tables sudah ada]
+
+   ✅ Jalankan dev server:
+      $ npm run dev
+      [Browser: http://localhost:3000]
+
+   ✅ Test API routes yang connect ke Supabase
+
+   ✅ Migrate data dari Firestore (jika ada)
+
+   ✅ Deploy ke Vercel production
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        ESTIMATED TIME: 15 MINUTES                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                           CREDENTIALS CHEAT SHEET
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─ SUPABASE DASHBOARD LOCATIONS ────────────────────────────────────────────┐
+│                                                                            │
+│  Sidebar Kiri:                                                             │
+│  ├─ Home                                                                   │
+│  ├─ SQL Editor                                                             │
+│  ├─ Authentication                                                         │
+│  ├─ Database                                                               │
+│  ├─ Storage                                                                │
+│  ├─ Edge Functions                                                         │
+│  ├─ Vector                                                                 │
+│  ├─ Realtime                                                               │
+│  └─ Settings ← KLIK INI                                                    │
+│                                                                            │
+│  Di Settings, ada tabs:                                                    │
+│  ├─ General                                                                │
+│  ├─ API ← UNTUK PROJECT_URL, ANON_KEY, SERVICE_ROLE_KEY                  │
+│  ├─ Database ← UNTUK DATABASE_URL                                          │
+│  ├─ Auth                                                                   │
+│  └─ ...                                                                    │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ VERCEL DASHBOARD LOCATIONS ──────────────────────────────────────────────┐
+│                                                                            │
+│  Dashboard:                                                                │
+│  └─ [Pilih project: ai-studio-applet]                                      │
+│     └─ Settings (icon roda gigi)                                           │
+│        └─ Environment Variables (atau "Vars")                              │
+│           └─ [Add New] ← untuk tambah env vars                             │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                            TERMINAL COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+# Generate migrations dari schema Drizzle
+$ npm run db:generate
+
+# Push migrations ke Supabase
+$ npm run db:push
+
+# Test database connection
+$ npm run db:test
+
+# Jalankan development server
+$ npm run dev
+
+# Build untuk production
+$ npm run build
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         🎓 DOKUMENTASI LENGKAP
+═══════════════════════════════════════════════════════════════════════════════
+
+Baca file-file ini untuk detail lengkap:
+
+1. SUPABASE_SETUP.md     - Panduan step-by-step dengan screenshot
+2. QUICK_START.md        - Quick reference (tldr version)
+3. SETUP_SUMMARY.md      - Ringkasan apa yang sudah disiapkan
+4. .env.example          - Template environment variables
+
+═══════════════════════════════════════════════════════════════════════════════
