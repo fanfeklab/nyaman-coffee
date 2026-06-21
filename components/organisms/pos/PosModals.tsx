@@ -46,7 +46,8 @@ export function PosModals({ logic }: { logic: any }) {
                                : (state.selectedVariants[v.id] || []).includes(opt.name);
 
                              return (
-                               <button
+                               <Button
+                                 variant="ghost"
                                  key={opt.name}
                                  onClick={() => {
                                    if (v.type === 'SINGLE_CHOICE') {
@@ -61,13 +62,13 @@ export function PosModals({ logic }: { logic: any }) {
                                    }
                                  }}
                                  className={cn(
-                                   "p-3 text-left border-4 border-black rounded-xl font-bold transition-all flex flex-col justify-between h-20 active:translate-y-1 active:shadow-none",
-                                   isSelected ? "bg-[#00E5FF] shadow-[2px_2px_0_0_#000] translate-y-0" : "bg-white shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_0_#000]"
+                                   "p-3 text-left border-4 border-black rounded-xl font-bold transition-all flex flex-col justify-between h-20 active:translate-y-1 active:shadow-none items-start whitespace-normal hover:bg-transparent",
+                                   isSelected ? "bg-[#00E5FF] shadow-[2px_2px_0_0_#000] translate-y-0 text-black hover:text-black hover:bg-[#00E5FF]/90" : "bg-white shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-[2px_2px_0_0_#000] text-black hover:text-black hover:bg-gray-50"
                                  )}
                                >
-                                  <span className="truncate">{opt.name}</span>
+                                  <span className="truncate w-full">{opt.name}</span>
                                   {opt.priceAdjustment > 0 && <span className="text-xs">+{formatRupiah(opt.priceAdjustment)}</span>}
-                               </button>
+                               </Button>
                              )
                           })}
                        </div>
@@ -102,15 +103,16 @@ export function PosModals({ logic }: { logic: any }) {
                         {data.items.filter((i: any) => data.recipes.find((r: any) => r.productId === i.product.id)).map((i: any) => {
                            const r = data.recipes.find((r: any) => r.productId === i.product.id);
                            return (
-                             <button 
+                             <Button 
+                               variant="outline"
                                key={i.id}
-                               className="px-3 py-1.5 bg-white border-2 border-black rounded-md text-xs font-bold font-inter shadow-[2px_2px_0_0_#000] hover:translate-y-0.5 hover:shadow-none active:translate-y-1 transition-all"
+                               className="px-3 py-1.5 h-auto bg-white border-2 border-black rounded-md text-xs font-bold font-inter shadow-[2px_2px_0_0_#000] hover:bg-gray-50 hover:translate-y-0.5 hover:shadow-none active:translate-y-1 transition-all text-black"
                                onClick={() => {
                                  state.setRecipeItem({...i.product, recipe: r?.instructions});
                                }}
                              >
                                Resep: {i.product.name}
-                             </button>
+                             </Button>
                            )
                         })}
                       </div>
