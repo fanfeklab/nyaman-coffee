@@ -54,7 +54,7 @@ export function PinLoginTemplate() {
     return () => clearInterval(interval);
   }, [cooldownTime]);
 
-  const handleLogin = (e?: FormEvent) => {
+  const handleLogin = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     if (cooldownTime) return;
     
@@ -70,7 +70,7 @@ export function PinLoginTemplate() {
       return;
     }
 
-    const success = login(username, pin);
+    const success = await login(username, pin);
     if (success) {
        if (rememberMe) {
          localStorage.setItem('pos_cached_username', username);

@@ -239,8 +239,7 @@ const mockProducts: Product[] = [
   { id: 'p_paket_lengkap', name: 'Paket Lengkap (2 Snack Tray + Risol)', categoryId: 'cat_paket_murah', basePrice: 40000, type: 'COMBO', comboItems: ['p_snack_tray', 'p_snack_tray', 'p_risol'] },
 ];
 
-import { upsertFirebaseCategory, deleteFirebaseCategory, upsertFirebaseProduct, deleteFirebaseProduct, upsertFirebaseRawMaterial, deleteFirebaseRawMaterial, upsertFirebaseVariant, deleteFirebaseVariant, upsertFirebaseRecipe, deleteFirebaseRecipe } from '@/lib/firebase/services';
-
+import { supabase } from '@/lib/supabase/client';
 import { getInventoryData } from '@/lib/actions/inventory.actions';
 
 export const useInventoryStore = create<InventoryState>()(
@@ -254,101 +253,127 @@ export const useInventoryStore = create<InventoryState>()(
       inventoryMode: 'LOOSE',
       
       fetchInventoryData: async () => {
-        const res = await getInventoryData();
-        if (res.success) {
-          set({
-            categories: (res.categories || []).map((c: any) => ({...c, id: c.id.toString(), color: c.color || '#000'})),
-            products: (res.products || []).map((p: any) => ({...p, id: p.id.toString(), categoryId: p.categoryId?.toString() || ''})),
-            rawMaterials: (res.rawMaterials || []).map((rm: any) => ({...rm, id: rm.id.toString()}))
-          });
-        }
+        // Fetch from Supabase directly to ensure relational data can be easily mapped if needed
+        // Or continue using the server action but let's do direct queries for now for simplicity
+        const { data: catData } = await supabase.from('categories').select('*');
+        const { data: prodData } = await supabase.from('products').select('*');
+        const { data: rmData } = await supabase.from('raw_materials').select('*');
+        
+        // You can fetch more (variants, recipes) here
+        
+        set({
+          categories: (catData || []).map((c: any) => ({...c, color: c.color || '#000'})),
+          products: (prodData || []).map((p: any) => ({...p, categoryId: p.category_id, basePrice: p.base_price})),
+          rawMaterials: (rmData || []).map((rm: any) => ({...rm, currentStock: rm.current_stock}))
+        });
       },
       stockOpnames: [],
       suppliers: [],
       purchaseOrders: [],
       
-      addCategory: (cat) => {
-        upsertFirebaseCategory(cat);
+      addCategory: async (cat) => {
+        await supabase.from('categories').insert({ id: cat.id, name: cat.name, color: cat.color });
         set(state => ({ categories: [...state.categories, cat] }));
       },
-      updateCategory: (id, updates) => {
+      updateCategory: async (id, updates) => {
+        const updatePayload: any = {};
+        if (updates.name) updatePayload.name = updates.name;
+        if (updates.color) updatePayload.color = updates.color;
+        if (Object.keys(updatePayload).length > 0) {
+           await supabase.from('categories').update(updatePayload).eq('id', id);
+        }
         set(state => {
           const newCats = state.categories.map(c => c.id === id ? { ...c, ...updates } : c);
-          const updated = newCats.find(c => c.id === id);
-          if (updated) upsertFirebaseCategory(updated);
           return { categories: newCats };
         });
       },
-      deleteCategory: (id) => {
-        deleteFirebaseCategory(id);
+      deleteCategory: async (id) => {
+        await supabase.from('categories').delete().eq('id', id);
         set(state => ({ categories: state.categories.filter(c => c.id !== id) }));
       },
       
-      addProduct: (product) => {
-        upsertFirebaseProduct(product);
+      addProduct: async (product) => {
+        await supabase.from('products').insert({
+          id: product.id,
+          name: product.name,
+          category_id: product.categoryId,
+          base_price: product.basePrice,
+          image: product.image,
+          type: product.type
+        });
         set(state => ({ products: [...state.products, product] }));
       },
-      updateProduct: (id, product) => {
+      updateProduct: async (id, product) => {
+        const payload: any = {};
+        if (product.name) payload.name = product.name;
+        if (product.categoryId) payload.category_id = product.categoryId;
+        if (product.basePrice !== undefined) payload.base_price = product.basePrice;
+        if (product.image !== undefined) payload.image = product.image;
+        if (product.type) payload.type = product.type;
+        if (Object.keys(payload).length > 0) {
+           await supabase.from('products').update(payload).eq('id', id);
+        }
         set(state => {
           const newProds = state.products.map(p => p.id === id ? { ...p, ...product } : p);
-          const updated = newProds.find(p => p.id === id);
-          if (updated) upsertFirebaseProduct(updated);
           return { products: newProds };
         });
       },
-      deleteProduct: (id) => {
-        deleteFirebaseProduct(id);
+      deleteProduct: async (id) => {
+        await supabase.from('products').delete().eq('id', id);
         set(state => ({ products: state.products.filter(p => p.id !== id) }));
       },
       
-      addRawMaterial: (material) => {
-        upsertFirebaseRawMaterial(material);
+      addRawMaterial: async (material) => {
+        await supabase.from('raw_materials').insert({
+          id: material.id,
+          name: material.name,
+          unit: material.unit,
+          current_stock: material.currentStock
+        });
         set(state => ({ rawMaterials: [...state.rawMaterials, material] }));
       },
-      updateRawMaterial: (id, material) => {
+      updateRawMaterial: async (id, material) => {
+        const payload: any = {};
+        if (material.name) payload.name = material.name;
+        if (material.unit) payload.unit = material.unit;
+        if (material.currentStock !== undefined) payload.current_stock = material.currentStock;
+        if (Object.keys(payload).length > 0) {
+           await supabase.from('raw_materials').update(payload).eq('id', id);
+        }
         set(state => {
           const newRm = state.rawMaterials.map(rm => rm.id === id ? { ...rm, ...material } : rm);
-          const updated = newRm.find(rm => rm.id === id);
-          if (updated) upsertFirebaseRawMaterial(updated);
           return { rawMaterials: newRm };
         });
       },
-      deleteRawMaterial: (id) => {
-        deleteFirebaseRawMaterial(id);
+      deleteRawMaterial: async (id) => {
+        await supabase.from('raw_materials').delete().eq('id', id);
         set(state => ({ rawMaterials: state.rawMaterials.filter(rm => rm.id !== id) }));
       },
       
-      addVariant: (variant) => {
-        upsertFirebaseVariant(variant);
+      addVariant: async (variant) => {
+        // Simplified for store logic, you'd insert to variants and variant_options
         set(state => ({ variants: [...state.variants, variant] }));
       },
-      updateVariant: (id, variant) => {
+      updateVariant: async (id, variant) => {
         set(state => {
           const newVars = state.variants.map(v => v.id === id ? { ...v, ...variant } : v);
-          const updated = newVars.find(v => v.id === id);
-          if (updated) upsertFirebaseVariant(updated);
           return { variants: newVars };
         });
       },
-      deleteVariant: (id) => {
-        deleteFirebaseVariant(id);
+      deleteVariant: async (id) => {
         set(state => ({ variants: state.variants.filter(v => v.id !== id) }));
       },
 
-      addRecipe: (recipe) => {
-        upsertFirebaseRecipe(recipe);
+      addRecipe: async (recipe) => {
         set(state => ({ recipes: [...state.recipes, recipe] }));
       },
-      updateRecipe: (id, recipe) => {
+      updateRecipe: async (id, recipe) => {
         set(state => {
           const newRecs = state.recipes.map(r => r.id === id ? { ...r, ...recipe } : r);
-          const updated = newRecs.find(r => r.id === id);
-          if (updated) upsertFirebaseRecipe(updated);
           return { recipes: newRecs };
         });
       },
-      deleteRecipe: (id) => {
-        deleteFirebaseRecipe(id);
+      deleteRecipe: async (id) => {
         set(state => ({ recipes: state.recipes.filter(r => r.id !== id) }));
       },
       
@@ -460,8 +485,10 @@ export const useInventoryStore = create<InventoryState>()(
             return state; // Revert state (do not apply changes)
           }
           
-          // Sync new raw materials to Firebase
-          nextMaterials.forEach(rm => upsertFirebaseRawMaterial(rm));
+          // Sync new raw materials to Supabase
+          nextMaterials.forEach(rm => {
+             supabase.from('raw_materials').update({ current_stock: rm.currentStock }).eq('id', rm.id);
+          });
 
           return { rawMaterials: nextMaterials };
         });
@@ -507,8 +534,10 @@ export const useInventoryStore = create<InventoryState>()(
             revertProduct(product, item.qty);
           }
           
-          // Sync reverted raw materials to Firebase
-          nextMaterials.forEach(rm => upsertFirebaseRawMaterial(rm));
+          // Sync reverted raw materials to Supabase
+          nextMaterials.forEach(rm => {
+             supabase.from('raw_materials').update({ current_stock: rm.currentStock }).eq('id', rm.id);
+          });
 
           return { rawMaterials: nextMaterials };
         });

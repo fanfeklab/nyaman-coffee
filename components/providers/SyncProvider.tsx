@@ -50,6 +50,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
              const { error } = await supabase.from('audit_logs').insert(op.payload);
              if (error) throw error;
           }
+          if (op.type === 'VOID_TRANSACTION') {
+             const { error } = await supabase.from('transactions').update({ status: 'VOID' }).eq('id', op.payload.transactionId);
+             if (error) throw error;
+          }
+          if (op.type === 'DELETE_TRANSACTION') {
+             // First delete items, then transaction due to foreign key
+             const { error: errItems } = await supabase.from('transaction_items').delete().eq('transaction_id', op.payload.transactionId);
+             if (errItems) throw errItems;
+             const { error: errTx } = await supabase.from('transactions').delete().eq('id', op.payload.transactionId);
+             if (errTx) throw errTx;
+          }
           // handle other operations as needed...
         } catch (e) {
           console.error("Failed to sync operation", op.id, e);

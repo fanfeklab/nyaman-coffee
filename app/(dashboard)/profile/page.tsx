@@ -12,16 +12,21 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [newPin, setNewPin] = useState('');
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName) {
-      toast.error('Nama Lengkap tidak boleh kosong!');
+    if (!fullName.trim()) {
+      toast.error('Nama Lengkap tidak boleh kosong');
       return;
     }
-    
-    updateProfile(fullName, newPin || undefined);
-    setNewPin(''); // Reset after apply
-    toast.success('Profil berhasil diperbaharui!');
+
+    if (newPin && newPin.length < 4) {
+      toast.error('PIN baru minimal 4 digit');
+      return;
+    }
+
+    await updateProfile(fullName, newPin || undefined);
+    setNewPin(''); // reset field pin setelah save
+    toast.success('Profil berhasil diperbarui');
   };
 
   if (!user) return null;

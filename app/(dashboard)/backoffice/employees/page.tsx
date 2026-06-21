@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuthStore, User } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,11 @@ import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 
 export default function EmployeesPage() {
-  const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuthStore();
+  const { users, addUser, updateUser, deleteUser, fetchUsers, user: currentUser } = useAuthStore();
+  
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -52,7 +56,7 @@ export default function EmployeesPage() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.username || !formData.fullName || !formData.pin) {
       toast.error('Semua field wajib diisi');
       return;
@@ -64,7 +68,7 @@ export default function EmployeesPage() {
     }
 
     if (editingItem) {
-      updateUser(editingItem.id, formData);
+      await updateUser(editingItem.id, formData);
       toast.success('Data karyawan berhasil diperbarui');
     } else {
       // Check if username already exists
@@ -74,7 +78,7 @@ export default function EmployeesPage() {
         return;
       }
       
-      addUser({
+      await addUser({
         username: formData.username.toLowerCase(),
         fullName: formData.fullName,
         pin: formData.pin,
@@ -94,9 +98,9 @@ export default function EmployeesPage() {
     setIsConfirmOpen(true);
   }, [currentUser?.id]);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (itemToDelete) {
-      deleteUser(itemToDelete);
+      await deleteUser(itemToDelete);
       toast.success('Karyawan berhasil dihapus');
       setItemToDelete(null);
     }
