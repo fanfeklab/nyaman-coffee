@@ -105,12 +105,12 @@ export default function SettingsPage() {
                <SelectValue placeholder="Pilih Kategori Pengaturan" />
              </SelectTrigger>
              <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-space-grotesk font-black uppercase text-base bg-white">
-               <SelectItem value="GENERAL" label="Toko"><div className="flex items-center gap-2"><Store className="w-5 h-5"/> Toko</div></SelectItem>
-               <SelectItem value="POS" label="Kasir & Struk"><div className="flex items-center gap-2"><Receipt className="w-5 h-5"/> Kasir & Struk</div></SelectItem>
-               <SelectItem value="INVENTORY" label="Inventory Mode"><div className="flex items-center gap-2"><PackageSearch className="w-5 h-5"/> Inventory Mode</div></SelectItem>
-               <SelectItem value="HARDWARE" label="Hardware"><div className="flex items-center gap-2"><Printer className="w-5 h-5"/> Hardware</div></SelectItem>
-               {user?.role === 'SUPER_ADMIN' && <SelectItem value="FIREBASE" label="Integrasi Cloud"><div className="flex items-center gap-2"><Database className="w-5 h-5"/> Integrasi Cloud</div></SelectItem>}
-               {user?.role === 'SUPER_ADMIN' && <SelectItem value="DANGER" label="Danger Zone"><div className="flex items-center gap-2 text-red-600"><AlertCircle className="w-5 h-5"/> Danger Zone</div></SelectItem>}
+               <SelectItem value="GENERAL"><div className="flex items-center gap-2"><Store className="w-5 h-5"/> Toko</div></SelectItem>
+               <SelectItem value="POS"><div className="flex items-center gap-2"><Receipt className="w-5 h-5"/> Kasir & Struk</div></SelectItem>
+               <SelectItem value="INVENTORY"><div className="flex items-center gap-2"><PackageSearch className="w-5 h-5"/> Inventory Mode</div></SelectItem>
+               <SelectItem value="HARDWARE"><div className="flex items-center gap-2"><Printer className="w-5 h-5"/> Hardware</div></SelectItem>
+               {user?.role === 'SUPER_ADMIN' && <SelectItem value="FIREBASE"><div className="flex items-center gap-2"><Database className="w-5 h-5"/> Integrasi Cloud</div></SelectItem>}
+               {user?.role === 'SUPER_ADMIN' && <SelectItem value="DANGER"><div className="flex items-center gap-2 text-red-600"><AlertCircle className="w-5 h-5"/> Danger Zone</div></SelectItem>}
              </SelectContent>
            </Select>
          </div>

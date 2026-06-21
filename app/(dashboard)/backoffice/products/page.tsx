@@ -891,13 +891,11 @@ export default function ProductsPage() {
                   <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
                     <SelectItem
                       value="SINGLE_CHOICE"
-                      label="Pilih Satu Saja (Radio)"
                     >
                       Pilih Satu Saja (Radio)
                     </SelectItem>
                     <SelectItem
                       value="MULTIPLE_CHOICE"
-                      label="Pilih Banyak (Checkbox)"
                     >
                       Pilih Banyak (Checkbox)
                     </SelectItem>
@@ -919,10 +917,10 @@ export default function ProductsPage() {
                     <SelectValue placeholder="Kondisi Wajib" />
                   </SelectTrigger>
                   <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold">
-                    <SelectItem value="false" label="Tidak Wajib (Opsional)">
+                    <SelectItem value="false">
                       Tidak Wajib (Opsional)
                     </SelectItem>
-                    <SelectItem value="true" label="Wajib Diisi (Mandatory)">
+                    <SelectItem value="true">
                       Wajib Diisi (Mandatory)
                     </SelectItem>
                   </SelectContent>

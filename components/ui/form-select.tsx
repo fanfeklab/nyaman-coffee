@@ -37,9 +37,9 @@ export function FormSelect({ value, onValueChange, options, placeholder, classNa
           ) : undefined}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold z-50">
-        {options.map(opt => (
-          <SelectItem key={opt.value} value={opt.value} label={opt.label}>
+      <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold z-[100]">
+        {options.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
             <div className="flex items-center gap-2 truncate">
               {opt.icon}
               <span className="truncate">{opt.label}</span>

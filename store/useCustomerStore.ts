@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface Customer {
   id: string;
@@ -54,6 +55,7 @@ export const useCustomerStore = create<CustomerState>()(
     }),
     {
       name: 'pos-customer-storage',
+  storage: createJSONStorage(() => idbStorage),
     }
   )
 );

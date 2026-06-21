@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface SettingsState {
   storeName: string;
@@ -48,6 +49,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'pos-settings-storage',
+  storage: createJSONStorage(() => idbStorage),
     }
   )
 );
