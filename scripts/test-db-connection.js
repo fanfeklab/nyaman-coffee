@@ -7,11 +7,21 @@
 
 require('dotenv').config({ path: '.env.local' });
 
-const DATABASE_URL = process.env.DATABASE_URL;
+// Try to get DATABASE_URL from multiple sources
+let DATABASE_URL = process.env.DATABASE_URL;
+
+// Fallback to Vercel Postgres URL if available
+if (!DATABASE_URL) {
+  DATABASE_URL = process.env.NEXT_POSTGRES_URL_NON_POOLING || process.env.NEXT_POSTGRES_URL;
+}
 
 if (!DATABASE_URL) {
-  console.error('❌ ERROR: DATABASE_URL environment variable is not set');
-  console.error('   Please check your .env.local or Vercel environment variables');
+  console.error('❌ ERROR: Database URL not found');
+  console.error('\n   Expected environment variables:');
+  console.error('   - DATABASE_URL');
+  console.error('   - NEXT_POSTGRES_URL');
+  console.error('   - NEXT_POSTGRES_URL_NON_POOLING');
+  console.error('\n   Please check your .env.local or Vercel environment variables');
   process.exit(1);
 }
 
