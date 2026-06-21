@@ -30,7 +30,8 @@ console.log('🔍 Testing Supabase Connection...\n');
 async function testConnection() {
   try {
     // Import postgres package
-    const { sql } = await import('postgres');
+    const postgres = await import('postgres');
+    const sql = postgres.default || postgres.sql;
     
     console.log('📍 Connecting to Supabase...');
     console.log(`   Database URL: ${DATABASE_URL.substring(0, 50)}...`);
