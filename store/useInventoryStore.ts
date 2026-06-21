@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface Category {
   id: string;
@@ -514,7 +515,8 @@ export const useInventoryStore = create<InventoryState>()(
       }
     }),
     {
-      name: 'pos-inventory-storage'
+      name: 'pos-inventory-storage',
+  storage: createJSONStorage(() => idbStorage)
     }
   )
 );

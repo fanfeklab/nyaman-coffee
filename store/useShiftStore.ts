@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { upsertFirebaseShift, upsertFirebasePettyCash } from '@/lib/firebase/services';
 
@@ -165,6 +166,7 @@ export const useShiftStore = create<ShiftState>()(
     }),
     {
       name: 'pos-shift-storage',
+  storage: createJSONStorage(() => idbStorage),
     }
   )
 );

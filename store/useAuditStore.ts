@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface AuditLog {
   id: string;
@@ -28,6 +29,7 @@ export const useAuditStore = create<AuditState>()(
     }),
     {
       name: 'pos-audit-storage',
+  storage: createJSONStorage(() => idbStorage),
     }
   )
 );

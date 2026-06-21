@@ -1,5 +1,6 @@
+import { idbStorage } from '@/lib/idbStorage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { useAuditStore } from './useAuditStore';
 
 export type UserRole = 'SUPER_ADMIN' | 'MANAGER' | 'CASHIER';
@@ -178,6 +179,7 @@ export const useAuthStore = create<AuthState>()(
   }
 }),
 {
-  name: 'pos-auth-storage'
+  name: 'pos-auth-storage',
+  storage: createJSONStorage(() => idbStorage)
 }
 ));

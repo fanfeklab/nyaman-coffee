@@ -230,9 +230,9 @@ export function CartDrawer({
                         <SelectValue placeholder="-- Pilih Pelanggan --" />
                       </SelectTrigger>
                       <SelectContent className="border-4 border-black rounded-xl shadow-[4px_4px_0_0_#000] font-inter font-bold uppercase">
-                        <SelectItem value="none" label="-- Tanpa Pelanggan --">-- Tanpa Pelanggan --</SelectItem>
+                        <SelectItem value="none">-- Tanpa Pelanggan --</SelectItem>
                         {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id} label={`${c.name} (${c.points} Poin)`}>{c.name} ({c.points} Poin)</SelectItem>
+                          <SelectItem key={c.id} value={c.id}>{c.name} ({c.points} Poin)</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
